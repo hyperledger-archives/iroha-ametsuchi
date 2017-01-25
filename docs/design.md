@@ -12,6 +12,8 @@ Iroha will be the platform to easily manage any kind of digital asset, currency,
 
 ##Financial instutions
 
+##Supply chain management
+
 
 
 #Iroha's use of Ametsuchi
@@ -26,6 +28,13 @@ Iroha stores all its data as flatbuffers. From the data storage to the user-faci
 |---|---|
 |Title| Save freebuffers to a URI location.|
 | Description | We should be able to save a freebuffer to a location specified by a URI. |
+|Priority | 10|
+|Risk| low| 
+
+| Requirement ID | FR-02  |
+|---|---|
+|Title| Create Merkle tree from flatbuffers |
+| Description | A binary hash tree (Merkle tree) should be constructed from flatbuffers store in Ametsuchi. Digital signatures from the 2f+1 validating nodes should be stored with each Merkle root for the global and block-level roots. |
 |Priority | 10|
 |Risk| low| 
 
