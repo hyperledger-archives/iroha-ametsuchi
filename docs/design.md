@@ -14,6 +14,9 @@ Iroha will be the platform to easily manage any kind of digital asset, currency,
 
 ##Supply chain management
 
+##Electronic payments
+
+Electronic payments, especially mobile payments, can benefit from Iroha for managing digital currencies in real time. Iroha aims to achieve transaction finality within 2 seconds internally for many network configurations, so this allows for the creation of mobile apps for enabling face-to-face payments.
 
 
 #Iroha's use of Ametsuchi
@@ -27,7 +30,7 @@ Iroha stores all its data as flatbuffers. From the data storage to the user-faci
 | Requirement ID | FR-01  |
 |---|---|
 |Title| Save flatbuffers to a URI location.|
-| Description | We should be able to save a freebuffer to a location specified by a URI. |
+| Description | We should be able to save a flatbuffer to a location specified by a URI. |
 |Priority | 10|
 |Risk| low| 
 
@@ -36,7 +39,14 @@ Iroha stores all its data as flatbuffers. From the data storage to the user-faci
 |Title| Create Merkle tree from flatbuffers |
 | Description | A binary hash tree (Merkle tree) should be constructed from flatbuffers store in Ametsuchi. Digital signatures from the 2f+1 validating nodes should be stored with each Merkle root for the global and block-level roots. |
 |Priority | 10|
-|Risk| low| 
+|Risk| medium| 
+
+| Requirement ID | FR-03  |
+|---|---|
+|Title| Create cache of global state. |
+| Description | There should be a cache of the global state, calculated by applying the transactions in the ledger in order. For example, if a digital Yen asset is created and 100 Yen are sent to account *A*, then the cache of the global state will have some record like: **A: 100 Yen**. This cache needs to be updated *atomically* when new transactions are committed to the ledger. There should also be some way to audit this cache periodically to guarantee that it has not been hacked. An attacker could potentially hack this cache to change an account balance, without touching the confirmed ledger. This is a risk for financial applications, as APIs used in production apps will simply access this cache. |
+|Priority | 10|
+|Risk| high | 
 
 
 ##Non-functional requirements
