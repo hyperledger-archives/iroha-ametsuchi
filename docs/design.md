@@ -26,7 +26,7 @@ Iroha stores all its data as flatbuffers. From the data storage to the user-faci
 
 | Requirement ID | FR-01  |
 |---|---|
-|Title| Save freebuffers to a URI location.|
+|Title| Save flatbuffers to a URI location.|
 | Description | We should be able to save a freebuffer to a location specified by a URI. |
 |Priority | 10|
 |Risk| low| 
