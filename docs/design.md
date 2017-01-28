@@ -60,7 +60,7 @@ Below are some specific functional and non-functional requirements for Ametsuchi
 | Requirement ID | FR-05  |
 |---|---|
 |Title| Query for world state. |
-| Description |  |
+| Description | It should be possible to query for various parameters in the world state. For exmaple, to query for the balance of assets owned by an account. |
 |Priority | 10|
 |Risk| high | 
 
