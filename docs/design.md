@@ -50,7 +50,23 @@ Below are some specific functional and non-functional requirements for Ametsuchi
 |Priority | 10|
 |Risk| high | 
 
+| Requirement ID | FR-04  |
+|---|---|
+|Title| Query for freebuffers. |
+| Description | It should be possible to query for freebuffers using a programmatic API. |
+|Priority | 10|
+|Risk| high | 
+
+| Requirement ID | FR-05  |
+|---|---|
+|Title| Query for world state. |
+| Description | It should be possible to query for various parameters in the world state. For exmaple, to query for the balance of assets owned by an account. |
+|Priority | 10|
+|Risk| high | 
 
 ##Non-functional requirements
 
 
+###Security
+
+###Ease-of-use
