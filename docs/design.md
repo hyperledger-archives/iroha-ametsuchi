@@ -1,4 +1,6 @@
 #「天地」Ametsuchi's Design
+######アメツチホシソラヤマカハミネタニクモキリムロコケヒトイヌウエスヱユワサルオフセヨエノ枝ヲナレヰテ
+
 
 #Purpose of Iroha
 
@@ -10,13 +12,21 @@ Iroha will be the platform to easily manage any kind of digital asset, currency,
 
 #Iroha use cases
 
-##Financial instutions
+##Digital identity
 
 ##Supply chain management
 
 ##Electronic payments
 
 Electronic payments, especially mobile payments, can benefit from Iroha for managing digital currencies in real time. Iroha aims to achieve transaction finality within 2 seconds internally for many network configurations, so this allows for the creation of mobile apps for enabling face-to-face payments.
+
+##Stock/bond management
+
+##Health record management
+
+##Voting
+
+##Land registration
 
 
 #Iroha's use of Ametsuchi
@@ -60,7 +70,7 @@ Below are some specific functional and non-functional requirements for Ametsuchi
 | Requirement ID | FR-05  |
 |---|---|
 |Title| Query for world state. |
-| Description | It should be possible to query for various parameters in the world state. For exmaple, to query for the balance of assets owned by an account. |
+| Description | It should be possible to query for various parameters in the world state. For example, to query for the balance of assets owned by an account. |
 |Priority | 10|
 |Risk| high | 
 
