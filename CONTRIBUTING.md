@@ -2,11 +2,20 @@
 
 ## Project structure
 
-- `app`: headers and sources for executables
-- `docs`: documentation
-- `include`: library headers
-- `scripts`: development environment scripts
-- `src`: library sources
+- `.github/ISSUE_TEMPLATE.md`: template for GitHub issues
+- `.github/PULL_REQUEST_TEMPLATE.md`: template for GitHub pull requests
+- `build/`: CMake out-of-source build location
+- `docs/`: documentation
+- `include/ametsuchi`: headers
+- `scripts/`: dev scripts
+- `src/`: sources
+- `.clang-format`: [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) config, based on [Google C++ style guide](https://google.github.io/styleguide/cppguide.html)
+- `.editorconfig`: [EditorConfig](http://editorconfig.org/) config
+- `.gitignore`: [gitignore](https://git-scm.com/docs/gitignore) config
+- `CMakeLists.txt`: [CMake](https://cmake.org/) project definition
+- `CONTRIBUTING.md`: contains information for contributors
+- `LICENSE`: project license
+- `README.md`: The main introductory document for the project
 
 ## How to build
 
