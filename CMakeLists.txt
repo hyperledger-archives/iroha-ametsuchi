@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 project(ametsuchi VERSION 0.1.0 LANGUAGES CXX)
 
+
+
 # Detect currently used compiler.
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   set(CMAKE_COMPILER_IS_CLANGCXX 1)
@@ -11,6 +13,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   set(CMAKE_COMPILER_IS_INTELCXX 1)
 endif()
+
+
+
 
 # Compile the specified target as a modern, strict C++.
 function(StrictMode target)
@@ -39,65 +44,78 @@ function(StrictMode target)
   endif()
 endfunction()
 
+
+
+
 # Download all external projects in the specified directory.
 include(ExternalProject)
-set_directory_properties(PROPERTIES
+set_directory_properties(PROPERTIES 
   EP_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/external"
-)
-set(EXTERNAL "${CMAKE_CURRENT_SOURCE_DIR}/external/src")
-
-# Project dependencies.
-ExternalProject_Add(flatbuffers
-  GIT_REPOSITORY "https://github.com/google/flatbuffers.git"
-  GIT_TAG "v1.5.0"
-  EXCLUDE_FROM_ALL 1
-)
-ExternalProject_Add(spdlog
-  GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
-  GIT_TAG "v0.11.0"
-  EXCLUDE_FROM_ALL 1
 )
 
 # Library.
-add_library(libametsuchi
+set(LIBAMETSUCHI_NAME libametsuchi)
+add_library(${LIBAMETSUCHI_NAME}
   src/ametsuchi/Greeter.cc
-)
-target_include_directories(libametsuchi
-  # Library headers.
-  PUBLIC include
-  # Dependencies.
-  PRIVATE "${EXTERNAL}/flatbuffers/include"
-  PRIVATE "${EXTERNAL}/spdlog/include"
 )
 StrictMode(libametsuchi)
 
+
+
+# Project dependencies.
+# flatbuffers
+ExternalProject_Add(flatbuffers
+  GIT_REPOSITORY "https://github.com/google/flatbuffers.git"
+  GIT_TAG "v1.5.0"
+  INSTALL_COMMAND   ""
+  TEST_COMMAND      ""
+)
+ExternalProject_Get_Property(flatbuffers source_dir)
+set(flatbuffers_SOURCE_DIR "${source_dir}")
+
+
+# speedlog
+ExternalProject_Add(spdlog
+  GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
+  GIT_TAG "v0.11.0"
+  #CONFIGURE_COMMAND ""
+  #BUILD_COMMAND     ""
+  INSTALL_COMMAND   ""
+  TEST_COMMAND      ""
+)
+ExternalProject_Get_Property(spdlog source_dir)
+set(spdlog_SOURCE_DIR "${source_dir}")
+
+
+
+include_directories(
+  # Library headers.
+  PRIVATE "${PROJECT_SOURCE_DIR}/include"
+  # Dependencies.
+  PRIVATE "${flatbuffers_SOURCE_DIR}/include"
+  PRIVATE "${spdlog_SOURCE_DIR}/include"
+)
+
+
+
 # Executable.
-add_executable(ametsuchi src/main.cc)
-target_link_libraries(ametsuchi libametsuchi)
+set(AMETSUCHI_NAME ametsuchi)
+add_executable(${AMETSUCHI_NAME} 
+  src/main.cc
+)
+
+target_link_libraries(${AMETSUCHI_NAME} 
+  libametsuchi
+)
+add_dependencies(${AMETSUCHI_NAME} spdlog flatbuffers)
+set_target_properties(${AMETSUCHI_NAME} PROPERTIES COMPILE_FLAGS -pthread LINK_FLAGS -pthread)
 StrictMode(ametsuchi)
 
-# Test dependencies.
-ExternalProject_Add(catch
-  GIT_REPOSITORY "https://github.com/philsquared/Catch.git"
-  GIT_TAG "v.1.7.0"  # The dot after 'v' is intentional.
-  EXCLUDE_FROM_ALL 1
-)
 
-# Tests.
-add_executable(testametsuchi
-  test/main.cc
-)
-target_include_directories(testametsuchi
-  PRIVATE "${EXTERNAL}/catch/single_include"
-)
-target_link_libraries(testametsuchi
-  PRIVATE libametsuchi
-)
-StrictMode(testametsuchi)
 
 # Connect test executable and CMake test system.
 enable_testing()
-add_test(NAME test COMMAND testametsuchi)
+add_subdirectory(test)
 
 # Documentation.
 option(WITH_DOCS "Generate API documentation" ON)
