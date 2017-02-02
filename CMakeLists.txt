@@ -98,3 +98,20 @@ StrictMode(testametsuchi)
 # Connect test executable and CMake test system.
 enable_testing()
 add_test(NAME test COMMAND testametsuchi)
+
+# Documentation.
+option(WITH_DOCS "Generate API documentation" ON)
+if(WITH_DOCS)
+  find_package(Doxygen)
+  if(DOXYGEN_NOT_FOUND)
+    message(FATAL_ERROR "Doxygen not found")
+  endif()
+  set(DOC_SOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  set(DOC_HEADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in" Doxyfile
+    @ONLY
+    NEWLINE_STYLE LF
+  )
+  add_custom_target(docs ${DOXYGEN_EXECUTABLE})
+endif()
