@@ -3,7 +3,7 @@ project(ametsuchi VERSION 0.1.0 LANGUAGES CXX)
 
 add_executable(ametsuchi
   src/main.cc
-  src/test.cc
+  src/ametsuchi/Greeter.cc
 )
 
 target_include_directories(ametsuchi PRIVATE include)
