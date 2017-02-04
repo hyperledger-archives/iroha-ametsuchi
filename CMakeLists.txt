@@ -45,47 +45,7 @@ function(StrictMode target)
 endfunction()
 
 
-
-
-# Download all external projects in the specified directory.
-include(ExternalProject)
-set_directory_properties(PROPERTIES 
-  EP_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/external"
-)
-
-# Library.
-set(LIBAMETSUCHI_NAME libametsuchi)
-add_library(${LIBAMETSUCHI_NAME}
-  src/ametsuchi/Greeter.cc
-)
-StrictMode(libametsuchi)
-
-
-
-# Project dependencies.
-# flatbuffers
-ExternalProject_Add(flatbuffers
-  GIT_REPOSITORY "https://github.com/google/flatbuffers.git"
-  GIT_TAG "v1.5.0"
-  INSTALL_COMMAND   ""
-  TEST_COMMAND      ""
-)
-ExternalProject_Get_Property(flatbuffers source_dir)
-set(flatbuffers_SOURCE_DIR "${source_dir}")
-
-
-# speedlog
-ExternalProject_Add(spdlog
-  GIT_REPOSITORY "https://github.com/gabime/spdlog.git"
-  GIT_TAG "v0.11.0"
-  #CONFIGURE_COMMAND ""
-  #BUILD_COMMAND     ""
-  INSTALL_COMMAND   ""
-  TEST_COMMAND      ""
-)
-ExternalProject_Get_Property(spdlog source_dir)
-set(spdlog_SOURCE_DIR "${source_dir}")
-
+include(dependencies.cmake)
 
 
 include_directories(
@@ -94,22 +54,31 @@ include_directories(
   # Dependencies.
   PRIVATE "${flatbuffers_SOURCE_DIR}/include"
   PRIVATE "${spdlog_SOURCE_DIR}/include"
+  PRIVATE "${keccak_INCLUDE_DIR}"
 )
 
 
+# Library.
+set(LIBAMETSUCHI_NAME ametsuchi)
+add_library(${LIBAMETSUCHI_NAME}
+  ${PROJECT_SOURCE_DIR}/src/ametsuchi/ametsuchi.cc
+)
+StrictMode(${LIBAMETSUCHI_NAME})
 
-# Executable.
-set(AMETSUCHI_NAME ametsuchi)
+
+# Standalone executable.
+set(AMETSUCHI_NAME ametsuchi_db)
 add_executable(${AMETSUCHI_NAME} 
   src/main.cc
 )
-
 target_link_libraries(${AMETSUCHI_NAME} 
-  libametsuchi
+  ${LIBAMETSUCHI_NAME}
+  ${keccak_LINK_DIR}/libkeccak.a
 )
-add_dependencies(${AMETSUCHI_NAME} spdlog flatbuffers)
+add_dependencies(${AMETSUCHI_NAME} spdlog flatbuffers keccak)
 set_target_properties(${AMETSUCHI_NAME} PROPERTIES COMPILE_FLAGS -pthread LINK_FLAGS -pthread)
-StrictMode(ametsuchi)
+StrictMode(${AMETSUCHI_NAME})
+
 
 
 
