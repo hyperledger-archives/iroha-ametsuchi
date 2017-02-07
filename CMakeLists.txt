@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.0)
 project(ametsuchi VERSION 0.1.0 LANGUAGES CXX)
 
+option(AMETSUCHI_COMPILE_SCHEMA "Compile given schema (fbs file) using flatc" OFF)
 
 
 # Detect currently used compiler.
@@ -101,4 +102,24 @@ if(WITH_DOCS)
     NEWLINE_STYLE LF
   )
   add_custom_target(docs ${DOXYGEN_EXECUTABLE})
+endif()
+
+
+# set variable AMETSUCHI_COMPILE_SCHEMA to the path of fbs file
+if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
+  message(STATUS "Compiling ${AMETSUCHI_COMPILE_SCHEMA} schema.")
+  message(STATUS "Output will be: ${PROJECT_SOURCE_DIR}/include/ametsuchi/api_generated.h")
+
+  add_custom_command(
+    OUTPUT  api_generated.h
+    COMMAND ${flatbuffers_BINARY_DIR}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}  
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
+    COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
+  )
+
+  add_custom_target(compileSchema
+    DEPENDS api_generated.h
+    COMMENT "Generating header file to include/ametsuchi/api_generated.h")
+
+  add_dependencies(${LIBAMETSUCHI_NAME} compileSchema)
 endif()
