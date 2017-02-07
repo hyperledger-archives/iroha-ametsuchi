@@ -23,7 +23,7 @@ dependencies:
 
   post:
     # remove old build symbols 
-    - cd ${AMETSUCHI_HOME}/external/src/keccak 2>/dev/null; make clean 2>/dev/null
+    - (cd ${AMETSUCHI_HOME}/external/src/keccak && make clean) || echo "Suppress errors" 
 
 
 test:
