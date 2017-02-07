@@ -1,0 +1,17 @@
+machine:
+  timezone:
+    Europe/Moscow
+  environment:
+    AMETSUCHI_HOME: $(pwd)/iroha-ametsuchi
+
+checkout:
+  post:
+    - cd $AMETSUCHI_HOME
+
+test:
+  pre:
+    - mkdir build; cd build
+    - cmake ..
+    - make -j2
+  override:
+    - ctest
