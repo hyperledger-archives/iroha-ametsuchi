@@ -1,8 +1,3 @@
-# Tests.
-add_executable(testametsuchi
-  main.cc
-)
-
 # Test dependencies.
 ExternalProject_Add(catch
   GIT_REPOSITORY "https://github.com/philsquared/Catch.git"
@@ -15,6 +10,10 @@ ExternalProject_Add(catch
   UPDATE_COMMAND    "" # remove update step
 )
 
+# Tests.
+add_executable(testametsuchi
+  main.cc
+)
 
 target_include_directories(testametsuchi
   PRIVATE "${CMAKE_BINARY_DIR}/catch/single_include"
@@ -24,3 +23,4 @@ target_link_libraries(testametsuchi
   PRIVATE ${LIBAMETSUCHI_NAME}
 )
 
+add_test(testametsuchi testametsuchi)
