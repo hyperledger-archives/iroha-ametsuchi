@@ -30,4 +30,4 @@ test:
   pre:
     - cd ${AMETSUCHI_HOME}; mkdir build; cd build; cmake ..; make -j2
   override:
-    - ctest
+    - cd ${AMETSUCHI_HOME}/build; ctest
