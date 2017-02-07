@@ -10,8 +10,6 @@ checkout:
 
 test:
   pre:
-    - mkdir build; cd build
-    - cmake ..
-    - make -j2
+    - mkdir build; cd build; cmake ..; make -j2
   override:
     - ctest
