@@ -15,11 +15,9 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_AMETSUCHI_H_
-#define AMETSUCHI_AMETSUCHI_H_
+#ifndef AMETSUCHI_GLOBALS_H_
+#define AMETSUCHI_GLOBALS_H_
 
-namespace ametsuchi {
+const int PAGE_SIZE = 4096;  // bytes
 
-}
-
-#endif  // AMETSUCHI_AMETSUCHI_H_
+#endif  // AMETSUCHI_GLOBALS_H_

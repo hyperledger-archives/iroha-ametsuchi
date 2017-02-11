@@ -15,11 +15,25 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_AMETSUCHI_H_
-#define AMETSUCHI_AMETSUCHI_H_
+#ifndef AMETSUCHI_PAGER_MANAGER_H_
+#define AMETSUCHI_PAGER_MANAGER_H_
+
+#include <ametsuchi/globals.h>
+#include <stdint.h>
 
 namespace ametsuchi {
+namespace pager {
 
-}
+class Manager {
+ private:
+  extern const int PAGE_SIZE;  // defined in globals.h
 
-#endif  // AMETSUCHI_AMETSUCHI_H_
+  void read(uint64_t pageNumber);
+
+  void allocateNewPage();
+
+};
+
+}  // namespace pager
+}  // namespace ametsuchi
+#endif  // AMETSUCHI_PAGER_MANAGER_H_

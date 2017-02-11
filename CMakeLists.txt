@@ -1,7 +1,12 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 project(ametsuchi VERSION 0.1.0 LANGUAGES CXX)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
 option(AMETSUCHI_COMPILE_SCHEMA "Compile given schema (fbs file) using flatc" OFF)
+
 
 
 # Detect currently used compiler.
@@ -16,36 +21,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 endif()
 
 
-
-
-# Compile the specified target as a modern, strict C++.
-function(StrictMode target)
-  # Require pure C++14 standard.
-  set_target_properties(${target} PROPERTIES
-    CXX_STANDARD 14
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-  )
-  # Enable more warnings and turn them into compile errors.
-  if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGCXX)
-    target_compile_options(${target} PRIVATE
-      -Wall
-      -Wextra
-      -Werror
-    )
-  elseif(CMAKE_COMPILER_IS_MSVCCXX OR CMAKE_COMPILER_IS_INTELCXX)
-    target_compile_options(${target} PRIVATE
-      /W3
-      /WX
-    )
-  else()
-    message(AUTHOR_WARNING
-      "Unknown compiler: building target ${target} with default options"
-    )
-  endif()
-endfunction()
-
-
+include(functions.cmake)
 include(dependencies.cmake)
 
 
@@ -69,10 +45,10 @@ StrictMode(${LIBAMETSUCHI_NAME})
 
 # Standalone executable.
 set(AMETSUCHI_NAME ametsuchi_db)
-add_executable(${AMETSUCHI_NAME} 
+add_executable(${AMETSUCHI_NAME}
   src/main.cc
 )
-target_link_libraries(${AMETSUCHI_NAME} 
+target_link_libraries(${AMETSUCHI_NAME}
   ${LIBAMETSUCHI_NAME}
   ${keccak_LINK_DIR}/libkeccak.a
 )
@@ -112,7 +88,7 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
 
   add_custom_command(
     OUTPUT  api_generated.h
-    COMMAND ${flatbuffers_BINARY_DIR}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}  
+    COMMAND ${flatbuffers_BINARY_DIR}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
     COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
   )
