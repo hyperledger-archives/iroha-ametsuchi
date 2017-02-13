@@ -5,8 +5,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-option(AMETSUCHI_COMPILE_SCHEMA "Compile given schema (fbs file) using flatc" OFF)
-
+option(SCHEMA "Compile given schema (fbs file) using flatc" OFF)
+option(BENCHMARKING "Build benchmarks" ON)
 
 
 # Detect currently used compiler.
@@ -99,3 +99,10 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
 
   add_dependencies(${LIBAMETSUCHI_NAME} compileSchema)
 endif()
+
+
+if (BENCHMARKING)
+  add_subdirectory(benchmark)
+endif(BENCHMARKING)
+
+message(STATUS  "Build type: ${CMAKE_BUILD_TYPE}")

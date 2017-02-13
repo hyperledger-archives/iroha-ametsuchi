@@ -74,3 +74,21 @@ set(gtest_BINARY_DIR   ${binary_dir})
 set(gtest_INCLUDE_DIR  ${gtest_SOURCE_DIR}/googletest/include)
 set(gtest_LINK_DIR     ${gtest_BINARY_DIR}/googlemock/gtest)
 set(gtest_LIBRARIES    ${gtest_LINK_DIR}/libgtest.a ${gtest_LINK_DIR}/libgtest_main.a)
+
+
+# BENCHMARKING is an option
+if(BENCHMARKING)
+  ##############################
+  #         benchmark          #
+  ##############################
+  ExternalProject_Add(gbenchmark
+    GIT_REPOSITORY    "https://github.com/google/benchmark.git"
+    CONFIGURE_COMMAND cmake ${EP_PREFIX}/src/gbenchmark -DBENCHMARK_ENABLE_TESTING=Off -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    INSTALL_COMMAND   "" # remove install step
+    UPDATE_COMMAND    "" # remove update step
+    TEST_COMMAND      "" # remove test step
+    )
+  ExternalProject_Get_Property(gbenchmark source_dir binary_dir)
+  set(gbenchmark_INCLUDE_DIR ${source_dir}/include)
+  set(gbenchmark_LINK_FILES ${binary_dir}/src/libbenchmark.a pthread)
+endif(BENCHMARKING)

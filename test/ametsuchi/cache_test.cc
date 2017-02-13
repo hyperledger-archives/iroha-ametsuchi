@@ -18,16 +18,21 @@
 #include <gtest/gtest.h>
 
 #include <ametsuchi/cache.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <chrono>
 #include <string>
+#include <vector>
 
 namespace ametsuchi {
 
 template <typename T>
 struct counter {
   counter() {}
-  void operator=(const counter&) { ++objects_created; }
-  counter(const counter&) { ++objects_created; }
-  counter(const counter&&) {}
+  void operator=(const counter&) { ++objects_created; }  // copy, bad
+  void operator=(const counter&&) {}                     // move, ok
+  counter(const counter&) { ++objects_created; }         // copy, bad
+  counter(const counter&&) {}                            // move, ok
   static int objects_created;
 };
 
@@ -38,48 +43,68 @@ class Copyable : public counter<Copyable> {
  public:
   int x;
   explicit Copyable(int x) : x(x) {}
-
-  operator int(){ return x;}
-
-  int get(){ return x;}
 };
+
+std::list<uint32_t> generateAccessSequence(uint32_t start, uint32_t end,
+                                           uint32_t len);
 
 // less copies = better. In our case, we should have 0 copies.
 TEST(CacheTest, CountCopies) {
   int maxSize = 10;
   Cache<int, Copyable> cache(maxSize);
 
+  // pass by address
   for (int i = 0; i < maxSize; i++) {
-    auto obj = ametsuchi::Copyable(i);
-    cache.put(i, obj);
+    Copyable obj(i);
+    cache.put(i, std::move(obj));
     auto q = cache.get(i);
-    if (q) {
-      ASSERT_EQ(q->x, obj.x);
-    } else {
-      ASSERT_EQ(q, nullptr);
-    }
+    ASSERT_NE(q, nullptr);
+    ASSERT_EQ(q->x, i);
   }
+
+  // we moved temp items to cache, check if we still can access them after their
+  auto q = cache.get(1);
+  ASSERT_NE(q, nullptr);
+  ASSERT_EQ(q->x, 1);
 
   EXPECT_EQ(Copyable::objects_created, 0) << "objects should not be copied";
 }
 
 TEST(CacheTest, PutAndGet) {
-  int maxSize = 10;
+  int maxSize = 5;
   Cache<int, int> cache(maxSize);
 
   cache.put(1, 1);
   cache.put(2, 2);
   cache.put(3, 3);
-  ASSERT_EQ(*cache.get(1), 1);
-  ASSERT_EQ(*cache.get(2), 2);
-  ASSERT_EQ(*cache.get(3), 3);
-  cache.print_state();
+  EXPECT_EQ(*cache.get(1), 1);
+  EXPECT_EQ(*cache.get(2), 2);
+  EXPECT_EQ(*cache.get(3), 3);
+  EXPECT_EQ(*cache.get(1), 1);
 
   cache.put(1, 2);
-  cache.print_state();
-  ASSERT_EQ(*cache.get(1), 2) << "put existing key, but different object";
+  EXPECT_EQ(*cache.get(1), 2) << "put existing key, but different value";
 
-  ASSERT_EQ(cache.get(4), nullptr) << "non-existent key should return nullptr";
+  EXPECT_EQ(cache.get(4), nullptr) << "non-existent key should return nullptr";
+
+  // add more than MAX items
+  cache.put(1, 1);  // will be removed
+  cache.put(2, 2);  // will be removed
+  cache.put(3, 3);  // will be removed
+  cache.put(4, 4);  // 5
+  cache.put(5, 5);  // 4
+  cache.put(6, 6);  // 3
+  cache.put(7, 7);  // 2
+  cache.put(8, 8);  // 1
+
+  EXPECT_EQ(cache.get(1), nullptr);
+  EXPECT_EQ(cache.get(2), nullptr);
+  EXPECT_EQ(cache.get(3), nullptr);
+  EXPECT_EQ(*cache.get(4), 4);
+  EXPECT_EQ(*cache.get(5), 5);
+  EXPECT_EQ(*cache.get(6), 6);
+  EXPECT_EQ(*cache.get(7), 7);
+  EXPECT_EQ(*cache.get(8), 8);
 }
 
-}
+}  // namespace ametsuchi

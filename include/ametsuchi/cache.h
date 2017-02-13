@@ -25,6 +25,17 @@
 
 namespace ametsuchi {
 
+/**
+ * Implementation of LRU (last recently used) in-memory cache.
+ * Implements move semantics -- it means, that it should "own" data item:
+ *    Example:
+ *       Cache<int, Object> cache(1024);
+ *       Object obj;
+ *       cache.put(1, std::move(obj)); // obj will be nullptr, cache owns memory
+ *
+ * @tparam K key, everything is accessed through key
+ * @tparam V value to be stored in a cache
+ */
 template <typename K, typename V>
 class Cache {
  public:
@@ -46,13 +57,13 @@ class Cache {
         // then move it to begin, O(1)
         _list.splice(_list.begin(), _list, list_iter, std::next(list_iter));
       }
-      list_iter.second = value;
-
+      list_iter->second = value;
 
     } else {                                     // key not found
       if (_list.size() == this->maxCacheSize) {  // cache is full
         auto lruPageKey = _list.back().first;    // O(1)
         _map.erase(lruPageKey);                  // O(1)
+        _list.pop_back();
       }
 
       // add to the begin of list (now current page is MRU page), O(1)
@@ -60,10 +71,6 @@ class Cache {
       _map[key] = _list.begin();  // O(1)
     }
   }
-
-  void put(K key, V& value) { this->put(key, std::forward<V>(value)); }
-
-  void put(K key, V* value) { this->put(key, std::forward<V>(*value)); }
 
   /**
    * Get item from cache. If cache miss - returns nullptr.
@@ -86,13 +93,6 @@ class Cache {
     }
   }
 
-  void print_state(){
-    printf("List:\n");
-    for(auto it=_list.begin(); it!=_list.end(); it++){
-      printf("(%d[%d]) <-> ", it->first, it->second);
-    }
-    printf("\n\n");
-  }
 
  private:
   using entry_t = typename std::pair<K, V>;
