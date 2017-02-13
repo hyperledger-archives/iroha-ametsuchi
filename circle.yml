@@ -2,7 +2,7 @@ machine:
   timezone:
     Europe/Moscow
   environment:
-    AMETSUCHI_HOME: ~/iroha-ametsuchi
+    AMETSUCHI_HOME: $(pwd)/iroha-ametsuchi
 
 checkout:
   post:
