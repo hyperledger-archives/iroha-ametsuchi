@@ -2,7 +2,7 @@ machine:
   timezone:
     Europe/Moscow
   environment:
-    AMETSUCHI_HOME: $(pwd)/iroha-ametsuchi
+    AMETSUCHI_HOME: ~/iroha-ametsuchi
 
 checkout:
   post:
@@ -19,6 +19,7 @@ dependencies:
     - ${AMETSUCHI_HOME}/external/src/gtest
     - ${AMETSUCHI_HOME}/external/src/flatbuffers
     - ${AMETSUCHI_HOME}/external/src/spdlog
+    - ${AMETSUCHI_HOME}/external/src/benchmarking
     - ${AMETSUCHI_HOME}/external/src/keccak
 
   post:
@@ -28,6 +29,6 @@ dependencies:
 
 test:
   pre:
-    - cd ${AMETSUCHI_HOME}; mkdir build; cd build; cmake ..; make -j2
+    - cd ${AMETSUCHI_HOME}; mkdir build; cd build; cmake .. -DTESTING=ON; make -j2
   override:
     - cd ${AMETSUCHI_HOME}/build; ctest

@@ -6,8 +6,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 option(SCHEMA "Compile given schema (fbs file) using flatc" OFF)
-option(BENCHMARKING "Build benchmarks" ON)
-option(WITHOUT_TESTS "Build project without tests" OFF)
+option(BENCHMARKING "Build benchmarks" OFF)
+option(TESTING "Build project without tests" OFF)
+option(DOCS "Generate API documentation" OFF)
+
+
+# set default CMAKE_BUILD_TYPE=Debug
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
 
 
 # Detect currently used compiler.
@@ -44,23 +51,9 @@ add_library(${LIBAMETSUCHI_NAME}
 StrictMode(${LIBAMETSUCHI_NAME})
 
 
-# Standalone executable.
-set(AMETSUCHI_NAME ametsuchi_db)
-add_executable(${AMETSUCHI_NAME}
-  src/main.cc
-)
-target_link_libraries(${AMETSUCHI_NAME}
-  ${LIBAMETSUCHI_NAME}
-  ${keccak_LINK_DIR}/libkeccak.a
-)
-add_dependencies(${AMETSUCHI_NAME} spdlog flatbuffers keccak)
-set_target_properties(${AMETSUCHI_NAME} PROPERTIES COMPILE_FLAGS -pthread LINK_FLAGS -pthread)
-StrictMode(${AMETSUCHI_NAME})
-
-
 # Documentation.
-option(WITH_DOCS "Generate API documentation" ON)
-if(WITH_DOCS)
+if(DOCS)
+  message(STATUS "Build with docs")
   find_package(Doxygen)
   if(DOXYGEN_NOT_FOUND)
     message(FATAL_ERROR "Doxygen not found")
@@ -73,7 +66,7 @@ if(WITH_DOCS)
     NEWLINE_STYLE LF
   )
   add_custom_target(docs ${DOXYGEN_EXECUTABLE})
-endif()
+endif(DOCS)
 
 
 # set variable AMETSUCHI_COMPILE_SCHEMA to the path of fbs file
@@ -96,15 +89,17 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
 endif()
 
 
-if(NOT WITHOUT_TESTS)
+if(TESTING)
   # Connect test executable and CMake test system.
   message(STATUS "Testing is ON")
   enable_testing()
   add_subdirectory(test)
-endif()
+endif(TESTING)
 
-if (BENCHMARKING)
+
+if(BENCHMARKING)
   add_subdirectory(benchmark)
 endif(BENCHMARKING)
+
 
 message(STATUS  "Build type: ${CMAKE_BUILD_TYPE}")

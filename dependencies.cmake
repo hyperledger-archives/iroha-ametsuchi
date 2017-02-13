@@ -56,24 +56,26 @@ set(keccak_INCLUDE_DIR ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a.headers)
 set(keccak_LINK_DIR    ${keccak_SOURCE_DIR}/bin/generic64)
 
 
-##########################
-#         gtest          #
-##########################
-find_package(Threads REQUIRED)
-set(GTEST_FORCE_SHARED_CRT ON)
-set(GTEST_DISABLE_PTHREADS OFF)
-ExternalProject_Add(gtest
-  GIT_REPOSITORY    "https://github.com/google/googletest.git"
-  INSTALL_COMMAND   "" # remove install step
-  UPDATE_COMMAND    "" # remove update step
-  TEST_COMMAND      "" # remove test step
-)
-ExternalProject_Get_Property(gtest source_dir binary_dir)
-set(gtest_SOURCE_DIR   ${source_dir})
-set(gtest_BINARY_DIR   ${binary_dir})
-set(gtest_INCLUDE_DIR  ${gtest_SOURCE_DIR}/googletest/include)
-set(gtest_LINK_DIR     ${gtest_BINARY_DIR}/googlemock/gtest)
-set(gtest_LIBRARIES    ${gtest_LINK_DIR}/libgtest.a ${gtest_LINK_DIR}/libgtest_main.a)
+if(TESTING)
+  ##########################
+  #         gtest          #
+  ##########################
+  find_package(Threads REQUIRED)
+  set(GTEST_FORCE_SHARED_CRT ON)
+  set(GTEST_DISABLE_PTHREADS OFF)
+  ExternalProject_Add(gtest
+    GIT_REPOSITORY    "https://github.com/google/googletest.git"
+    INSTALL_COMMAND   "" # remove install step
+    UPDATE_COMMAND    "" # remove update step
+    TEST_COMMAND      "" # remove test step
+  )
+  ExternalProject_Get_Property(gtest source_dir binary_dir)
+  set(gtest_SOURCE_DIR   ${source_dir})
+  set(gtest_BINARY_DIR   ${binary_dir})
+  set(gtest_INCLUDE_DIR  ${gtest_SOURCE_DIR}/googletest/include)
+  set(gtest_LINK_DIR     ${gtest_BINARY_DIR}/googlemock/gtest)
+  set(gtest_LIBRARIES    ${gtest_LINK_DIR}/libgtest.a ${gtest_LINK_DIR}/libgtest_main.a)
+endif(TESTING)
 
 
 # BENCHMARKING is an option
@@ -90,5 +92,5 @@ if(BENCHMARKING)
     )
   ExternalProject_Get_Property(gbenchmark source_dir binary_dir)
   set(gbenchmark_INCLUDE_DIR ${source_dir}/include)
-  set(gbenchmark_LINK_FILES ${binary_dir}/src/libbenchmark.a pthread)
+  set(gbenchmark_LINK_FILES ${binary_dir}/src/libbenchmark.a ${CMAKE_THREAD_LIBS_INIT})
 endif(BENCHMARKING)
