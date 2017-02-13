@@ -58,17 +58,18 @@ class Cache {
         _list.splice(_list.begin(), _list, list_iter, std::next(list_iter));
       }
       list_iter->second = value;
-
     } else {                                     // key not found
-      if (_list.size() == this->maxCacheSize) {  // cache is full
+      if (currentSize == this->maxCacheSize) {  // cache is full
         auto lruPageKey = _list.back().first;    // O(1)
         _map.erase(lruPageKey);                  // O(1)
         _list.pop_back();
+        currentSize--;
       }
 
       // add to the begin of list (now current page is MRU page), O(1)
       _list.push_front(std::make_pair(key, std::forward<V>(value)));
       _map[key] = _list.begin();  // O(1)
+      currentSize++;
     }
   }
 

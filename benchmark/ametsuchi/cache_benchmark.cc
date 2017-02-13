@@ -38,77 +38,49 @@ std::list<uint32_t> generateAccessSequence(uint32_t start, uint32_t end,
   return ret;
 }
 
-static void Cache_PutExisting(benchmark::State& state) {
-  ametsuchi::Cache<int, int> cache(64);
-  while (state.KeepRunning()) {
-    cache.put(1, 1);
-  }
-}
+static void Cache_RandomAccess(benchmark::State& state) {
+  // unit of storage
+  struct Page {
+    char buf[4096];
+  };
 
-static void Cache_PutNonExisting(benchmark::State& state) {
-  ametsuchi::Cache<int, int> cache(64);
-  uint64_t key = 0;
+  auto sequence = generateAccessSequence(0, state.range(0), state.range(1));
+  auto begin = sequence.begin();
+  auto end = sequence.end();
+  ametsuchi::Cache<int, Page> cache(state.range(2));
+  uint64_t items = 0;
   while (state.KeepRunning()) {
+    // simulate cache
+    auto item = cache.get(*begin);
+    if (item == nullptr) {
+      cache.put(*begin, std::move(Page()));
+    }
+
     state.PauseTiming();
-    uint32_t r = rand();
-    key++;
-    state.ResumeTiming();
-    cache.put(key, std::move(r));
-  }
-}
+    if (begin == end)
+      begin = sequence.begin();
+    else
+      ++begin;
 
-static void Cache_PutRandom(benchmark::State& state) {
-  uint32_t maxSize = 64;
-  ametsuchi::Cache<uint32_t, uint32_t> cache(maxSize);
-  while (state.KeepRunning()) {
-    state.PauseTiming();
-    uint32_t rk = rand() % maxSize;  // random key
-    uint32_t rv = rand() % maxSize;  // random value
-    state.ResumeTiming();
-    cache.put(rk, std::move(rv));
-  }
-}
-
-static void Cache_GetExisting(benchmark::State& state) {
-  uint32_t maxSize = 64;
-  ametsuchi::Cache<uint32_t, uint32_t> cache(maxSize);
-  cache.put(1, 100);
-  while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(cache.get(1));
-  }
-}
-
-static void Cache_GetNonExisting(benchmark::State& state) {
-  uint32_t maxSize = 64;
-  ametsuchi::Cache<uint32_t, uint32_t> cache(maxSize);
-  cache.put(1, 100);
-  while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(cache.get(2));
-  }
-}
-
-static void Cache_GetRandom(benchmark::State& state) {
-  uint32_t maxSize = 64;
-  ametsuchi::Cache<uint32_t, uint32_t> cache(maxSize);
-  auto put = generateAccessSequence(0, maxSize, maxSize);
-  std::for_each(put.begin(), put.end(),
-                [&cache](uint32_t i) { cache.put(i, std::move(i)); });
-
-  auto get = generateAccessSequence(0, maxSize, maxSize);
-  auto it = get.begin();
-  while (state.KeepRunning()) {
-    cache.get(*it);
-    state.PauseTiming();
-    if (++it == get.end()) it = get.begin();
+    items++;
     state.ResumeTiming();
   }
+
+  state.SetBytesProcessed(sizeof(Page) * static_cast<uint64_t>(state.range(1)) *
+                          static_cast<uint64_t>(state.iterations()));
+
+  state.SetItemsProcessed(items);
 }
 
-BENCHMARK(Cache_PutExisting);
-BENCHMARK(Cache_PutNonExisting);
-BENCHMARK(Cache_PutRandom);
-BENCHMARK(Cache_GetExisting);
-BENCHMARK(Cache_GetNonExisting);
-BENCHMARK(Cache_GetRandom);
+/**
+ * We generate a sequence of "accesses" to pages (just numbers).
+ * It is from 0 to {1 << 8, 1 << 15} (state.range(0))
+ * Length of this sequence is {1 << 15, 1 << 16} (stage.range(1))
+ * {256, 256} - is cache size (items)
+ */
+BENCHMARK(Cache_RandomAccess)
+    ->RangeMultiplier(2)
+    ->Ranges({{1 << 8, 1 << 15}, {1 << 15, 1 << 16}, {256, 256}})
+    ->Complexity(benchmark::oAuto);
 
 BENCHMARK_MAIN();
