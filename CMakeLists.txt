@@ -7,6 +7,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 option(SCHEMA "Compile given schema (fbs file) using flatc" OFF)
 option(BENCHMARKING "Build benchmarks" ON)
+option(WITHOUT_TESTS "Build project without tests" OFF)
 
 
 # Detect currently used compiler.
@@ -57,12 +58,6 @@ set_target_properties(${AMETSUCHI_NAME} PROPERTIES COMPILE_FLAGS -pthread LINK_F
 StrictMode(${AMETSUCHI_NAME})
 
 
-
-
-# Connect test executable and CMake test system.
-enable_testing()
-add_subdirectory(test)
-
 # Documentation.
 option(WITH_DOCS "Generate API documentation" ON)
 if(WITH_DOCS)
@@ -100,6 +95,13 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
   add_dependencies(${LIBAMETSUCHI_NAME} compileSchema)
 endif()
 
+
+if(NOT WITHOUT_TESTS)
+  # Connect test executable and CMake test system.
+  message(STATUS "Testing is ON")
+  enable_testing()
+  add_subdirectory(test)
+endif()
 
 if (BENCHMARKING)
   add_subdirectory(benchmark)
