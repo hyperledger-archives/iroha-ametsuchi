@@ -16,18 +16,19 @@ checkout:
 
 dependencies:
   cache_directories:
-    - ${AMETSUCHI_HOME}/external/src/catch
+    - ${AMETSUCHI_HOME}/external/src/gtest
     - ${AMETSUCHI_HOME}/external/src/flatbuffers
     - ${AMETSUCHI_HOME}/external/src/spdlog
+    - ${AMETSUCHI_HOME}/external/src/benchmarking
     - ${AMETSUCHI_HOME}/external/src/keccak
 
   post:
-    # remove old build symbols 
-    - (cd ${AMETSUCHI_HOME}/external/src/keccak && make clean) || echo "Suppress errors" 
+    # remove old build symbols
+    - (cd ${AMETSUCHI_HOME}/external/src/keccak && make clean) || echo "Suppress errors"
 
 
 test:
   pre:
-    - cd ${AMETSUCHI_HOME}; mkdir build; cd build; cmake ..; make -j2
+    - cd ${AMETSUCHI_HOME}; mkdir build; cd build; cmake .. -DTESTING=ON; make -j2
   override:
     - cd ${AMETSUCHI_HOME}/build; ctest

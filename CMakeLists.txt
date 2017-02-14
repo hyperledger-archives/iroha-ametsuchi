@@ -1,7 +1,25 @@
-cmake_minimum_required(VERSION 3.0)
-project(ametsuchi VERSION 0.1.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+# we need both C and CXX, without C pthread won't be compiled, causing build error
+project(ametsuchi VERSION 0.1.0 LANGUAGES C CXX)
 
-option(AMETSUCHI_COMPILE_SCHEMA "Compile given schema (fbs file) using flatc" OFF)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
+option(SCHEMA "Compile given schema (fbs file) using flatc" OFF)
+option(BENCHMARKING "Build benchmarks" OFF)
+option(TESTING "Build project without tests" OFF)
+option(DOCS "Generate API documentation" OFF)
+
+
+# set default CMAKE_BUILD_TYPE=Debug
+if (NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
+message(STATUS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+message(STATUS "-DTESTING=${TESTING}")
+message(STATUS "-DBENCHMARKING=${BENCHMARKING}")
+message(STATUS "-DDOCS=${DOCS}")
 
 
 # Detect currently used compiler.
@@ -16,36 +34,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 endif()
 
 
-
-
-# Compile the specified target as a modern, strict C++.
-function(StrictMode target)
-  # Require pure C++14 standard.
-  set_target_properties(${target} PROPERTIES
-    CXX_STANDARD 14
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-  )
-  # Enable more warnings and turn them into compile errors.
-  if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGCXX)
-    target_compile_options(${target} PRIVATE
-      -Wall
-      -Wextra
-      -Werror
-    )
-  elseif(CMAKE_COMPILER_IS_MSVCCXX OR CMAKE_COMPILER_IS_INTELCXX)
-    target_compile_options(${target} PRIVATE
-      /W3
-      /WX
-    )
-  else()
-    message(AUTHOR_WARNING
-      "Unknown compiler: building target ${target} with default options"
-    )
-  endif()
-endfunction()
-
-
+include(functions.cmake)
 include(dependencies.cmake)
 
 
@@ -67,42 +56,23 @@ add_library(${LIBAMETSUCHI_NAME}
 StrictMode(${LIBAMETSUCHI_NAME})
 
 
-# Standalone executable.
-set(AMETSUCHI_NAME ametsuchi_db)
-add_executable(${AMETSUCHI_NAME} 
-  src/main.cc
-)
-target_link_libraries(${AMETSUCHI_NAME} 
-  ${LIBAMETSUCHI_NAME}
-  ${keccak_LINK_DIR}/libkeccak.a
-)
-add_dependencies(${AMETSUCHI_NAME} spdlog flatbuffers keccak)
-set_target_properties(${AMETSUCHI_NAME} PROPERTIES COMPILE_FLAGS -pthread LINK_FLAGS -pthread)
-StrictMode(${AMETSUCHI_NAME})
-
-
-
-
-# Connect test executable and CMake test system.
-enable_testing()
-add_subdirectory(test)
-
 # Documentation.
-option(WITH_DOCS "Generate API documentation" ON)
-if(WITH_DOCS)
+if(DOCS)
   find_package(Doxygen)
   if(DOXYGEN_NOT_FOUND)
     message(FATAL_ERROR "Doxygen not found")
   endif()
   set(DOC_SOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
   set(DOC_HEADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
-  configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in" Doxyfile
-    @ONLY
-    NEWLINE_STYLE LF
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  add_custom_target(
+    doc ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} ${DOC_DOXYFILE}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM
   )
-  add_custom_target(docs ${DOXYGEN_EXECUTABLE})
-endif()
+endif(DOCS)
 
 
 # set variable AMETSUCHI_COMPILE_SCHEMA to the path of fbs file
@@ -112,7 +82,7 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
 
   add_custom_command(
     OUTPUT  api_generated.h
-    COMMAND ${flatbuffers_BINARY_DIR}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}  
+    COMMAND ${flatbuffers_BINARY_DIR}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
     COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
   )
@@ -123,3 +93,18 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
 
   add_dependencies(${LIBAMETSUCHI_NAME} compileSchema)
 endif()
+
+
+if(TESTING)
+  # Connect test executable and CMake test system.
+  enable_testing()
+  add_subdirectory(test)
+endif(TESTING)
+
+
+if(BENCHMARKING)
+  add_subdirectory(benchmark)
+endif(BENCHMARKING)
+
+
+

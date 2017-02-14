@@ -15,11 +15,16 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_AMETSUCHI_H_
-#define AMETSUCHI_AMETSUCHI_H_
+#include <ametsuchi/pager/manager.h>
 
-namespace ametsuchi {
+namespace ametsuchi{
+namespace pager{
+
+void Manager::read(uint64_t pageNumber){}
+
+void Manager::allocateEmptyPage(){
 
 }
 
-#endif  // AMETSUCHI_AMETSUCHI_H_
+}
+}

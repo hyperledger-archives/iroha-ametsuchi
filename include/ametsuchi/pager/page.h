@@ -15,11 +15,43 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_AMETSUCHI_H_
-#define AMETSUCHI_AMETSUCHI_H_
+#ifndef AMETSUCHI_PAGER_PAGE_H_
+#define AMETSUCHI_PAGER_PAGE_H_
+
+#include <stdint.h>  // for uintX_t
 
 namespace ametsuchi {
+namespace pager {
 
-}
 
-#endif  // AMETSUCHI_AMETSUCHI_H_
+enum class PageType : uint8_t { DATA_ITEM, MERKLE_NODE, INDEX_NODE };
+
+
+enum class SpanningItem : uint8_t {
+  NO_SPANNING,
+  SINGLE_PREFIX,
+  SINGLE_SUFFIX,
+  SINGLE_PREFIX_AND_SUFFIX,
+  SINGLE_INFIX
+};
+
+
+struct PageDirectory {
+  uint16_t offset;
+  uint16_t length;
+};
+
+
+struct Page {
+  PageType pageType;
+  SpanningItem spanningItems;
+  uint16_t entryCount;
+
+  uint32_t pageDorectoryCount;
+  PageDirectory* dataItems;
+};
+
+}  // namespace pager
+}  // namespace ametsuchi
+
+#endif  // AMETSUCHI_PAGER_PAGE_H_
