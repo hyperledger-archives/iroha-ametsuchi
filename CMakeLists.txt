@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
-# we need both C and CXX, without C pthreads won't be compiled, causing build error
+# we need both C and CXX, without C pthread won't be compiled, causing build error
 project(ametsuchi VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -58,19 +58,20 @@ StrictMode(${LIBAMETSUCHI_NAME})
 
 # Documentation.
 if(DOCS)
-  message(STATUS "Build with docs")
   find_package(Doxygen)
   if(DOXYGEN_NOT_FOUND)
     message(FATAL_ERROR "Doxygen not found")
   endif()
   set(DOC_SOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
   set(DOC_HEADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
-  configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in" Doxyfile
-    @ONLY
-    NEWLINE_STYLE LF
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  add_custom_target(
+    doc ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} ${DOC_DOXYFILE}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM
   )
-  add_custom_target(docs ${DOXYGEN_EXECUTABLE})
 endif(DOCS)
 
 
