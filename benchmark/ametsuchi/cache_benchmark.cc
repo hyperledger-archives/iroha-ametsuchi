@@ -22,10 +22,10 @@
 
 /**
  * Generates a list of `len` random numbers in range [start; end]
- * @param start
- * @param end
- * @param len
- * @return
+ * @param start - min item in sequence
+ * @param end - max item in sequence
+ * @param len - length of a sequence
+ * @return returns std::list of random integers
  */
 std::list<uint32_t> generateAccessSequence(uint32_t start, uint32_t end,
                                            uint32_t len) {
@@ -74,8 +74,8 @@ static void Cache_RandomAccess(benchmark::State& state) {
 
 /**
  * We generate a sequence of "accesses" to pages (just numbers).
- * It is from 0 to {1 << 8, 1 << 15} (state.range(0))
- * Length of this sequence is {1 << 15, 1 << 16} (stage.range(1))
+ * It is from 1 << 8 to 1 << 15 (state.range(0))
+ * Length of this sequence is from 1 << 15 to 1 << 16 (stage.range(1))
  * {256, 256} - is cache size (items)
  */
 BENCHMARK(Cache_RandomAccess)

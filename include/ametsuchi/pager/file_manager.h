@@ -15,11 +15,17 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_GLOBALS_H_
-#define AMETSUCHI_GLOBALS_H_
+#ifndef AMETSUCHI_PAGER_FILE_MANAGER_H_
+#define AMETSUCHI_PAGER_FILE_MANAGER_H_
 
-namespace ametsuchi {
-#define AMETSUCHI_PAGE_SIZE (4096)  // bytes
+namespace ametsuchi{
+namespace pager{
+
+class FileManager{
+
+};
+
+}
 }
 
-#endif  // AMETSUCHI_GLOBALS_H_
+#endif  // AMETSUCHI_PAGER_FILE_MANAGER_H_

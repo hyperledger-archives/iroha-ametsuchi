@@ -107,4 +107,36 @@ TEST(CacheTest, PutAndGet) {
   EXPECT_EQ(*cache.get(8), 8);
 }
 
+TEST(CacheTest, RemoveAndSize) {
+  int maxSize = 10;
+  Cache<int, int> cache(maxSize);
+
+  for (int i = 0; i < maxSize; i++) {
+    cache.put(i, i + 1);
+    ASSERT_EQ(cache.size(), i + 1u);
+  }
+
+  // ensure size decreased
+  for (int i = 0; i < maxSize; i++) {
+    auto size = cache.size();
+    auto item = cache.remove(i);
+    ASSERT_EQ(cache.size(), size - 1);
+    ASSERT_EQ(item, true);
+  }
+  ASSERT_EQ(cache.size(), 0u);
+}
+
+TEST(CacheTest, Clear){
+  int maxSize = 10;
+  Cache<int, int> cache(maxSize);
+
+  for (int i = 0; i < maxSize; i++) {
+    cache.put(i, i + 1);
+  }
+
+  cache.clear();
+
+  ASSERT_EQ(cache.size(), 0u);
+}
+
 }  // namespace ametsuchi

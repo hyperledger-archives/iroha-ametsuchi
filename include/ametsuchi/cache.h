@@ -29,8 +29,11 @@ namespace ametsuchi {
  * Implementation of LRU (last recently used) in-memory cache.
  * Implements move semantics -- it means, that it should "own" data item:
  *    Example:
+ *
  *       Cache<int, Object> cache(1024);
+ *
  *       Object obj;
+ *
  *       cache.put(1, std::move(obj)); // obj will be nullptr, cache owns memory
  *
  * @tparam K key, everything is accessed through key
@@ -58,10 +61,10 @@ class Cache {
         _list.splice(_list.begin(), _list, list_iter, std::next(list_iter));
       }
       list_iter->second = value;
-    } else {                                     // key not found
+    } else {                                    // key not found
       if (currentSize == this->maxCacheSize) {  // cache is full
-        auto lruPageKey = _list.back().first;    // O(1)
-        _map.erase(lruPageKey);                  // O(1)
+        auto lruPageKey = _list.back().first;   // O(1)
+        _map.erase(lruPageKey);                 // O(1)
         _list.pop_back();
         currentSize--;
       }
@@ -94,16 +97,53 @@ class Cache {
     }
   }
 
+  /**
+   * Removes item from a cache.
+   * @param key to be removed
+   * @return true if key is found and removed, false otherwise
+   */
+  bool remove(K key) {
+    auto map_iter = _map.find(key);  // O(1)
+    if (map_iter != _map.end()) {    // key found
+      auto list_iter = map_iter->second;
+      _list.erase(list_iter);
+      _map.erase(key);
+      currentSize--;
+      return true;
+    } else {  // key not found
+      return false;
+    }
+  }
+
+  /**
+   * Clears the cache.
+   */
+  void clear() {
+    _list.clear();
+    _map.clear();
+    currentSize = 0;
+  }
+
+  /**
+   * Returns current size of cache.
+   * @return
+   */
+  uint64_t size() { return currentSize; }
 
  private:
   using entry_t = typename std::pair<K, V>;
   using iter_t = typename std::list<entry_t>::iterator;
 
   /**
+   * contains std::pair<key, value>
    * _list.front() = most recently used
    * _list.back()  = least recently used
    */
   std::list<entry_t> _list;
+
+  /**
+   * maps keys to iterators in _list
+   */
   std::unordered_map<K, iter_t> _map;
 
   uint64_t maxCacheSize;
