@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
-project(ametsuchi VERSION 0.1.0 LANGUAGES CXX)
+# we need both C and CXX, without C pthreads won't be compiled, causing build error
+project(ametsuchi VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
