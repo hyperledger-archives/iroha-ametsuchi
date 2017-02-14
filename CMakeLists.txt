@@ -15,6 +15,10 @@ option(DOCS "Generate API documentation" OFF)
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
+message(STATUS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+message(STATUS "-DTESTING=${TESTING}")
+message(STATUS "-DBENCHMARKING=${BENCHMARKING}")
+message(STATUS "-DDOCS=${DOCS}")
 
 
 # Detect currently used compiler.
@@ -91,7 +95,6 @@ endif()
 
 if(TESTING)
   # Connect test executable and CMake test system.
-  message(STATUS "Testing is ON")
   enable_testing()
   add_subdirectory(test)
 endif(TESTING)
@@ -102,4 +105,4 @@ if(BENCHMARKING)
 endif(BENCHMARKING)
 
 
-message(STATUS  "Build type: ${CMAKE_BUILD_TYPE}")
+

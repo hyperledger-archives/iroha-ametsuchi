@@ -13,7 +13,7 @@ set_directory_properties(PROPERTIES
 ExternalProject_Add(flatbuffers
   GIT_REPOSITORY    "https://github.com/google/flatbuffers.git"
   GIT_TAG           "v1.5.0"
-  CONFIGURE_COMMAND cmake ${EP_PREFIX}/src/flatbuffers -DFLATBUFFERS_BUILD_TESTS=Off -DFLATBUFFERS_INSTALL=Off -DFLATBUFFERS_BUILD_FLATHASH=Off
+  CONFIGURE_COMMAND cmake ${EP_PREFIX}/src/flatbuffers -DFLATBUFFERS_BUILD_TESTS=Off -DFLATBUFFERS_INSTALL=Off -DFLATBUFFERS_BUILD_FLATHASH=Off -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   INSTALL_COMMAND   "" # remove install step
   TEST_COMMAND      "" # remove test step
   UPDATE_COMMAND    "" # remove update step
@@ -92,5 +92,5 @@ if(BENCHMARKING)
     )
   ExternalProject_Get_Property(gbenchmark source_dir binary_dir)
   set(gbenchmark_INCLUDE_DIR ${source_dir}/include)
-  set(gbenchmark_LINK_FILES ${binary_dir}/src/libbenchmark.a ${CMAKE_THREAD_LIBS_INIT})
+  set(gbenchmark_LINK_FILES ${binary_dir}/src/libbenchmark.a pthreads)
 endif(BENCHMARKING)
