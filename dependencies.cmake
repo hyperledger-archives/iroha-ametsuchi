@@ -6,6 +6,7 @@ set_directory_properties(PROPERTIES
 )
 
 # Project dependencies.
+find_package(Threads REQUIRED)
 
 ################################
 #         flatbuffers          #
@@ -29,6 +30,8 @@ set(flatbuffers_BINARY_DIR "${binary_dir}")
 ExternalProject_Add(spdlog
   GIT_REPOSITORY    "https://github.com/gabime/spdlog.git"
   GIT_TAG           "v0.11.0"
+  CONFIGURE_COMMAND "" # remove configure step
+  BUILD_COMMAND     "" # remove build step
   INSTALL_COMMAND   "" # remove install step
   TEST_COMMAND      "" # remove test step
   UPDATE_COMMAND    "" # remove update step
@@ -53,14 +56,13 @@ ExternalProject_Add(keccak
 ExternalProject_Get_Property(keccak source_dir)
 set(keccak_SOURCE_DIR  "${source_dir}")
 set(keccak_INCLUDE_DIR ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a.headers)
-set(keccak_LINK_DIR    ${keccak_SOURCE_DIR}/bin/generic64)
+set(keccak_LIBRARIES   ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a)
 
 
 if(TESTING)
   ##########################
   #         gtest          #
   ##########################
-  find_package(Threads REQUIRED)
   set(GTEST_FORCE_SHARED_CRT ON)
   set(GTEST_DISABLE_PTHREADS OFF)
   ExternalProject_Add(gtest

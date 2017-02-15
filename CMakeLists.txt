@@ -34,8 +34,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 endif()
 
 
-include(functions.cmake)
 include(dependencies.cmake)
+include(functions.cmake)
 
 
 include_directories(
@@ -67,7 +67,7 @@ if(DOCS)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
   add_custom_target(
     doc ALL
-    COMMAND ${DOXYGEN_EXECUTABLE} ${DOC_DOXYFILE}
+    COMMAND ${DOXYGEN_EXECUTABLE}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Generating API documentation with Doxygen"
     VERBATIM
