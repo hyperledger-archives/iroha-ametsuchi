@@ -53,7 +53,7 @@ static void Cache_RandomAccess(benchmark::State& state) {
     // simulate cache
     auto item = cache.get(*begin);
     if (item == nullptr) {
-      cache.put(*begin, std::move(Page()));
+      cache.put(*begin, Page());
     }
 
     state.PauseTiming();
@@ -69,6 +69,7 @@ static void Cache_RandomAccess(benchmark::State& state) {
   state.SetBytesProcessed(sizeof(Page) * static_cast<uint64_t>(state.range(1)) *
                           static_cast<uint64_t>(state.iterations()));
 
+  state.SetComplexityN(state.range(1));
   state.SetItemsProcessed(items);
 }
 
