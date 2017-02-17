@@ -15,11 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_AMETSUCHI_H_
-#define AMETSUCHI_AMETSUCHI_H_
+#pragma once
 
 namespace ametsuchi {
 
 }
-
-#endif  // AMETSUCHI_AMETSUCHI_H_

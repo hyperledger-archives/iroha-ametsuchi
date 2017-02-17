@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_CACHE_H_
-#define AMETSUCHI_CACHE_H_
+#pragma once
 
 #include <iterator>
 #include <list>
@@ -42,9 +41,7 @@ namespace ametsuchi {
 template <typename K, typename V>
 class Cache {
  public:
-  explicit Cache(uint64_t maxSize) : maxCacheSize(maxSize), currentSize(0) {
-    _map.reserve(maxSize);
-  }
+  explicit Cache(uint64_t maxSize);
 
   /**
    * Put item into a cache. If item is already in the cache, its flag "last used
@@ -52,83 +49,32 @@ class Cache {
    * @param key
    * @param value
    */
-  void put(K key, V&& value) {
-    auto map_iter = _map.find(key);  // O(1)
-    if (map_iter != _map.end()) {    // key found
-      auto list_iter = map_iter->second;
-      if (list_iter != _list.begin()) {  // if item is not MRU
-        // then move it to begin, O(1)
-        _list.splice(_list.begin(), _list, list_iter, std::next(list_iter));
-      }
-      list_iter->second = value;
-    } else {                                    // key not found
-      if (currentSize == this->maxCacheSize) {  // cache is full
-        auto lruPageKey = _list.back().first;   // O(1)
-        _map.erase(lruPageKey);                 // O(1)
-        _list.pop_back();
-        currentSize--;
-      }
-
-      // add to the begin of list (now current page is MRU page), O(1)
-      _list.push_front(std::make_pair(key, std::forward<V>(value)));
-      _map[key] = _list.begin();  // O(1)
-      currentSize++;
-    }
-  }
+  void put(K key, V&& value);
 
   /**
    * Get item from cache. If cache miss - returns nullptr.
    * @param key
    * @return nullptr if item is not in the cache (miss)
    */
-  V* get(K key) {
-    auto map_iter = _map.find(key);  // O(1)
-    if (map_iter != _map.end()) {    // key found
-      auto list_iter = map_iter->second;
-      if (list_iter != _list.begin()) {  // if item is not MRU
-        // then move it to begin, O(1)
-        _list.splice(_list.begin(), _list, list_iter, std::next(list_iter));
-      }
-
-      return &list_iter->second;
-
-    } else {  // key not found
-      return nullptr;
-    }
-  }
+  V* get(K key);
 
   /**
    * Removes item from a cache.
    * @param key to be removed
    * @return true if key is found and removed, false otherwise
    */
-  bool remove(K key) {
-    auto map_iter = _map.find(key);  // O(1)
-    if (map_iter != _map.end()) {    // key found
-      auto list_iter = map_iter->second;
-      _list.erase(list_iter);
-      _map.erase(key);
-      currentSize--;
-      return true;
-    } else {  // key not found
-      return false;
-    }
-  }
+  bool remove(K key);
 
   /**
    * Clears the cache.
    */
-  void clear() {
-    _list.clear();
-    _map.clear();
-    currentSize = 0;
-  }
+  void clear();
 
   /**
    * Returns current size of cache.
    * @return
    */
-  uint64_t size() { return currentSize; }
+  uint64_t size();
 
  private:
   using entry_t = typename std::pair<K, V>;
@@ -150,6 +96,6 @@ class Cache {
   uint64_t currentSize;
 };
 
-}  // namespace ametsuchi
+#include "cache.inc"
 
-#endif  // AMETSUCHI_CACHE_H_
+}  // namespace ametsuchi

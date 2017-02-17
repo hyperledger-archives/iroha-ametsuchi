@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_PAGER_PAGE_H_
-#define AMETSUCHI_PAGER_PAGE_H_
+#pragma once
 
 #include <stdint.h>  // for uintX_t
 
@@ -53,5 +52,3 @@ struct Page {
 
 }  // namespace pager
 }  // namespace ametsuchi
-
-#endif  // AMETSUCHI_PAGER_PAGE_H_

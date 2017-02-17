@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_PAGER_PAGE_MANAGER_H_
-#define AMETSUCHI_PAGER_PAGE_MANAGER_H_
+#pragma once
 
 #include <ametsuchi/globals.h>
 #include <ametsuchi/pager/page.h>
@@ -35,4 +34,3 @@ class PageManager {
 
 }  // namespace pager
 }  // namespace ametsuchi
-#endif  // AMETSUCHI_PAGER_PAGE_MANAGER_H_
