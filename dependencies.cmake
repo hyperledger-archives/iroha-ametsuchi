@@ -14,7 +14,7 @@ find_package(Threads REQUIRED)
 ExternalProject_Add(flatbuffers
   GIT_REPOSITORY    "https://github.com/google/flatbuffers.git"
   GIT_TAG           "v1.5.0"
-  CONFIGURE_COMMAND cmake ${EP_PREFIX}/src/flatbuffers -DFLATBUFFERS_BUILD_TESTS=Off -DFLATBUFFERS_INSTALL=Off -DFLATBUFFERS_BUILD_FLATHASH=Off -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  CMAKE_ARGS        "-DFLATBUFFERS_BUILD_TESTS=Off -DFLATBUFFERS_INSTALL=Off -DFLATBUFFERS_BUILD_FLATHASH=Off -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
   INSTALL_COMMAND   "" # remove install step
   TEST_COMMAND      "" # remove test step
   UPDATE_COMMAND    "" # remove update step
@@ -44,11 +44,12 @@ set(spdlog_SOURCE_DIR "${source_dir}")
 ###########################
 #         keccak          #
 ###########################
+# TODO add xsltproc dependency check
 ExternalProject_Add(keccak
   GIT_REPOSITORY    "https://github.com/gvanas/KeccakCodePackage.git"
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE   1
-  BUILD_COMMAND     make && make generic64/libkeccak.a
+  BUILD_COMMAND     $(MAKE) && $(MAKE) generic64/libkeccak.a
   INSTALL_COMMAND   "" # remove install step
   TEST_COMMAND      "" # remove test step
   UPDATE_COMMAND    "" # remove update step
@@ -87,7 +88,7 @@ if(BENCHMARKING)
   ##############################
   ExternalProject_Add(gbenchmark
     GIT_REPOSITORY    "https://github.com/google/benchmark.git"
-    CONFIGURE_COMMAND cmake ${EP_PREFIX}/src/gbenchmark -DBENCHMARK_ENABLE_TESTING=Off -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    CMAKE_ARGS        "-DBENCHMARK_ENABLE_TESTING=Off -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     INSTALL_COMMAND   "" # remove install step
     UPDATE_COMMAND    "" # remove update step
     TEST_COMMAND      "" # remove test step
