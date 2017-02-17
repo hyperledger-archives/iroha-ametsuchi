@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_CACHE_H_
-#define AMETSUCHI_CACHE_H_
+#pragma once
 
 #include <iterator>
 #include <list>
@@ -100,5 +99,3 @@ class Cache {
 #include "cache.inc"
 
 }  // namespace ametsuchi
-
-#endif  // AMETSUCHI_CACHE_H_

@@ -15,11 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_GLOBALS_H_
-#define AMETSUCHI_GLOBALS_H_
+#pragma once
 
 namespace ametsuchi {
 #define AMETSUCHI_PAGE_SIZE (4096)  // bytes
 }
-
-#endif  // AMETSUCHI_GLOBALS_H_

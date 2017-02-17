@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_PAGER_FILE_MANAGER_H_
-#define AMETSUCHI_PAGER_FILE_MANAGER_H_
+#pragma once
 
 namespace ametsuchi{
 namespace pager{
@@ -27,5 +26,3 @@ class FileManager{
 
 }
 }
-
-#endif  // AMETSUCHI_PAGER_FILE_MANAGER_H_
