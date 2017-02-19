@@ -15,40 +15,15 @@
  * limitations under the License.
  */
 
-#pragma once
+#include <gtest/gtest.h>
 
-#include <cstdint>
+#include <ametsuchi/db.h>
 
 namespace ametsuchi {
-namespace pager {
 
+TEST(DBTest, DBCreation) {
+    DB db("_db_test_file.db");
+    ASSERT_EQ(1, 1);
+}
 
-enum class PageType : uint8_t { DATA_ITEM, MERKLE_NODE, INDEX_NODE };
-
-
-enum class SpanningItem : uint8_t {
-  NO_SPANNING,
-  SINGLE_PREFIX,
-  SINGLE_SUFFIX,
-  SINGLE_PREFIX_AND_SUFFIX,
-  SINGLE_INFIX
-};
-
-
-struct PageDirectory {
-  uint16_t offset;
-  uint16_t length;
-};
-
-
-struct Page {
-  PageType pageType;
-  SpanningItem spanningItems;
-  uint16_t entryCount;
-
-  uint32_t pageDorectoryCount;
-  PageDirectory* dataItems;
-};
-
-}  // namespace pager
-}  // namespace ametsuchi
+}

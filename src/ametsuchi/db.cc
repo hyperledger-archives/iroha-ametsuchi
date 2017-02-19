@@ -15,40 +15,41 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <cstdint>
+#include <ametsuchi/db.h>
+#include <iostream>
 
 namespace ametsuchi {
-namespace pager {
 
+DB::DB(const std::string &file_path) {
+    // TODO: there should be handling configuration params as well
 
-enum class PageType : uint8_t { DATA_ITEM, MERKLE_NODE, INDEX_NODE };
+    file.open(file_path);
 
+    file<<"天地\x00";
+}
 
-enum class SpanningItem : uint8_t {
-  NO_SPANNING,
-  SINGLE_PREFIX,
-  SINGLE_SUFFIX,
-  SINGLE_PREFIX_AND_SUFFIX,
-  SINGLE_INFIX
-};
+DB::~DB() {
+    close();
+}
 
+std::unique_ptr<DB> DB::open(const std::string &file_path) {
+    std::fstream file;
+    file.open(file_path, std::ios::in | std::ios::out | std::ios::binary);
+    std::unique_ptr<DB> db(new DB(file));
+    return db;
+}
 
-struct PageDirectory {
-  uint16_t offset;
-  uint16_t length;
-};
+template<size_t T>
+void DB::save(const ByteArray<T> &tx) {
 
+}
 
-struct Page {
-  PageType pageType;
-  SpanningItem spanningItems;
-  uint16_t entryCount;
+void DB::close() {
+    file.close();
+}
 
-  uint32_t pageDorectoryCount;
-  PageDirectory* dataItems;
-};
+DB::DB(std::fstream &f) {
+    file = std::move(f);
+}
 
-}  // namespace pager
-}  // namespace ametsuchi
+}

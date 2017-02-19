@@ -15,40 +15,37 @@
  * limitations under the License.
  */
 
-#pragma once
-
+#include <string>
 #include <cstdint>
+#include <array>
+#include <fstream>
+#include <memory>
 
 namespace ametsuchi {
-namespace pager {
 
+template <size_t T>
+using ByteArray = std::array<uint8_t, T>;
 
-enum class PageType : uint8_t { DATA_ITEM, MERKLE_NODE, INDEX_NODE };
+class DB {
+ public:
+    /*
+    *   Creation of new file, filling the header
+    */
+    DB(const std::string &file_path);
 
+    ~DB();
+    /*
+    *   Resuage of existing file
+    */
 
-enum class SpanningItem : uint8_t {
-  NO_SPANNING,
-  SINGLE_PREFIX,
-  SINGLE_SUFFIX,
-  SINGLE_PREFIX_AND_SUFFIX,
-  SINGLE_INFIX
+    static std::unique_ptr<DB> open(const std::string &file_path);
+
+    template<size_t T> void save(const ByteArray<T> &tx);
+
+    void close();
+ private:
+    DB(std::fstream &file);
+    std::fstream file;
 };
 
-
-struct PageDirectory {
-  uint16_t offset;
-  uint16_t length;
-};
-
-
-struct Page {
-  PageType pageType;
-  SpanningItem spanningItems;
-  uint16_t entryCount;
-
-  uint32_t pageDorectoryCount;
-  PageDirectory* dataItems;
-};
-
-}  // namespace pager
-}  // namespace ametsuchi
+}
