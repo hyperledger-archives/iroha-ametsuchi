@@ -21,22 +21,22 @@
 namespace ametsuchi {
 namespace io {
 
-CVFS::CVFS(const char *file) : cache(CVFS_MAX_CACHE_SIZE) {
+FileVFS::FileVFS(const char *file) : cache(FileVFS_MAX_CACHE_SIZE) {
     f = fopen(file, "r+"); // maybe a+?
 }
 
-CVFS::~CVFS() {
+FileVFS::~FileVFS() {
     close();
 }
 
-void CVFS::close() {
+void FileVFS::close() {
     flush();
     fclose(f);
 }
 
-void CVFS::read(std::size_t ptr, ByteArray &b, std::size_t size) {
+void FileVFS::read(std::size_t offset, ByteArray &b, std::size_t size) {
     size_t page_size = pager::AMETSUCHI_PAGE_SIZE;
-    auto base_page = pager::page_idx(ptr);
+    auto base_page = pager::page_idx(offset);
     auto page_num = pager::page_ceil(size);
     b.clear();
     b.reserve(size);
@@ -47,7 +47,7 @@ void CVFS::read(std::size_t ptr, ByteArray &b, std::size_t size) {
 
         // TODO: store missed pages at read from disk at once
         if (!pg) {
-            fseek(f, ptr, SEEK_SET);
+            fseek(f, offset, SEEK_SET);
             fread(p, page_size, 1, f);
         } else {
             p = pg;
@@ -60,9 +60,9 @@ void CVFS::read(std::size_t ptr, ByteArray &b, std::size_t size) {
 
 }
 
-void CVFS::write(std::size_t ptr, const ByteArray &b) {
+void FileVFS::write(std::size_t offset, const ByteArray &b) {
     size_t page_size = pager::AMETSUCHI_PAGE_SIZE;
-    auto base_page = pager::page_idx(ptr);
+    auto base_page = pager::page_idx(offset);
     auto size = b.size();
     auto page_num = pager::page_ceil(size);
 
@@ -73,11 +73,11 @@ void CVFS::write(std::size_t ptr, const ByteArray &b) {
         cache.put(base_page + i, std::move(p));
     }
 
-    fseek(f, ptr, SEEK_SET);
+    fseek(f, offset, SEEK_SET);
     fwrite(b.data(), b.size(), 1, f);
 }
 
-void CVFS::flush() {
+void FileVFS::flush() {
     //TODO: consider dirty pages
     fflush(f);
     cache.clear();

@@ -24,12 +24,9 @@ namespace ametsuchi {
 
 class DB {
  public:
-    /*
-    * Empty constructor
-    */
     DB();
     /*
-    * Constructor that creates new file,
+    * Constructor that if necessary creates new file,
     * filling the header and first page header (not finished)
     */
     DB(const std::string &file_path);

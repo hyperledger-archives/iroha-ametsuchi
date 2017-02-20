@@ -17,7 +17,7 @@
 
 #include <ametsuchi/db.h>
 #include <ametsuchi/pager/page.h>
-#include <ametsuchi/io/cvfs.h>
+#include <ametsuchi/io/filevfs.h>
 #include <iostream>
 
 namespace ametsuchi {
@@ -44,7 +44,7 @@ void DB::open(const std::string &file_path/*, todo: VFSType type*/) {
         close();
     }
 
-    vfs = std::make_unique<io::CVFS>(file_path.c_str());
+    vfs = std::make_unique<io::FileVFS>(file_path.c_str());
 }
 
 void DB::save(const ByteArray &tx) {

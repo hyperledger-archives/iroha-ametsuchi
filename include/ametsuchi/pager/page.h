@@ -56,13 +56,14 @@ struct FileHeader {
 };
 
 constexpr FileHeader default_file_header = {
-    "天地",  //fmt_header[7]
-    0,      //fmt_version
-    0,      //page_size_exponent
-    0,      //block_merkle_tree_width
-    0,      //block_merkle_tree_height
-    0,      //global_merkle_tree_width
-    0,      //hash_algo
+  //"天地"
+  "\xe5\xa4\xa9\xe5\x9c\xb0", //fmt_header[7]
+  0, //fmt_version
+  0, //page_size_exponent
+  0, //block_merkle_tree_width
+  0, //block_merkle_tree_height
+  0, //global_merkle_tree_width
+  0, //hash_algo
 };
 
 struct PageHeader {

@@ -28,7 +28,7 @@ namespace io {
 */
 class VFS {
  public:
-    virtual ~VFS() = 0;
+    virtual ~VFS() {};
 
     /*
     * Flushes the cached data and close active connection if present
@@ -41,14 +41,14 @@ class VFS {
     * @param b array for storing the data
     * @param size number of bytes to read
     */
-    virtual void read(std::size_t ptr, ByteArray &b, std::size_t size) = 0;
+    virtual void read(std::size_t offset, ByteArray &b, std::size_t size) = 0;
 
     /*
     * Perform writing data at specified file offset of entire buffer
     * @param ptr offset at the file in bytes
     * @param b array for writing
     */
-    virtual void write(std::size_t ptr, const ByteArray &b) = 0;
+    virtual void write(std::size_t offset, const ByteArray &b) = 0;
 
     /*
     * Flushes dirty pages from cache to used FS

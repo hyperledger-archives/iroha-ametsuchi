@@ -23,9 +23,10 @@
 #include <array>
 #include <fstream>
 #include <memory>
+#include <iterator>
 
 namespace ametsuchi {
 
-typedef std::vector<uint8_t> ByteArray;
+using ByteArray = std::vector<uint8_t>;
 
 }
