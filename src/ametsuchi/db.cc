@@ -40,7 +40,7 @@ DB::~DB() {
 }
 
 void DB::open(const std::string &file_path/*, todo: VFSType type*/) {
-    if (!vfs) {
+    if (vfs) {
         close();
     }
 
