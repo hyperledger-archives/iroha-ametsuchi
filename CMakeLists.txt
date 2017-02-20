@@ -36,9 +36,8 @@ include_directories(
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
 add_library(${LIBAMETSUCHI_NAME}
-  ${PROJECT_SOURCE_DIR}/src/ametsuchi/ametsuchi.cc
   ${PROJECT_SOURCE_DIR}/src/ametsuchi/db.cc
-  ${PROJECT_SOURCE_DIR}/src/ametsuchi/io/cvfs.cc
+  ${PROJECT_SOURCE_DIR}/src/ametsuchi/io/filevfs.cc
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
   flatbuffers

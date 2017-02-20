@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/io/cvfs.h>
+#include <ametsuchi/io/filevfs.h>
 #include <cstring>
 
 namespace ametsuchi {
