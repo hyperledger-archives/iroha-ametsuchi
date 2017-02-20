@@ -29,14 +29,44 @@ enum { CVFS_MAX_FILE_SIZE = 4096 * 16, CVFS_MAX_CACHE_SIZE = 256, };
 
 typedef FILE* FileHandler;
 
+/*
+* This class perform the real basic implementation of VFS
+* All operations are performed via C-based i/o function
+* todo?: respect max_file_size & WAL
+*/
 class CVFS : public virtual VFS {
 public:
+    /*
+    * @param file base name of the file to operate
+    *        todo?: file format: %file%-%file_number%.db
+    */
     CVFS(const char *file);
     virtual ~CVFS();
+
+    /*
+    * Flushes the cached data and close active connection if present
+    */
     virtual void close();
-    virtual void read(std::size_t ptr, ByteArray&, std::size_t size);
+
+    /*
+    * Perform reading data at specified file offset
+    * @param ptr offset at the file in bytes
+    * @param b array for storing the data
+    * @param size number of bytes to read
+    */
+    virtual void read(std::size_t ptr, ByteArray &b, std::size_t size);
+
+    /*
+    * Perform writing data at specified file offset of entire buffer
+    * @param ptr offset at the file in bytes
+    * @param b array for writing
+    */
     virtual void write(std::size_t ptr, const ByteArray&);
-    virtual void fflush();
+
+    /*
+    * Flushes dirty pages from cache to used FS
+    */
+    virtual void flush();
 private:
     FileHandler f;
     Cache<std::size_t, pager::Page> cache;

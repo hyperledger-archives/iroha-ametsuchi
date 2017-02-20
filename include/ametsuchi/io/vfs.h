@@ -22,13 +22,38 @@
 namespace ametsuchi {
 namespace io {
 
+/*
+* Interface for performing all I/O operations for the db
+* This class assumes that it working with one file
+*/
 class VFS {
  public:
     virtual ~VFS() = 0;
+
+    /*
+    * Flushes the cached data and close active connection if present
+    */
     virtual void close() = 0;
-    virtual void read(std::size_t ptr, ByteArray&, std::size_t size) = 0;
-    virtual void write(std::size_t ptr, const ByteArray&) = 0;
-    virtual void fflush() = 0;
+
+    /*
+    * Perform reading data at specified file offset
+    * @param ptr offset at the file in bytes
+    * @param b array for storing the data
+    * @param size number of bytes to read
+    */
+    virtual void read(std::size_t ptr, ByteArray &b, std::size_t size) = 0;
+
+    /*
+    * Perform writing data at specified file offset of entire buffer
+    * @param ptr offset at the file in bytes
+    * @param b array for writing
+    */
+    virtual void write(std::size_t ptr, const ByteArray &b) = 0;
+
+    /*
+    * Flushes dirty pages from cache to used FS
+    */
+    virtual void flush() = 0;
 };
 
 }

@@ -23,6 +23,8 @@
 namespace ametsuchi {
 namespace pager {
 
+// file structures don't need to has padded bytes
+// struct {char, int} -> 5 bytes (with pack) or 8 bytes (without pack)
 #pragma pack(push, 1)
 
 enum { AMETSUCHI_PAGE_SIZE = 4096, };
@@ -72,6 +74,7 @@ struct PageHeader {
   PageDirectory* data_items;
 };
 
+// restore previous value
 #pragma pack(pop)
 
 inline size_t page_idx(std::size_t offset) {

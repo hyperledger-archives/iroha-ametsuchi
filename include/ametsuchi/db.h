@@ -25,27 +25,46 @@ namespace ametsuchi {
 class DB {
  public:
     /*
-    *   Empty constructor
+    * Empty constructor
     */
     DB();
     /*
-    *   Creation of new file, filling the header
+    * Constructor that creates new file,
+    * filling the header and first page header (not finished)
     */
     DB(const std::string &file_path);
 
     ~DB();
 
     /*
-    *   Resuage of existing file
+    * Opens file by specified name. Close active
+    * VFS handler if there's any
+    * @param file_path name of the file to open
     */
     void open(const std::string &file_path);
 
+    /*
+    * Append data to the database.
+    * Don't check for validity VFS handler
+    * @param tx data to write
+    */
     void save(const ByteArray &tx);
 
+    /*
+    * Safely close all opened resources
+    */
     void close();
  private:
     DB(std::unique_ptr<io::VFS>&& vfs);
+
+    /*
+    * VFS handler of database
+    */
     std::unique_ptr<io::VFS> vfs;
+
+    /*
+    * Size of the database
+    */
     size_t size;
 };
 
