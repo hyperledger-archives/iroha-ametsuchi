@@ -16,40 +16,48 @@
  */
 
 #include <ametsuchi/db.h>
+#include <ametsuchi/pager/page.h>
+#include <ametsuchi/io/cvfs.h>
 #include <iostream>
 
 namespace ametsuchi {
 
+DB::DB() : vfs(nullptr) {}
+
 DB::DB(const std::string &file_path) {
     // TODO: there should be handling configuration params as well
+    open(file_path);
 
-    file.open(file_path);
-
-    file<<"天地\x00";
+    // definitely not so good serialization
+    using pager::default_file_header;
+    auto ptr = reinterpret_cast<const uint8_t*>(&default_file_header);
+    ByteArray arr(ptr, ptr + sizeof default_file_header);
+    save(arr);
 }
 
 DB::~DB() {
     close();
 }
 
-std::unique_ptr<DB> DB::open(const std::string &file_path) {
-    std::fstream file;
-    file.open(file_path, std::ios::in | std::ios::out | std::ios::binary);
-    std::unique_ptr<DB> db(new DB(file));
-    return db;
+void DB::open(const std::string &file_path/*, todo: VFSType type*/) {
+    if (!vfs) {
+        close();
+    }
+
+    vfs = std::make_unique<io::CVFS>(file_path.c_str());
 }
 
-template<size_t T>
-void DB::save(const ByteArray<T> &tx) {
-
+void DB::save(const ByteArray &tx) {
+    vfs->write(size, tx);
+    size += tx.size();
 }
 
 void DB::close() {
-    file.close();
+    size = 0;
+    if (!vfs) return;
+    vfs->close();
 }
 
-DB::DB(std::fstream &f) {
-    file = std::move(f);
-}
+DB::DB(std::unique_ptr<io::VFS>&& vfs) : vfs(std::move(vfs)) {}
 
 }

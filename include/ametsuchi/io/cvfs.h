@@ -15,27 +15,31 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/globals.h>
+#pragma once
+
 #include <ametsuchi/io/vfs.h>
+#include <ametsuchi/pager/page.h>
+#include <ametsuchi/cache.h>
 #include <cstdio>
 
 namespace ametsuchi {
 namespace io {
 
-enum { CVFS_MAX_FILE_SIZE = 4096, };
+enum { CVFS_MAX_FILE_SIZE = 4096 * 16, CVFS_MAX_CACHE_SIZE = 256, };
 
-using FileHandler = FILE*;
-using Byte = char**;
+typedef FILE* FileHandler;
 
-class CVFS : public virtual VFS<Byte> {
+class CVFS : public virtual VFS {
 public:
-    CVFS(FileHandler&);
+    CVFS(const char *file);
     virtual ~CVFS();
     virtual void close();
-    virtual void read(size_t ptr, Byte&, size_t size);
-    virtual void write(size_t ptr, const Byte&, size_t size);
+    virtual void read(std::size_t ptr, ByteArray&, std::size_t size);
+    virtual void write(std::size_t ptr, const ByteArray&);
+    virtual void fflush();
 private:
     FileHandler f;
+    Cache<std::size_t, pager::Page> cache;
 };
 
 }

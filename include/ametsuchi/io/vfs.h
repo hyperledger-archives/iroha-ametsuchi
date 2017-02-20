@@ -22,13 +22,13 @@
 namespace ametsuchi {
 namespace io {
 
-template <typename Byte>
 class VFS {
  public:
     virtual ~VFS() = 0;
     virtual void close() = 0;
-    virtual void read(size_t ptr, Byte&, size_t size) = 0;
-    virtual void write(size_t ptr, const Byte&, size_t size) = 0;
+    virtual void read(std::size_t ptr, ByteArray&, std::size_t size) = 0;
+    virtual void write(std::size_t ptr, const ByteArray&) = 0;
+    virtual void fflush() = 0;
 };
 
 }

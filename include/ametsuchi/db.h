@@ -15,37 +15,38 @@
  * limitations under the License.
  */
 
-#include <string>
-#include <cstdint>
-#include <array>
-#include <fstream>
-#include <memory>
+#pragma once
+
+#include <ametsuchi/globals.h>
+#include <ametsuchi/io/vfs.h>
 
 namespace ametsuchi {
 
-template <size_t T>
-using ByteArray = std::array<uint8_t, T>;
-
 class DB {
  public:
+    /*
+    *   Empty constructor
+    */
+    DB();
     /*
     *   Creation of new file, filling the header
     */
     DB(const std::string &file_path);
 
     ~DB();
+
     /*
     *   Resuage of existing file
     */
+    void open(const std::string &file_path);
 
-    static std::unique_ptr<DB> open(const std::string &file_path);
-
-    template<size_t T> void save(const ByteArray<T> &tx);
+    void save(const ByteArray &tx);
 
     void close();
  private:
-    DB(std::fstream &file);
-    std::fstream file;
+    DB(std::unique_ptr<io::VFS>&& vfs);
+    std::unique_ptr<io::VFS> vfs;
+    size_t size;
 };
 
 }
