@@ -7,7 +7,7 @@ function(StrictMode target)
     CXX_EXTENSIONS OFF
   )
   # Enable more warnings and turn them into compile errors.
-  if((CMAKE_CXX_COMPILER_ID STREQUAL "GCC") OR
+  if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
      (CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
      (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
     target_compile_options(${target} PRIVATE -Wall -Wextra -Werror)
