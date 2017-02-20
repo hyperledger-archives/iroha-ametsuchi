@@ -8,6 +8,7 @@ set_directory_properties(PROPERTIES
 include(cmake/DownloadProject.cmake)
 
 # Project dependencies.
+set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
 ################################

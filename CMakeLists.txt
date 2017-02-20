@@ -40,7 +40,7 @@ include(cmake/functions.cmake)
 
 include_directories(
   # Library headers.
-  PRIVATE "${PROJECT_SOURCE_DIR}/include"
+  PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
 
