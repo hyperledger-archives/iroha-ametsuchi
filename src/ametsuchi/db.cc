@@ -18,7 +18,6 @@
 #include <ametsuchi/db.h>
 #include <ametsuchi/pager/page.h>
 #include <ametsuchi/io/filevfs.h>
-#include <iostream>
 
 namespace ametsuchi {
 

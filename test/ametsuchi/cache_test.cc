@@ -19,11 +19,7 @@
 
 #include <ametsuchi/pager/cache.h>
 #include <ametsuchi/globals.h>
-// #include <stdint.h>
-// #include <stdlib.h>
 #include <chrono>
-#include <string>
-#include <vector>
 
 namespace ametsuchi {
 

@@ -20,6 +20,7 @@
 #include <ametsuchi/io/vfs.h>
 #include <ametsuchi/pager/page.h>
 #include <ametsuchi/pager/cache.h>
+#include <ametsuchi/globals.h>
 #include <cstdio>
 
 namespace ametsuchi {

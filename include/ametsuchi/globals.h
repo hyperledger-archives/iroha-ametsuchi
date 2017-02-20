@@ -18,12 +18,10 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdlib>
 #include <vector>
 #include <string>
-#include <array>
-#include <fstream>
 #include <memory>
-#include <iterator>
 
 namespace ametsuchi {
 

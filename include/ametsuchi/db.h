@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <ametsuchi/globals.h>
 #include <ametsuchi/io/vfs.h>
+#include <ametsuchi/globals.h>
 
 namespace ametsuchi {
 
