@@ -8,7 +8,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 option(SCHEMA "Compile given schema (fbs file) using flatc" OFF)
 option(BENCHMARKING "Build benchmarks" OFF)
-option(TESTING "Build project without tests" OFF)
+option(TESTING "Build tests" ON)
 option(DOCS "Generate API documentation" OFF)
 
 
@@ -34,17 +34,13 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 endif()
 
 
-include(dependencies.cmake)
-include(functions.cmake)
+include(cmake/dependencies.cmake)
+include(cmake/functions.cmake)
 
 
 include_directories(
   # Library headers.
-  PRIVATE "${PROJECT_SOURCE_DIR}/include"
-  # Dependencies.
-  PRIVATE "${flatbuffers_SOURCE_DIR}/include"
-  PRIVATE "${spdlog_SOURCE_DIR}/include"
-  PRIVATE "${keccak_INCLUDE_DIR}"
+  PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
 
@@ -53,6 +49,11 @@ set(LIBAMETSUCHI_NAME ametsuchi)
 add_library(${LIBAMETSUCHI_NAME}
   ${PROJECT_SOURCE_DIR}/src/ametsuchi/ametsuchi.cc
 )
+target_link_libraries(${LIBAMETSUCHI_NAME}
+  flatbuffers
+  spdlog
+  keccak
+  )
 StrictMode(${LIBAMETSUCHI_NAME})
 
 
@@ -82,7 +83,7 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
 
   add_custom_command(
     OUTPUT  api_generated.h
-    COMMAND ${flatbuffers_BINARY_DIR}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
+    COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
     COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
   )
@@ -96,8 +97,6 @@ endif()
 
 
 if(TESTING)
-  # Connect test executable and CMake test system.
-  enable_testing()
   add_subdirectory(test)
 endif(TESTING)
 

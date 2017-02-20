@@ -29,6 +29,6 @@ dependencies:
 
 test:
   pre:
-    - cd ${AMETSUCHI_HOME}; mkdir build; cd build; cmake .. -DTESTING=ON; make -j2
+    - cd ${AMETSUCHI_HOME}; mkdir build; cd build; cmake ..; make -j2
   override:
     - cd ${AMETSUCHI_HOME}/build; ctest
