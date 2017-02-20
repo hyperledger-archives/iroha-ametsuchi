@@ -8,7 +8,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 option(SCHEMA "Compile given schema (fbs file) using flatc" OFF)
 option(BENCHMARKING "Build benchmarks" OFF)
-option(TESTING "Build tests" OFF)
+option(TESTING "Build tests" ON)
 option(DOCS "Generate API documentation" OFF)
 
 
