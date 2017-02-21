@@ -25,9 +25,13 @@
 namespace ametsuchi {
 
 using pager::FileHeader;
+using pager::default_file_header;
+
+const std::string name = "_test_database.db";
+
+#define CLEANUP (remove(name.c_str()))
 
 TEST(DBTest, DatabaseCreation) {
-    const std::string name = "_test_database.db";
     DB db(name);
     db.save({1});
     db.close();
@@ -35,7 +39,20 @@ TEST(DBTest, DatabaseCreation) {
     FILE *f = fopen(name.c_str(), "rb");
     FileHeader header;
     EXPECT_EQ(fread(&header, sizeof(FileHeader), 1, f), 1u);
-    ASSERT_EQ(strncmp(reinterpret_cast<const char*>(&header), reinterpret_cast<const char*>(&pager::default_file_header), sizeof(FileHeader)), 0);
+    ASSERT_EQ(strncmp(reinterpret_cast<const char*>(&header), reinterpret_cast<const char*>(&default_file_header), sizeof(FileHeader)), 0);
+    CLEANUP;
+}
+
+TEST(DBTest, DatabaseReopening) {
+    FILE *f = fopen(name.c_str(), "wb+");
+    fwrite(&default_file_header, sizeof(FileHeader), 1, f);
+    fclose(f);
+
+    DB db;
+    db.open(name);
+    db.save({1});
+    db.close();
+    CLEANUP;
 }
 
 }
