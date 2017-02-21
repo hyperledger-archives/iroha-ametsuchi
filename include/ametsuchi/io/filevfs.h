@@ -70,7 +70,7 @@ public:
     virtual void flush();
 private:
     FileHandler f;
-    Cache<std::size_t, pager::Page> cache;
+    pager::Cache<std::size_t, pager::Page> cache;
 };
 
 }

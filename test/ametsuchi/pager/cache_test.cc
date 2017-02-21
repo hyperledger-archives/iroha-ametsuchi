@@ -22,6 +22,7 @@
 #include <chrono>
 
 namespace ametsuchi {
+namespace pager {
 
 template <typename T>
 struct Counter {
@@ -137,3 +138,4 @@ TEST(CacheTest, Clear){
 }
 
 }  // namespace ametsuchi
+}
