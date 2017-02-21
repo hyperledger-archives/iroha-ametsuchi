@@ -56,18 +56,20 @@ download_project(PROJ keccak
   PREFIX              ${EP_PREFIX}
   )
 
-execute_process(
-  COMMAND make clean
-  WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
-)
-execute_process(
-  COMMAND make
-  WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
+if (NOT EXISTS ${keccak_SOURCE_DIR}/bin)
+  execute_process(
+    COMMAND make clean
+    WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
   )
-execute_process(
-  COMMAND make generic64/libkeccak.a
-  WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
+  execute_process(
+    COMMAND make
+    WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
   )
+  execute_process(
+    COMMAND make generic64/libkeccak.a
+    WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
+  )
+endif ()
 
 add_library(keccak STATIC IMPORTED)
 set_target_properties(keccak PROPERTIES

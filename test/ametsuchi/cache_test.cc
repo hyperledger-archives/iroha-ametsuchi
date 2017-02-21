@@ -17,29 +17,26 @@
 
 #include <gtest/gtest.h>
 
-#include <ametsuchi/cache.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <ametsuchi/pager/cache.h>
+#include <ametsuchi/globals.h>
 #include <chrono>
-#include <string>
-#include <vector>
 
 namespace ametsuchi {
 
 template <typename T>
-struct counter {
-  counter() {}
-  void operator=(const counter&) { ++objects_created; }  // copy, bad
-  void operator=(const counter&&) {}                     // move, ok
-  counter(const counter&) { ++objects_created; }         // copy, bad
-  counter(const counter&&) {}                            // move, ok
+struct Counter {
+  Counter() {}
+  void operator=(const Counter&) { ++objects_created; }  // copy, bad
+  void operator=(const Counter&&) {}                     // move, ok
+  Counter(const Counter&) { ++objects_created; }         // copy, bad
+  Counter(const Counter&&) {}                            // move, ok
   static int objects_created;
 };
 
 template <typename T>
-int counter<T>::objects_created(0);
+int Counter<T>::objects_created(0);
 
-class Copyable : public counter<Copyable> {
+class Copyable : public Counter<Copyable> {
  public:
   int x;
   explicit Copyable(int x) : x(x) {}
@@ -50,11 +47,11 @@ std::list<uint32_t> generateAccessSequence(uint32_t start, uint32_t end,
 
 // less copies = better. In our case, we should have 0 copies.
 TEST(CacheTest, CountCopies) {
-  int maxSize = 10;
-  Cache<int, Copyable> cache(maxSize);
+  int max_size = 10;
+  Cache<int, Copyable> cache(max_size);
 
   // pass by address
-  for (int i = 0; i < maxSize; i++) {
+  for (int i = 0; i < max_size; i++) {
     Copyable obj(i);
     cache.put(i, std::move(obj));
     auto q = cache.get(i);
@@ -71,8 +68,8 @@ TEST(CacheTest, CountCopies) {
 }
 
 TEST(CacheTest, PutAndGet) {
-  int maxSize = 5;
-  Cache<int, int> cache(maxSize);
+  int max_size = 5;
+  Cache<int, int> cache(max_size);
 
   cache.put(1, 1);
   cache.put(2, 2);
@@ -108,16 +105,16 @@ TEST(CacheTest, PutAndGet) {
 }
 
 TEST(CacheTest, RemoveAndSize) {
-  int maxSize = 10;
-  Cache<int, int> cache(maxSize);
+  int max_size = 10;
+  Cache<int, int> cache(max_size);
 
-  for (int i = 0; i < maxSize; i++) {
+  for (int i = 0; i < max_size; i++) {
     cache.put(i, i + 1);
     ASSERT_EQ(cache.size(), i + 1u);
   }
 
   // ensure size decreased
-  for (int i = 0; i < maxSize; i++) {
+  for (int i = 0; i < max_size; i++) {
     auto size = cache.size();
     auto item = cache.remove(i);
     ASSERT_EQ(cache.size(), size - 1);
@@ -127,10 +124,10 @@ TEST(CacheTest, RemoveAndSize) {
 }
 
 TEST(CacheTest, Clear){
-  int maxSize = 10;
-  Cache<int, int> cache(maxSize);
+  int max_size = 10;
+  Cache<int, int> cache(max_size);
 
-  for (int i = 0; i < maxSize; i++) {
+  for (int i = 0; i < max_size; i++) {
     cache.put(i, i + 1);
   }
 

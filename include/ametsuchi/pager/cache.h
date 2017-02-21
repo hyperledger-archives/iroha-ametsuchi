@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include <iterator>
+#include <ametsuchi/globals.h>
 #include <list>
 #include <unordered_map>
-#include <utility>  // for std::pair
 
 namespace ametsuchi {
 
@@ -41,7 +40,7 @@ namespace ametsuchi {
 template <typename K, typename V>
 class Cache {
  public:
-  explicit Cache(uint64_t maxSize);
+  explicit Cache(uint64_t max_size);
 
   /**
    * Put item into a cache. If item is already in the cache, its flag "last used
@@ -77,23 +76,23 @@ class Cache {
   uint64_t size();
 
  private:
-  using entry_t = typename std::pair<K, V>;
-  using iter_t = typename std::list<entry_t>::iterator;
+  using Entry = typename std::pair<K, V>;
+  using Iter = typename std::list<Entry>::iterator;
 
   /**
    * contains std::pair<key, value>
-   * _list.front() = most recently used
-   * _list.back()  = least recently used
+   * lru_list.front() = most recently used
+   * lru_list.back()  = least recently used
    */
-  std::list<entry_t> _list;
+  std::list<Entry> lru_list;
 
   /**
-   * maps keys to iterators in _list
+   * maps keys to iterators in lru_list
    */
-  std::unordered_map<K, iter_t> _map;
+  std::unordered_map<K, Iter> iters_map;
 
-  uint64_t maxCacheSize;
-  uint64_t currentSize;
+  uint64_t max_cache_size;
+  uint64_t current_size;
 };
 
 #include "cache.inc"

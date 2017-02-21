@@ -22,17 +22,6 @@ message(STATUS "-DBENCHMARKING=${BENCHMARKING}")
 message(STATUS "-DDOCS=${DOCS}")
 
 
-# Detect currently used compiler.
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(CMAKE_COMPILER_IS_CLANGCXX 1)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  set(CMAKE_COMPILER_IS_CLANGCXX 1)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  set(CMAKE_COMPILER_IS_MSVCCXX 1)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-  set(CMAKE_COMPILER_IS_INTELCXX 1)
-endif()
-
 
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
@@ -47,7 +36,8 @@ include_directories(
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
 add_library(${LIBAMETSUCHI_NAME}
-  ${PROJECT_SOURCE_DIR}/src/ametsuchi/ametsuchi.cc
+  ${PROJECT_SOURCE_DIR}/src/ametsuchi/db.cc
+  ${PROJECT_SOURCE_DIR}/src/ametsuchi/io/filevfs.cc
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
   flatbuffers

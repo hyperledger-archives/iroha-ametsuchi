@@ -17,6 +17,14 @@
 
 #pragma once
 
+#include <cstdint>
+#include <cstdlib>
+#include <vector>
+#include <string>
+#include <memory>
+
 namespace ametsuchi {
-#define AMETSUCHI_PAGE_SIZE (4096)  // bytes
+
+using ByteArray = std::vector<uint8_t>;
+
 }

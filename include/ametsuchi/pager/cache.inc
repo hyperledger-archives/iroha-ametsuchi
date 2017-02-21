@@ -16,43 +16,43 @@
  */
 
 template <typename K, typename V>
-Cache<K, V>::Cache(uint64_t maxSize) : maxCacheSize(maxSize), currentSize(0) {
-  _map.reserve(maxSize);
+Cache<K, V>::Cache(uint64_t max_size) : max_cache_size(max_size), current_size(0) {
+  iters_map.reserve(max_size);
 }
 
 template <typename K, typename V>
 void Cache<K, V>::put(K key, V&& value) {
-  auto map_iter = _map.find(key);  // O(1)
-  if (map_iter != _map.end()) {    // key found
+  auto map_iter = iters_map.find(key);  // O(1)
+  if (map_iter != iters_map.end()) {    // key found
     auto list_iter = map_iter->second;
-    if (list_iter != _list.begin()) {  // if item is not MRU
+    if (list_iter != lru_list.begin()) {  // if item is not MRU
       // then move it to begin, O(1)
-      _list.splice(_list.begin(), _list, list_iter, std::next(list_iter));
+      lru_list.splice(lru_list.begin(), lru_list, list_iter, std::next(list_iter));
     }
     list_iter->second = value;
   } else {                                    // key not found
-    if (currentSize == this->maxCacheSize) {  // cache is full
-      auto lruPageKey = _list.back().first;   // O(1)
-      _map.erase(lruPageKey);                 // O(1)
-      _list.pop_back();
-      currentSize--;
+    if (current_size == this->max_cache_size) {  // cache is full
+      auto lruPageKey = lru_list.back().first;   // O(1)
+      iters_map.erase(lruPageKey);                 // O(1)
+      lru_list.pop_back();
+      current_size--;
     }
 
     // add to the begin of list (now current page is MRU page), O(1)
-    _list.push_front(std::make_pair(key, std::forward<V>(value)));
-    _map[key] = _list.begin();  // O(1)
-    currentSize++;
+    lru_list.push_front(std::make_pair(key, std::forward<V>(value)));
+    iters_map[key] = lru_list.begin();  // O(1)
+    current_size++;
   }
 }
 
 template <typename K, typename V>
 V* Cache<K, V>::get(K key) {
-  auto map_iter = _map.find(key);  // O(1)
-  if (map_iter != _map.end()) {    // key found
+  auto map_iter = iters_map.find(key);  // O(1)
+  if (map_iter != iters_map.end()) {    // key found
     auto list_iter = map_iter->second;
-    if (list_iter != _list.begin()) {  // if item is not MRU
+    if (list_iter != lru_list.begin()) {  // if item is not MRU
       // then move it to begin, O(1)
-      _list.splice(_list.begin(), _list, list_iter, std::next(list_iter));
+      lru_list.splice(lru_list.begin(), lru_list, list_iter, std::next(list_iter));
     }
 
     return &list_iter->second;
@@ -64,12 +64,12 @@ V* Cache<K, V>::get(K key) {
 
 template <typename K, typename V>
 bool Cache<K, V>::remove(K key) {
-  auto map_iter = _map.find(key);  // O(1)
-  if (map_iter != _map.end()) {    // key found
+  auto map_iter = iters_map.find(key);  // O(1)
+  if (map_iter != iters_map.end()) {    // key found
     auto list_iter = map_iter->second;
-    _list.erase(list_iter);
-    _map.erase(key);
-    currentSize--;
+    lru_list.erase(list_iter);
+    iters_map.erase(key);
+    current_size--;
     return true;
   } else {  // key not found
     return false;
@@ -78,10 +78,10 @@ bool Cache<K, V>::remove(K key) {
 
 template <typename K, typename V>
 void Cache<K, V>::clear() {
-  _list.clear();
-  _map.clear();
-  currentSize = 0;
+  lru_list.clear();
+  iters_map.clear();
+  current_size = 0;
 }
 
 template <typename K, typename V>
-uint64_t Cache<K, V>::size() { return currentSize; }
+uint64_t Cache<K, V>::size() { return current_size; }
