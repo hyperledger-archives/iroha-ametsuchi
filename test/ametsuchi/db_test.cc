@@ -21,33 +21,27 @@
 #include <ametsuchi/pager/page.h>
 #include <ametsuchi/globals.h>
 #include <string.h>
+#include "io/io_testing_lib.h"
 
 namespace ametsuchi {
 
 using pager::FileHeader;
 using pager::default_file_header;
-
-const std::string name = "_test_database.db";
-
-#define CLEANUP (remove(name.c_str()))
+using io::name;
 
 TEST(DBTest, DatabaseCreation) {
     DB db(name);
     db.save({1});
     db.close();
     ASSERT_NE(access(name.c_str(), F_OK), -1);
-    FILE *f = fopen(name.c_str(), "rb");
     FileHeader header;
-    EXPECT_EQ(fread(&header, sizeof(FileHeader), 1, f), 1u);
+    EXPECT_EQ(io::ReadFile((char*)(&header), sizeof(FileHeader)), 16u);
     ASSERT_EQ(strncmp(reinterpret_cast<const char*>(&header), reinterpret_cast<const char*>(&default_file_header), sizeof(FileHeader)), 0);
     CLEANUP;
 }
 
 TEST(DBTest, DatabaseReopening) {
-    FILE *f = fopen(name.c_str(), "wb+");
-    fwrite(&default_file_header, sizeof(FileHeader), 1, f);
-    fclose(f);
-
+    io::CreateAndWrite((const char*)(&default_file_header), sizeof(FileHeader));
     DB db;
     db.open(name);
     db.save({1});
