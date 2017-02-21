@@ -83,7 +83,7 @@ inline size_t page_idx(std::size_t offset) {
 }
 
 inline size_t page_ceil(std::size_t size) {
-  return ceil(size / AMETSUCHI_PAGE_SIZE);
+  return ceil((double)size / AMETSUCHI_PAGE_SIZE);
 }
 
 }  // namespace pager

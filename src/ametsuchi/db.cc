@@ -21,9 +21,9 @@
 
 namespace ametsuchi {
 
-DB::DB() : vfs(nullptr) {}
+DB::DB() : vfs(nullptr), size(0) {}
 
-DB::DB(const std::string &file_path) {
+DB::DB(const std::string &file_path) : DB() {
     // TODO: there should be handling configuration params as well
     open(file_path);
 
@@ -31,6 +31,7 @@ DB::DB(const std::string &file_path) {
     using pager::default_file_header;
     auto ptr = reinterpret_cast<const uint8_t*>(&default_file_header);
     ByteArray arr(ptr, ptr + sizeof default_file_header);
+    arr.shrink_to_fit();
     save(arr);
 }
 
