@@ -3,96 +3,111 @@ include(ExternalProject)
 set(EP_PREFIX "${PROJECT_SOURCE_DIR}/external")
 set_directory_properties(PROPERTIES
   EP_PREFIX ${EP_PREFIX}
-)
-
-include(cmake/DownloadProject.cmake)
+  )
 
 # Project dependencies.
-set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
 ################################
 #         flatbuffers          #
 ################################
-download_project(PROJ flatbuffers
-  GIT_REPOSITORY      https://github.com/google/flatbuffers.git
-  GIT_TAG             v1.5.0
-  PREFIX              ${EP_PREFIX}
+find_package(Git REQUIRED)
+set(flatbuffers_CMAKE_ARGS
+  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+  -DFLATBUFFERS_BUILD_TESTS=OFF
+  -DFLATBUFFERS_INSTALL=OFF
+  -DFLATBUFFERS_BUILD_FLATHASH=OFF
+  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
   )
-
-set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(FLATBUFFERS_INSTALL OFF CACHE BOOL "" FORCE)
-set(FLATBUFFERS_BUILD_FLATHASH OFF CACHE BOOL "" FORCE)
 if (NOT SCHEMA)
-  set(FLATBUFFERS_BUILD_FLATC OFF CACHE BOOL "" FORCE)
+  list(APPEND flatbuffers_CMAKE_ARGS
+    -DFLATBUFFERS_BUILD_FLATC=OFF
+    )
 endif ()
-add_subdirectory(${flatbuffers_SOURCE_DIR} ${flatbuffers_BINARY_DIR})
+ExternalProject_Add(googleflatbuffers
+  GIT_REPOSITORY    "https://github.com/google/flatbuffers.git"
+  CMAKE_ARGS        ${flatbuffers_CMAKE_ARGS}
+  INSTALL_COMMAND   "" # remove install step
+  TEST_COMMAND      "" # remove test step
+  UPDATE_COMMAND    "" # remove update step
+  PATCH_COMMAND     ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/patches/flatbuffers-Remove-libc-and-c-abi-requirement-on-Linux-with-clan.patch
+  )
+ExternalProject_Get_Property(googleflatbuffers source_dir binary_dir)
+set(flatbuffers_SOURCE_DIR "${source_dir}")
+set(flatbuffers_BINARY_DIR "${binary_dir}")
+
+add_library(flatbuffers INTERFACE)
+target_include_directories(flatbuffers INTERFACE ${flatbuffers_SOURCE_DIR}/include)
+target_link_libraries(flatbuffers INTERFACE ${flatbuffers_BINARY_DIR}/libflatbuffers.a)
+add_dependencies(flatbuffers googleflatbuffers)
 
 
 #############################
 #         speedlog          #
 #############################
-download_project(PROJ spdlog
-  GIT_REPOSITORY      https://github.com/gabime/spdlog.git
-  GIT_TAG             v0.11.0
-  PREFIX              ${EP_PREFIX}
+ExternalProject_Add(gabimespdlog
+  GIT_REPOSITORY    "https://github.com/gabime/spdlog.git"
+  CONFIGURE_COMMAND "" # remove configure step
+  BUILD_COMMAND     "" # remove build step
+  INSTALL_COMMAND   "" # remove install step
+  TEST_COMMAND      "" # remove test step
+  UPDATE_COMMAND    "" # remove update step
   )
+ExternalProject_Get_Property(gabimespdlog source_dir)
+set(spdlog_SOURCE_DIR "${source_dir}")
 
-set(SPDLOG_BUILD_TESTING OFF CACHE BOOL "" FORCE)
-add_subdirectory(${spdlog_SOURCE_DIR} ${spdlog_BINARY_DIR})
+add_library(spdlog INTERFACE)
+target_include_directories(spdlog INTERFACE ${spdlog_SOURCE_DIR}/include)
+add_dependencies(spdlog gabimespdlog)
 
 
 ###########################
 #         keccak          #
 ###########################
-find_package(LibXslt QUIET)
-if (NOT LIBXSLT_XSLTPROC_EXECUTABLE)
-  message(FATAL_ERROR "xsltproc not found")
-endif ()
+ExternalProject_Add(gvanaskeccak
+  GIT_REPOSITORY    "https://github.com/gvanas/KeccakCodePackage.git"
+  CONFIGURE_COMMAND ""
+  BUILD_IN_SOURCE   1
+  BUILD_COMMAND     $(MAKE) && $(MAKE) generic64/libkeccak.a
+  INSTALL_COMMAND   "" # remove install step
+  TEST_COMMAND      "" # remove test step
+  UPDATE_COMMAND    "" # remove update step
+  )
+ExternalProject_Get_Property(gvanaskeccak source_dir)
+set(keccak_SOURCE_DIR "${source_dir}")
 
-download_project(PROJ keccak
-  GIT_REPOSITORY      https://github.com/gvanas/KeccakCodePackage.git
-  GIT_TAG             master
-  PREFIX              ${EP_PREFIX}
-  )
-
-if (NOT EXISTS ${keccak_SOURCE_DIR}/bin)
-  execute_process(
-    COMMAND make clean
-    WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
-  )
-  execute_process(
-    COMMAND make
-    WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
-  )
-  execute_process(
-    COMMAND make generic64/libkeccak.a
-    WORKING_DIRECTORY "${keccak_SOURCE_DIR}"
-  )
-endif ()
-
-add_library(keccak STATIC IMPORTED)
-set_target_properties(keccak PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a.headers
-  IMPORTED_LOCATION ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a
-  )
+add_library(keccak INTERFACE)
+target_include_directories(keccak INTERFACE ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a.headers)
+target_link_libraries(keccak INTERFACE ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a)
+add_dependencies(keccak gvanaskeccak)
 
 
 if(TESTING)
   ##########################
   #         gtest          #
   ##########################
-  download_project(PROJ gtest
-    GIT_REPOSITORY      https://github.com/google/googletest.git
-    GIT_TAG             master
-    PREFIX              ${EP_PREFIX}
+  ExternalProject_Add(googletest
+    GIT_REPOSITORY    "https://github.com/google/googletest.git"
+    CMAKE_ARGS        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                      -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                      -DGTEST_FORCE_SHARED_CRT=ON
+                      -DGTEST_DISABLE_PTHREADS=OFF
+                      -DBUILD_GTEST=ON
+                      -DBUILD_GMOCK=OFF
+                      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    INSTALL_COMMAND   "" # remove install step
+    UPDATE_COMMAND    "" # remove update step
+    TEST_COMMAND      "" # remove test step
     )
+  ExternalProject_Get_Property(googletest source_dir binary_dir)
+  set(gtest_SOURCE_DIR ${source_dir})
+  set(gtest_BINARY_DIR ${binary_dir})
 
-  set(GTEST_FORCE_SHARED_CRT ON CACHE BOOL "" FORCE)
-  set(GTEST_DISABLE_PTHREADS OFF CACHE BOOL "" FORCE)
-  set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
-  set(BUILD_GTEST ON CACHE BOOL "" FORCE)
-  add_subdirectory(${gtest_SOURCE_DIR} ${gtest_BINARY_DIR})
+  add_library(gtest INTERFACE)
+  target_include_directories(gtest INTERFACE ${gtest_SOURCE_DIR}/googletest/include)
+  target_link_libraries(gtest INTERFACE ${gtest_BINARY_DIR}/googletest/libgtest.a)
+  add_dependencies(gtest googletest)
 endif(TESTING)
 
 
@@ -101,12 +116,22 @@ if(BENCHMARKING)
   ##############################
   #         benchmark          #
   ##############################
-  download_project(PROJ benchmarking
-    GIT_REPOSITORY      https://github.com/google/benchmark.git
-    GIT_TAG             master
-    PREFIX              ${EP_PREFIX}
+  ExternalProject_Add(googlebenchmark
+    GIT_REPOSITORY    "https://github.com/google/benchmark.git"
+    CMAKE_ARGS        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                      -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                      -DBENCHMARK_ENABLE_TESTING=OFF
+                      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    INSTALL_COMMAND   "" # remove install step
+    UPDATE_COMMAND    "" # remove update step
+    TEST_COMMAND      "" # remove test step
     )
+  ExternalProject_Get_Property(googlebenchmark source_dir binary_dir)
+  set(benchmark_SOURCE_DIR ${source_dir})
+  set(benchmark_BINARY_DIR ${binary_dir})
 
-  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
-  add_subdirectory(${benchmarking_SOURCE_DIR} ${benchmarking_BINARY_DIR})
+  add_library(benchmark INTERFACE)
+  target_include_directories(benchmark INTERFACE ${benchmark_SOURCE_DIR}/include)
+  target_link_libraries(benchmark INTERFACE ${benchmark_BINARY_DIR}/src/libbenchmark.a)
+  add_dependencies(benchmark googlebenchmark)
 endif(BENCHMARKING)
