@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3.0 FATAL_ERROR)
 # we need both C and CXX, without C pthread won't be compiled, causing build error
 project(ametsuchi VERSION 0.1.0 LANGUAGES C CXX)
 
@@ -29,7 +29,7 @@ include(cmake/functions.cmake)
 
 include_directories(
   # Library headers.
-  PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
 
@@ -73,7 +73,7 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
 
   add_custom_command(
     OUTPUT  api_generated.h
-    COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
+    COMMAND ${flatbuffers_BINARY_DIR}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
     COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
   )
@@ -87,6 +87,8 @@ endif()
 
 
 if(TESTING)
+  # Connect test executable and CMake test system.
+  enable_testing()
   add_subdirectory(test)
 endif(TESTING)
 

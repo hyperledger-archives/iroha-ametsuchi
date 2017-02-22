@@ -3,31 +3,41 @@ machine:
     Europe/Moscow
   environment:
     AMETSUCHI_HOME: $(pwd)/iroha-ametsuchi
+    PATH: "$HOME/cmake-3.3.0-Linux-x86_64/bin:$PATH"
 
 checkout:
   post:
     - cd $AMETSUCHI_HOME
     - sudo apt-get install -y software-properties-common
-    - sudo add-apt-repository -y ppa:george-edison55/cmake-3.x
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     - sudo apt-get update
     # install additional dependencies here:
-    - sudo apt-get install -y cmake xsltproc build-essential gcc-5 g++-5
+    - sudo apt-get install -y xsltproc build-essential gcc-5 g++-5
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 100
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 100
 
 
 dependencies:
   cache_directories:
-    - ${AMETSUCHI_HOME}/external/src/gtest
-    - ${AMETSUCHI_HOME}/external/src/flatbuffers
-    - ${AMETSUCHI_HOME}/external/src/spdlog
-    - ${AMETSUCHI_HOME}/external/src/benchmarking
-    - ${AMETSUCHI_HOME}/external/src/keccak
+    - ${AMETSUCHI_HOME}/external/src/google_test
+    - ${AMETSUCHI_HOME}/external/src/google_flatbuffers
+    - ${AMETSUCHI_HOME}/external/src/gabime_spdlog
+    - ${AMETSUCHI_HOME}/external/src/google_benchmark
+    - ${AMETSUCHI_HOME}/external/src/gvanas_keccak
+    - ~/cmake-3.3.0-Linux-x86_64
+
+  override:
+    - >
+      if [ ! -d ~/cmake-3.3.0-Linux-x86_64 ]; then
+        echo "No cache - building CMake"
+        cd ~ && wget --quiet https://cmake.org/files/v3.3/cmake-3.3.0-Linux-x86_64.tar.gz && tar -xvf cmake-3.3.0-Linux-x86_64.tar.gz
+      else
+        echo "Cached CMake found"
+      fi
 
   post:
     # remove old build symbols
-    - (cd ${AMETSUCHI_HOME}/external/src/keccak && make clean) || echo "Suppress errors"
+    - (cd ${AMETSUCHI_HOME}/external/src/gvanas_keccak && make clean) || echo "Suppress errors"
 
 
 test:
