@@ -71,6 +71,11 @@ add_dependencies(spdlog gabimespdlog)
 ###########################
 #         keccak          #
 ###########################
+find_package(LibXslt QUIET)
+if (NOT LIBXSLT_XSLTPROC_EXECUTABLE)
+  message(FATAL_ERROR "xsltproc not found")
+endif ()
+
 ExternalProject_Add(gvanaskeccak
   GIT_REPOSITORY    "https://github.com/gvanas/KeccakCodePackage.git"
   CONFIGURE_COMMAND ""
