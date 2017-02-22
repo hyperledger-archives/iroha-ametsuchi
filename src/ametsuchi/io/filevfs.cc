@@ -22,7 +22,7 @@ namespace ametsuchi {
 namespace io {
 
 FileVFS::FileVFS(const char *file) : cache(FileVFS_MAX_CACHE_SIZE) {
-    f = fopen(file, "r+"); // maybe a+?
+    f = fopen(file, "ab+"); // maybe a+?
 }
 
 FileVFS::~FileVFS() {
@@ -31,7 +31,8 @@ FileVFS::~FileVFS() {
 
 void FileVFS::close() {
     flush();
-    fclose(f);
+    if (f) fclose(f);
+    f = 0;
 }
 
 void FileVFS::read(std::size_t offset, ByteArray &b, std::size_t size) {
@@ -41,9 +42,10 @@ void FileVFS::read(std::size_t offset, ByteArray &b, std::size_t size) {
     b.clear();
     b.reserve(size);
 
-    pager::Page *p;
+    pager::Page buf;
     for (size_t i = 0; i < page_num; ++i) {
         pager::Page* pg = cache.get(base_page);
+        pager::Page *p = &buf;
 
         // TODO: store missed pages at read from disk at once
         if (!pg) {
@@ -79,7 +81,7 @@ void FileVFS::write(std::size_t offset, const ByteArray &b) {
 
 void FileVFS::flush() {
     //TODO: consider dirty pages
-    fflush(f);
+    if (f) fflush(f);
     cache.clear();
 }
 

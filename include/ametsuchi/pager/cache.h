@@ -22,7 +22,7 @@
 #include <unordered_map>
 
 namespace ametsuchi {
-
+namespace pager {
 /**
  * Implementation of LRU (last recently used) in-memory cache.
  * Implements move semantics -- it means, that it should "own" data item:
@@ -98,3 +98,4 @@ class Cache {
 #include "cache.inc"
 
 }  // namespace ametsuchi
+}
