@@ -29,7 +29,7 @@ include(cmake/functions.cmake)
 
 include_directories(
   # Library headers.
-  PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
 

@@ -37,9 +37,12 @@ ExternalProject_Get_Property(googleflatbuffers source_dir binary_dir)
 set(flatbuffers_SOURCE_DIR "${source_dir}")
 set(flatbuffers_BINARY_DIR "${binary_dir}")
 
-add_library(flatbuffers INTERFACE)
-target_include_directories(flatbuffers INTERFACE ${flatbuffers_SOURCE_DIR}/include)
-target_link_libraries(flatbuffers INTERFACE ${flatbuffers_BINARY_DIR}/libflatbuffers.a)
+add_library(flatbuffers STATIC IMPORTED)
+file(MAKE_DIRECTORY ${flatbuffers_SOURCE_DIR}/include)
+set_target_properties(flatbuffers PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${flatbuffers_SOURCE_DIR}/include
+  IMPORTED_LOCATION ${flatbuffers_BINARY_DIR}/libflatbuffers.a
+  )
 add_dependencies(flatbuffers googleflatbuffers)
 
 
@@ -57,8 +60,11 @@ ExternalProject_Add(gabimespdlog
 ExternalProject_Get_Property(gabimespdlog source_dir)
 set(spdlog_SOURCE_DIR "${source_dir}")
 
-add_library(spdlog INTERFACE)
-target_include_directories(spdlog INTERFACE ${spdlog_SOURCE_DIR}/include)
+add_library(spdlog INTERFACE IMPORTED)
+file(MAKE_DIRECTORY ${spdlog_SOURCE_DIR}/include)
+set_target_properties(spdlog PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${spdlog_SOURCE_DIR}/include
+  )
 add_dependencies(spdlog gabimespdlog)
 
 
@@ -77,9 +83,12 @@ ExternalProject_Add(gvanaskeccak
 ExternalProject_Get_Property(gvanaskeccak source_dir)
 set(keccak_SOURCE_DIR "${source_dir}")
 
-add_library(keccak INTERFACE)
-target_include_directories(keccak INTERFACE ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a.headers)
-target_link_libraries(keccak INTERFACE ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a)
+add_library(keccak STATIC IMPORTED)
+file(MAKE_DIRECTORY ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a.headers)
+set_target_properties(keccak PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a.headers
+  IMPORTED_LOCATION ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a
+  )
 add_dependencies(keccak gvanaskeccak)
 
 
@@ -91,8 +100,8 @@ if(TESTING)
     GIT_REPOSITORY    "https://github.com/google/googletest.git"
     CMAKE_ARGS        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                      -DGTEST_FORCE_SHARED_CRT=ON
-                      -DGTEST_DISABLE_PTHREADS=OFF
+                      -Dgtest_force_shared_crt=ON
+                      -Dgtest_disable_pthreads=OFF
                       -DBUILD_GTEST=ON
                       -DBUILD_GMOCK=OFF
                       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
@@ -104,9 +113,12 @@ if(TESTING)
   set(gtest_SOURCE_DIR ${source_dir})
   set(gtest_BINARY_DIR ${binary_dir})
 
-  add_library(gtest INTERFACE)
-  target_include_directories(gtest INTERFACE ${gtest_SOURCE_DIR}/googletest/include)
-  target_link_libraries(gtest INTERFACE ${gtest_BINARY_DIR}/googletest/libgtest.a)
+  add_library(gtest STATIC IMPORTED)
+  file(MAKE_DIRECTORY ${gtest_SOURCE_DIR}/googletest/include)
+  set_target_properties(gtest PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES ${gtest_SOURCE_DIR}/googletest/include
+    IMPORTED_LOCATION ${gtest_BINARY_DIR}/googletest/libgtest.a
+    )
   add_dependencies(gtest googletest)
 endif(TESTING)
 
@@ -130,8 +142,11 @@ if(BENCHMARKING)
   set(benchmark_SOURCE_DIR ${source_dir})
   set(benchmark_BINARY_DIR ${binary_dir})
 
-  add_library(benchmark INTERFACE)
-  target_include_directories(benchmark INTERFACE ${benchmark_SOURCE_DIR}/include)
-  target_link_libraries(benchmark INTERFACE ${benchmark_BINARY_DIR}/src/libbenchmark.a)
+  add_library(benchmark STATIC IMPORTED)
+  file(MAKE_DIRECTORY ${benchmark_SOURCE_DIR}/include)
+  set_target_properties(benchmark PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES ${benchmark_SOURCE_DIR}/include
+    IMPORTED_LOCATION ${benchmark_BINARY_DIR}/src/libbenchmark.a
+    )
   add_dependencies(benchmark googlebenchmark)
 endif(BENCHMARKING)

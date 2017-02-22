@@ -19,15 +19,15 @@ checkout:
 
 dependencies:
   cache_directories:
-    - ${AMETSUCHI_HOME}/external/src/gtest
-    - ${AMETSUCHI_HOME}/external/src/flatbuffers
-    - ${AMETSUCHI_HOME}/external/src/spdlog
-    - ${AMETSUCHI_HOME}/external/src/benchmarking
-    - ${AMETSUCHI_HOME}/external/src/keccak
+    - ${AMETSUCHI_HOME}/external/src/googletest
+    - ${AMETSUCHI_HOME}/external/src/googleflatbuffers
+    - ${AMETSUCHI_HOME}/external/src/gabimespdlog
+    - ${AMETSUCHI_HOME}/external/src/googlebenchmark
+    - ${AMETSUCHI_HOME}/external/src/gvanaskeccak
 
   post:
     # remove old build symbols
-    - (cd ${AMETSUCHI_HOME}/external/src/keccak && make clean) || echo "Suppress errors"
+    - (cd ${AMETSUCHI_HOME}/external/src/gvanaskeccak && make clean) || echo "Suppress errors"
 
 
 test:
