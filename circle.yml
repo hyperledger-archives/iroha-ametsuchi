@@ -19,11 +19,11 @@ checkout:
 
 dependencies:
   cache_directories:
-    - ${AMETSUCHI_HOME}/external/src/googletest
-    - ${AMETSUCHI_HOME}/external/src/googleflatbuffers
-    - ${AMETSUCHI_HOME}/external/src/gabimespdlog
-    - ${AMETSUCHI_HOME}/external/src/googlebenchmark
-    - ${AMETSUCHI_HOME}/external/src/gvanaskeccak
+    - ${AMETSUCHI_HOME}/external/src/google_test
+    - ${AMETSUCHI_HOME}/external/src/google_flatbuffers
+    - ${AMETSUCHI_HOME}/external/src/gabime_spdlog
+    - ${AMETSUCHI_HOME}/external/src/google_benchmark
+    - ${AMETSUCHI_HOME}/external/src/gvanas_keccak
     - ~/cmake-3.3.0-Linux-x86_64
 
   override:
@@ -37,7 +37,7 @@ dependencies:
 
   post:
     # remove old build symbols
-    - (cd ${AMETSUCHI_HOME}/external/src/gvanaskeccak && make clean) || echo "Suppress errors"
+    - (cd ${AMETSUCHI_HOME}/external/src/gvanas_keccak && make clean) || echo "Suppress errors"
 
 
 test:

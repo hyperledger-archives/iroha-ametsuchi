@@ -25,15 +25,15 @@ if (NOT SCHEMA)
     -DFLATBUFFERS_BUILD_FLATC=OFF
     )
 endif ()
-ExternalProject_Add(googleflatbuffers
+ExternalProject_Add(google_flatbuffers
   GIT_REPOSITORY    "https://github.com/google/flatbuffers.git"
   CMAKE_ARGS        ${flatbuffers_CMAKE_ARGS}
   INSTALL_COMMAND   "" # remove install step
   TEST_COMMAND      "" # remove test step
   UPDATE_COMMAND    "" # remove update step
-  PATCH_COMMAND     ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/patches/flatbuffers-Remove-libc-and-c-abi-requirement-on-Linux-with-clan.patch
+  PATCH_COMMAND     ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/patches/flatbuffers-Remove-libc-and-c-abi-requirement-on-Linux-with-clan.patch || true
   )
-ExternalProject_Get_Property(googleflatbuffers source_dir binary_dir)
+ExternalProject_Get_Property(google_flatbuffers source_dir binary_dir)
 set(flatbuffers_SOURCE_DIR "${source_dir}")
 set(flatbuffers_BINARY_DIR "${binary_dir}")
 
@@ -43,13 +43,13 @@ set_target_properties(flatbuffers PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${flatbuffers_SOURCE_DIR}/include
   IMPORTED_LOCATION ${flatbuffers_BINARY_DIR}/libflatbuffers.a
   )
-add_dependencies(flatbuffers googleflatbuffers)
+add_dependencies(flatbuffers google_flatbuffers)
 
 
 #############################
 #         speedlog          #
 #############################
-ExternalProject_Add(gabimespdlog
+ExternalProject_Add(gabime_spdlog
   GIT_REPOSITORY    "https://github.com/gabime/spdlog.git"
   CONFIGURE_COMMAND "" # remove configure step
   BUILD_COMMAND     "" # remove build step
@@ -57,7 +57,7 @@ ExternalProject_Add(gabimespdlog
   TEST_COMMAND      "" # remove test step
   UPDATE_COMMAND    "" # remove update step
   )
-ExternalProject_Get_Property(gabimespdlog source_dir)
+ExternalProject_Get_Property(gabime_spdlog source_dir)
 set(spdlog_SOURCE_DIR "${source_dir}")
 
 add_library(spdlog INTERFACE IMPORTED)
@@ -65,7 +65,7 @@ file(MAKE_DIRECTORY ${spdlog_SOURCE_DIR}/include)
 set_target_properties(spdlog PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${spdlog_SOURCE_DIR}/include
   )
-add_dependencies(spdlog gabimespdlog)
+add_dependencies(spdlog gabime_spdlog)
 
 
 ###########################
@@ -76,7 +76,7 @@ if (NOT LIBXSLT_XSLTPROC_EXECUTABLE)
   message(FATAL_ERROR "xsltproc not found")
 endif ()
 
-ExternalProject_Add(gvanaskeccak
+ExternalProject_Add(gvanas_keccak
   GIT_REPOSITORY    "https://github.com/gvanas/KeccakCodePackage.git"
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE   1
@@ -85,7 +85,7 @@ ExternalProject_Add(gvanaskeccak
   TEST_COMMAND      "" # remove test step
   UPDATE_COMMAND    "" # remove update step
   )
-ExternalProject_Get_Property(gvanaskeccak source_dir)
+ExternalProject_Get_Property(gvanas_keccak source_dir)
 set(keccak_SOURCE_DIR "${source_dir}")
 
 add_library(keccak STATIC IMPORTED)
@@ -94,14 +94,14 @@ set_target_properties(keccak PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a.headers
   IMPORTED_LOCATION ${keccak_SOURCE_DIR}/bin/generic64/libkeccak.a
   )
-add_dependencies(keccak gvanaskeccak)
+add_dependencies(keccak gvanas_keccak)
 
 
 if(TESTING)
   ##########################
   #         gtest          #
   ##########################
-  ExternalProject_Add(googletest
+  ExternalProject_Add(google_test
     GIT_REPOSITORY    "https://github.com/google/googletest.git"
     CMAKE_ARGS        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -114,7 +114,7 @@ if(TESTING)
     UPDATE_COMMAND    "" # remove update step
     TEST_COMMAND      "" # remove test step
     )
-  ExternalProject_Get_Property(googletest source_dir binary_dir)
+  ExternalProject_Get_Property(google_test source_dir binary_dir)
   set(gtest_SOURCE_DIR ${source_dir})
   set(gtest_BINARY_DIR ${binary_dir})
 
@@ -124,7 +124,7 @@ if(TESTING)
     INTERFACE_INCLUDE_DIRECTORIES ${gtest_SOURCE_DIR}/googletest/include
     IMPORTED_LOCATION ${gtest_BINARY_DIR}/googletest/libgtest.a
     )
-  add_dependencies(gtest googletest)
+  add_dependencies(gtest google_test)
 endif(TESTING)
 
 
@@ -133,7 +133,7 @@ if(BENCHMARKING)
   ##############################
   #         benchmark          #
   ##############################
-  ExternalProject_Add(googlebenchmark
+  ExternalProject_Add(google_benchmark
     GIT_REPOSITORY    "https://github.com/google/benchmark.git"
     CMAKE_ARGS        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -143,7 +143,7 @@ if(BENCHMARKING)
     UPDATE_COMMAND    "" # remove update step
     TEST_COMMAND      "" # remove test step
     )
-  ExternalProject_Get_Property(googlebenchmark source_dir binary_dir)
+  ExternalProject_Get_Property(google_benchmark source_dir binary_dir)
   set(benchmark_SOURCE_DIR ${source_dir})
   set(benchmark_BINARY_DIR ${binary_dir})
 
@@ -153,5 +153,5 @@ if(BENCHMARKING)
     INTERFACE_INCLUDE_DIRECTORIES ${benchmark_SOURCE_DIR}/include
     IMPORTED_LOCATION ${benchmark_BINARY_DIR}/src/libbenchmark.a
     )
-  add_dependencies(benchmark googlebenchmark)
+  add_dependencies(benchmark google_benchmark)
 endif(BENCHMARKING)
