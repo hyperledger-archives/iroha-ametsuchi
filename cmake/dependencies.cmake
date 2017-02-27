@@ -80,7 +80,7 @@ ExternalProject_Add(gvanas_keccak
   GIT_REPOSITORY    "https://github.com/gvanas/KeccakCodePackage.git"
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE   1
-  BUILD_COMMAND     $(MAKE) && $(MAKE) generic64/libkeccak.a
+  BUILD_COMMAND     $(MAKE) generic64/libkeccak.a
   INSTALL_COMMAND   "" # remove install step
   TEST_COMMAND      "" # remove test step
   UPDATE_COMMAND    "" # remove update step
@@ -122,6 +122,7 @@ if(TESTING)
   file(MAKE_DIRECTORY ${gtest_SOURCE_DIR}/googletest/include)
   set_target_properties(gtest PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES ${gtest_SOURCE_DIR}/googletest/include
+    IMPORTED_LINK_INTERFACE_LIBRARIES "pthread;${gtest_BINARY_DIR}/googletest/libgtest_main.a"
     IMPORTED_LOCATION ${gtest_BINARY_DIR}/googletest/libgtest.a
     )
   add_dependencies(gtest google_test)
