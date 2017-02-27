@@ -22,7 +22,6 @@ endfunction()
 
 # Creates test "test_name", with "SOURCES" (use string as second argument)
 function(AddTest test_name SOURCES)
-  list(APPEND SOURCES main.cc)
   add_executable(${test_name} ${SOURCES})
   target_link_libraries(${test_name} PRIVATE ${LIBAMETSUCHI_NAME} gtest pthread)
   add_test(
