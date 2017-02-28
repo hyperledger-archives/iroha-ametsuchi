@@ -5,6 +5,7 @@ project(ametsuchi VERSION 0.1.0 LANGUAGES C CXX)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 option(SCHEMA "Compile given schema (fbs file) using flatc" OFF)
 option(BENCHMARKING "Build benchmarks" OFF)
@@ -73,7 +74,7 @@ if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
 
   add_custom_command(
     OUTPUT  api_generated.h
-    COMMAND ${flatbuffers_BINARY_DIR}/flatc --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
+    COMMAND ${flatc_EXECUTABLE} --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
     COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
   )
