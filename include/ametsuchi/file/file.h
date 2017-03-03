@@ -15,18 +15,29 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_FILE_H
+#define AMETSUCHI_FILE_H
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
 #include <string>
-#include <memory>
 
 namespace ametsuchi {
+namespace file {
 
-using ByteArray = std::vector<uint8_t>;
+class File {
+ public:
+  explicit File(const std::string& path);
 
-using byte_t = uint8_t;
-using byte_array = std::vector<byte_t>;
-}
+  virtual void open() = 0;
+  virtual void close() = 0;
+
+  virtual ~File();
+
+ private:
+  std::string _path;
+  FILE * _file;
+};
+
+}  // namespace file
+}  // namespace ametsuchi
+
+#endif  // AMETSUCHI_FILE_H

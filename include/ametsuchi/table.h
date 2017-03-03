@@ -15,18 +15,23 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_SSTABLE_H
+#define AMETSUCHI_SSTABLE_H
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
+#include <ametsuchi/comparator/comparator.h>
+#include <ametsuchi/globals.h>
+#include <map>
 
 namespace ametsuchi {
 
-using ByteArray = std::vector<uint8_t>;
+class Table {
+ public:
+  Table(const Comparator& cmp);
 
-using byte_t = uint8_t;
-using byte_array = std::vector<byte_t>;
+ private:
+  Comparator _cmp;
+  std::map<byte_array, byte_array> _table;
+};
 }
+
+#endif  // AMETSUCHI_SSTABLE_H

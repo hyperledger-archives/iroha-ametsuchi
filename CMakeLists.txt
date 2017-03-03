@@ -23,29 +23,25 @@ message(STATUS "-DBENCHMARKING=${BENCHMARKING}")
 message(STATUS "-DDOCS=${DOCS}")
 
 
-
-include(cmake/dependencies.cmake)
-include(cmake/functions.cmake)
-
-
 include_directories(
   # Library headers.
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
+include(cmake/dependencies.cmake)
+include(cmake/functions.cmake)
 
 
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
-add_library(${LIBAMETSUCHI_NAME}
-  ${PROJECT_SOURCE_DIR}/src/ametsuchi/db.cc
-  ${PROJECT_SOURCE_DIR}/src/ametsuchi/io/filevfs.cc
-)
-target_link_libraries(${LIBAMETSUCHI_NAME}
-  flatbuffers
-  spdlog
-  keccak
-  )
-StrictMode(${LIBAMETSUCHI_NAME})
+#add_library(${LIBAMETSUCHI_NAME}
+
+#)
+#target_link_libraries(${LIBAMETSUCHI_NAME}
+#  flatbuffers
+#  spdlog
+#  keccak
+#  )
+#StrictMode(${LIBAMETSUCHI_NAME})
 
 
 # Documentation.

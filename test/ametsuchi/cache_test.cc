@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ametsuchi/pager/cache.h>
+#include <ametsuchi/cache.h>
 #include <ametsuchi/globals.h>
 #include <chrono>
 

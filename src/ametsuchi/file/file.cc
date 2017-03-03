@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
+#include <ametsuchi/file/file.h>
 
 namespace ametsuchi {
+namespace file {
 
-using ByteArray = std::vector<uint8_t>;
+File::File(const std::string &path) : _path(path) {}
 
-using byte_t = uint8_t;
-using byte_array = std::vector<byte_t>;
+File::~File() {
+  if (_file) {
+    fclose(_file);
+  }
+}
+
+}
 }

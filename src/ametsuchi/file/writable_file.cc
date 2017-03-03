@@ -15,18 +15,32 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
+#include <ametsuchi/file/writable_file.h>
 
 namespace ametsuchi {
+namespace file {
 
-using ByteArray = std::vector<uint8_t>;
+WritableFile::WritableFile(const std::string& path) : File(path) {}
 
-using byte_t = uint8_t;
-using byte_array = std::vector<byte_t>;
+bool WritableFile::open() {
+  file = fopen(path.c_str(), "wb");
+  if (!file)
+    return false;
+  else
+    return true;
+}
+
+
+
+template <typename T>
+void WritableFile::write(const T* blob, const uint64_t size) {
+  throw std::exception("not implemented");
+}
+
+// for uint8_t
+template <>
+void WritableFile::write(const uint8_t* blob, const uint64_t size) {
+  fwrite(blob, sizeof(uint8_t), size, _file);
+}
+}
 }

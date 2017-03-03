@@ -15,33 +15,18 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <string>
-#include <cstdio>
+#ifndef AMETSUCHI_COMPARATOR_H
+#define AMETSUCHI_COMPARATOR_H
 
 namespace ametsuchi {
-namespace io {
+namespace comparator {
 
-const std::string name = "_test_database.db";
-
-#define CLEANUP (remove(name.c_str()))
-
-std::size_t CreateAndWrite(const char *bytes, std::size_t len) {
-    FILE* f = fopen(name.c_str(), "wb+");
-    if (!f) return 0;
-    std::size_t written = fwrite(bytes, 1, len, f);
-    fclose(f);
-    return written;
-}
-
-std::size_t ReadFile(char *bytes, std::size_t len) {
-    FILE *f = fopen(name.c_str(), "rb");
-    if (!f) return 0;
-    std::size_t written = fread(bytes, 1, len, f);
-    fclose(f);
-    return written;
-}
+template <typename T>
+class Comparator {
+  bool operator()(const T& a, const T& b) = 0;
+};
 
 }
 }
+
+#endif  // AMETSUCHI_ABSTRACT_COMPARATOR_H

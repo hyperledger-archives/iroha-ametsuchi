@@ -15,18 +15,26 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_WRITABLE_FILE_H
+#define AMETSUCHI_WRITABLE_FILE_H
 
 #include <cstdint>
-#include <cstdlib>
-#include <vector>
+#include <exception>
 #include <string>
-#include <memory>
+#include "file.h"
 
 namespace ametsuchi {
+namespace file {
+class WritableFile : public File {
+ public:
+  explicit WritableFile(const std::string& path);
 
-using ByteArray = std::vector<uint8_t>;
+  virtual bool open();
 
-using byte_t = uint8_t;
-using byte_array = std::vector<byte_t>;
+  template <typename T>
+  virtual void write(const T &blob);
+};
 }
+}
+
+#endif  // AMETSUCHI_WRITABLE_FILE_H

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/pager/cache.h>
+#include <ametsuchi/cache.h>
 #include <benchmark/benchmark.h>
 #include <stdint.h>
 #include <algorithm>
