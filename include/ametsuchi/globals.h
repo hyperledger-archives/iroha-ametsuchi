@@ -25,8 +25,7 @@
 
 namespace ametsuchi {
 
-using ByteArray = std::vector<uint8_t>;
-
 using byte_t = uint8_t;
-using byte_array = std::vector<byte_t>;
+using ByteArray = std::vector<byte_t>;
+
 }

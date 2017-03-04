@@ -6,3 +6,8 @@ AddTest(module_keccak module/keccak_test.cc)
 target_link_libraries(module_keccak
   PRIVATE keccak
 )
+
+AddTest(ametsuchi_file_test ametsuchi/file/file_test.cc)
+target_link_libraries(ametsuchi_file_test
+  PRIVATE ${LIBAMETSUCHI_NAME}
+  )

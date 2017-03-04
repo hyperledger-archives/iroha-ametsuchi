@@ -26,11 +26,11 @@ namespace ametsuchi {
 
 class Table {
  public:
-  Table(const Comparator& cmp);
+  explicit Table(const Comparator &cmp);
 
  private:
-  Comparator _cmp;
-  std::map<byte_array, byte_array> _table;
+  Comparator cmp_;
+  std::map<byte_array, byte_array> table_;
 };
 }
 

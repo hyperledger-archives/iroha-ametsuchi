@@ -15,30 +15,57 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
+
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
 
 namespace ametsuchi {
 namespace file {
 
-File::File(const std::string &path) : path_(path), file_(nullptr, &fclose) {}
+const std::string filename = "test";
+/*
+TEST(FileTest, WriteTest) {
+  WritableFile wf(filename);
 
+  ByteArray wdata = {1, 2, 3};
+  wf.write(wdata);
 
-AppendableFile::AppendableFile(const std::string &path) : File(path) {
-  file_.reset(fopen(path_.c_str(), "ab"));
-}
-template<>
-void AppendableFile::append<ByteArray>(const ByteArray &data) {
-  fwrite(data.data(), sizeof(ByteArray::value_type), data.size(), file_.get());
-}
+  ByteArray rdata(3);
+  wf.read(rdata, 0);
 
-SequentialFile::SequentialFile(const std::string &path) : File(path) {
-  file_.reset(fopen(path_.c_str(), "rb"));
-}
-template<>
-void SequentialFile::read<ByteArray>(ByteArray *data, std::size_t size, std::size_t offset) {
-  fseek(file_.get(), offset, SEEK_CUR);
-  fread(data, sizeof(ByteArray::value_type), size, file_.get());
+  ASSERT_EQ(wdata, rdata);
+
+  wdata = {3, 2, 1};
+  wf.write(wdata);
+
+  wf.read(rdata, 0);
+
+  ASSERT_EQ(wdata, rdata);
+
+  remove(filename.c_str());
+}*/
+
+TEST(FileTest, AppendTest) {
+  {
+    AppendableFile af(filename);
+
+    ByteArray wdata = {1, 2, 3};
+    af.append(wdata);
+
+    wdata = {3, 2, 1};
+    af.append(wdata);
+  }
+  {
+    SequentialFile sf(filename);
+
+    ByteArray wdata = {1, 2, 3, 3, 2, 1};
+    ByteArray rdata(6);
+    sf.read(rdata.data(), rdata.size(), 0);
+    ASSERT_EQ(wdata, rdata);
+  }
+
+  remove(filename.c_str());
 }
 }
 }

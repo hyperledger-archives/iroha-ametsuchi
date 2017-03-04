@@ -33,15 +33,16 @@ include(cmake/functions.cmake)
 
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
-#add_library(${LIBAMETSUCHI_NAME}
-
-#)
+add_library(${LIBAMETSUCHI_NAME}
+  src/ametsuchi/file/file.cc
+  include/ametsuchi/file/file.h
+)
 #target_link_libraries(${LIBAMETSUCHI_NAME}
 #  flatbuffers
 #  spdlog
 #  keccak
 #  )
-#StrictMode(${LIBAMETSUCHI_NAME})
+StrictMode(${LIBAMETSUCHI_NAME})
 
 
 # Documentation.
