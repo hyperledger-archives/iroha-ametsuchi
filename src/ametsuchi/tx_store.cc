@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
+#include <ametsuchi/tx_store.h>
 
 namespace ametsuchi {
 
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
+TXStore::TXStore(const std::string& path) : file_(path) {}
+
+template <typename T>
+Status TXStore::append(const T& tx) {
+  ByteArray blob = serializer_.serialize(tx);
+  return file_.append(blob);
+}
 
 }

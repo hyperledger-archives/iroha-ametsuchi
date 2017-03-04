@@ -15,17 +15,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_EXCEPTION_H
+#define AMETSUCHI_EXCEPTION_H
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
 
-namespace ametsuchi {
-
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
-
-}
+#endif  // AMETSUCHI_EXCEPTION_H

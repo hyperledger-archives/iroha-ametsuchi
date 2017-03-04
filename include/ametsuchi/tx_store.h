@@ -15,23 +15,42 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_SSTABLE_H
-#define AMETSUCHI_SSTABLE_H
+#ifndef AMETSUCHI_TX_STORE_H
+#define AMETSUCHI_TX_STORE_H
 
-#include <ametsuchi/comparator/comparator.h>
-#include <ametsuchi/globals.h>
-#include <map>
+#include <string>
+#include "status.h"
+#include "cache.h"
 
 namespace ametsuchi {
 
-class Table {
+class AppendableFile;
+class Serialzier;
+
+template <typename T, Serializer serializer>
+class TXStore {
  public:
-  Table(const Comparator& cmp);
+  explicit TXStore(const std::string &path);
+
+  Status append(const T& tx);
+
 
  private:
-  Comparator _cmp;
-  std::map<byte_array, byte_array> _table;
+  std::unique_ptr<AppendableFile> file_;
+  std::unique_ptr<Serializer> serializer_;
+
+
 };
+
+static struct Entry{
+  ByteArray key;
+  ByteArray value;
+};
+
+static class PKIndex{
+  Cache<uint64_t, Entry> cache;
+};
+
 }
 
-#endif  // AMETSUCHI_SSTABLE_H
+#endif  // AMETSUCHI_TX_STORE_H

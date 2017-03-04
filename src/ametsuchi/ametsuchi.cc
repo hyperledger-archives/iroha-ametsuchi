@@ -15,18 +15,16 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_COMPARATOR_H
-#define AMETSUCHI_COMPARATOR_H
+#include <ametsuchi/ametsuchi.h>
 
-namespace ametsuchi {
-namespace comparator {
+namespace ametsuchi{
 
-template <typename T>
-class Comparator {
-  bool operator()(const T& a, const T& b) = 0;
-};
-
-}
+Status Ametsuchi::open(const std::string &path) {
+  /**
+   * Create new TX_store
+   * return Status
+   */
+   return nullptr;
 }
 
-#endif  // AMETSUCHI_ABSTRACT_COMPARATOR_H
+}

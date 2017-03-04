@@ -22,7 +22,6 @@
 #include <chrono>
 
 namespace ametsuchi {
-namespace pager {
 
 template <typename T>
 struct Counter {
@@ -124,7 +123,7 @@ TEST(CacheTest, RemoveAndSize) {
   ASSERT_EQ(cache.size(), 0u);
 }
 
-TEST(CacheTest, Clear){
+TEST(CacheTest, Clear) {
   int max_size = 10;
   Cache<int, int> cache(max_size);
 
@@ -137,5 +136,17 @@ TEST(CacheTest, Clear){
   ASSERT_EQ(cache.size(), 0u);
 }
 
-}  // namespace ametsuchi
+TEST(CacheTest, PutEvicted) {
+  int max_size = 3;
+  Cache<int, int> cache(max_size);
+  for (int i = 0; i < 3 * max_size; i++) {
+    auto evicted = cache.put(i, i + 1);
+    if (i < max_size) {
+      ASSERT_EQ(evicted, nullptr);
+    } else {
+      ASSERT_EQ(*evicted, i + 1 - max_size);
+    }
+  }
 }
+
+}  // namespace ametsuchi

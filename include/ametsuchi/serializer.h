@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_SERIALIZER_H
+#define AMETSUCHI_SERIALIZER_H
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
+namespace ametsuchi{
 
-namespace ametsuchi {
-
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
+template <typename T>
+class Serializer{
+  ByteArray serialize(const T& obj) = 0;
+  T deserialize(const ByteArray& blob) = 0;
+};
 
 }
+
+#endif  // AMETSUCHI_SERIALIZER_H
