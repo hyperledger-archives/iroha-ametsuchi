@@ -23,9 +23,17 @@
 namespace ametsuchi {
 namespace file {
 
-const std::string filename = "/tmp/test_db";
+class FileTest : public ::testing::Test{
+ protected:
 
-TEST(FileTest, AppendTest) {
+  virtual void TearDown() {
+    remove(filename.c_str());
+  }
+
+  const std::string filename = "/tmp/test_db";
+};
+
+TEST_F(FileTest, AppendTest) {
   {
     AppendableFile af(filename);
 
@@ -57,7 +65,31 @@ TEST(FileTest, AppendTest) {
     ASSERT_EQ(wdata, rdata);
   }
 
-  remove(filename.c_str());
+}
+
+TEST_F(FileTest, PositionTest){
+  {
+    AppendableFile af(filename);
+
+    ASSERT_EQ(af.position(), 0);
+
+    ByteArray wdata = {1, 2, 3};
+    af.append(wdata);
+
+    ASSERT_EQ(af.position(), 3);
+
+    wdata = {3, 2, 1};
+    af.append(wdata);
+
+    ASSERT_EQ(af.position(), 6);
+  }
+  {
+    SequentialFile sf(filename);
+
+    ByteArray rdata = sf.read(2, 2);
+
+    ASSERT_EQ(sf.position(), 4);
+  }
 }
 }
 }

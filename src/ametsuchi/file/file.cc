@@ -24,6 +24,10 @@ namespace file {
 File::File(const std::string &path)
     : path_(path), file_(nullptr, &std::fclose) {}
 
+offset_t File::position() const {
+  return ftell(file_.get());
+}
+
 File::~File() {}
 
 AppendableFile::AppendableFile(const std::string &path) : File(path) {

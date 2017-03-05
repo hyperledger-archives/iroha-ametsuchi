@@ -25,9 +25,13 @@
 namespace ametsuchi {
 namespace file {
 
+using offset_t = std::result_of<decltype(&ftell)(FILE*)>::type;
+
 class File {
  public:
   explicit File(const std::string &path);
+
+  offset_t position() const;
 
   virtual ~File() = 0;
 
