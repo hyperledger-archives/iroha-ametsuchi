@@ -27,7 +27,8 @@ static void SerializeMacros(benchmark::State& state) {
   uint16_t c = 0x4444;
   uint8_t d = 0x55;
 
-  ByteArray a_(16);
+  ByteArray data(state.range(0), 1u);
+  ByteArray a_(state.range(0) + 200u);
 
   while (state.KeepRunning()) {
     // put
@@ -36,6 +37,7 @@ static void SerializeMacros(benchmark::State& state) {
     PUT_UINT(pw, b, uint32_t);
     PUT_UINT(pw, c, uint16_t);
     PUT_UINT(pw, d, uint8_t);
+    PUT_BYTE_ARRAY(pw, data);
 
     // get
     uint8_t* pr = a_.data();
@@ -43,11 +45,13 @@ static void SerializeMacros(benchmark::State& state) {
     GET_UINT(&b, pr, uint32_t);
     GET_UINT(&c, pr, uint16_t);
     GET_UINT(&d, pr, uint8_t);
+    GET_BYTE_ARRAY(data, pr);
 
     assert(a == 0x2222222222222222);
     assert(b == 0x33333333);
     assert(c == 0x4444);
     assert(d == 0x55);
+    assert(data[0] == 1);
   }
 }
 
@@ -59,22 +63,34 @@ static void SerializeSstream(benchmark::State& state) {
   uint16_t c = 0x4444;
   uint8_t d = 0x55;
 
+  ByteArray data(state.range(0), 1u);
+  size_t size = data.size();
+
   std::stringstream s;
 
   while (state.KeepRunning()) {
     // put
     s << a << b << c << d;
+    s << size;
+    for (auto&& b : data) {
+      s << b;
+    }
 
     // get
     s >> a >> b >> c >> d;
+    s >> size;
+    for (size_t i = 0; i < size; i++) {
+      s >> data[i];
+    }
 
     assert(a == 0x2222222222222222);
     assert(b == 0x33333333);
     assert(c == 0x4444);
     assert(d == 0x55);
+    assert(data[0] == 1);
   }
 }
 
-BENCHMARK(SerializeMacros); //->Range(1, 1 << 20);
-BENCHMARK(SerializeSstream); //->Range(1, 1 << 20);
+BENCHMARK(SerializeMacros)->Range(1, 1 << 20);
+BENCHMARK(SerializeSstream)->Range(1, 1 << 20);
 BENCHMARK_MAIN();

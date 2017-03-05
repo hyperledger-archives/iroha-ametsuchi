@@ -56,14 +56,12 @@ static void Cache_RandomAccess(benchmark::State& state) {
       cache.put(*begin, Page());
     }
 
-    state.PauseTiming();
     if (begin == end)
       begin = sequence.begin();
     else
       ++begin;
 
     items++;
-    state.ResumeTiming();
   }
 
   state.SetBytesProcessed(sizeof(Page) * static_cast<uint64_t>(state.range(1)) *
