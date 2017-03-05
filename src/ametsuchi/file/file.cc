@@ -21,7 +21,8 @@
 namespace ametsuchi {
 namespace file {
 
-File::File(const std::string &path) : path_(path), file_(nullptr, &std::fclose) {}
+File::File(const std::string &path)
+    : path_(path), file_(nullptr, &std::fclose) {}
 
 File::~File() {}
 
@@ -45,5 +46,15 @@ void SequentialFile::read<ByteArray::value_type>(ByteArray::value_type *data,
   fseek(file_.get(), offset, SEEK_CUR);
   fread(data, sizeof(ByteArray::value_type), size, file_.get());
 }
+
+
+ByteArray SequentialFile::read(std::size_t size, std::size_t offset) {
+  ByteArray ret(size);
+  fseek(file_.get(), offset, SEEK_CUR);
+  fread(ret.data(), sizeof(ByteArray::value_type), size, file_.get());
+  // http://stackoverflow.com/a/17473871/1953079
+  return ret;
+}
+
 }  // namespace file
 }  // namespace ametsuchi

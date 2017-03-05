@@ -18,39 +18,29 @@
 #ifndef AMETSUCHI_TX_STORE_H
 #define AMETSUCHI_TX_STORE_H
 
+#include <generated/tx_store_generated.h>
 #include <string>
-#include "status.h"
 #include "cache.h"
+#include "file/file.h"
+#include "status.h"
 
 namespace ametsuchi {
 
 class AppendableFile;
 class Serialzier;
 
-template <typename T, Serializer serializer>
+template <typename T, Serializer<T> serializer>
 class TXStore {
  public:
-  explicit TXStore(const std::string &path);
+  explicit TXStore(const std::string& path);
 
   Status append(const T& tx);
 
-
  private:
-  std::unique_ptr<AppendableFile> file_;
-  std::unique_ptr<Serializer> serializer_;
+  AppendableFile file_;
 
-
+  uint64_t total_tags;
 };
-
-static struct Entry{
-  ByteArray key;
-  ByteArray value;
-};
-
-static class PKIndex{
-  Cache<uint64_t, Entry> cache;
-};
-
 }
 
 #endif  // AMETSUCHI_TX_STORE_H

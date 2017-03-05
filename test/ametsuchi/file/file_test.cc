@@ -23,7 +23,7 @@
 namespace ametsuchi {
 namespace file {
 
-const std::string filename = "test";
+const std::string filename = "/tmp/test_db";
 
 TEST(FileTest, AppendTest) {
   {
@@ -43,6 +43,16 @@ TEST(FileTest, AppendTest) {
 
     ByteArray rdata(6);
     sf.read(rdata.data(), rdata.size(), 0);
+
+    ASSERT_EQ(wdata, rdata);
+  }
+
+  {
+    SequentialFile sf(filename);
+
+    ByteArray wdata = {1, 2, 3, 3, 2, 1};
+
+    ByteArray rdata = sf.read(wdata.size(), 0);
 
     ASSERT_EQ(wdata, rdata);
   }

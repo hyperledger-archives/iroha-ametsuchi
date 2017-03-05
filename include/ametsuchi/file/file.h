@@ -20,6 +20,8 @@
 
 #include <memory>
 #include <string>
+#include <ametsuchi/globals.h>
+#include "file_state.h"
 
 namespace ametsuchi {
 namespace file {
@@ -41,6 +43,8 @@ class SequentialFile : public File {
 
   template <typename T>
   void read(T *data, std::size_t size, std::size_t offset);
+
+  ByteArray read(std::size_t size, std::size_t offset);
 };
 
 class AppendableFile : public File {

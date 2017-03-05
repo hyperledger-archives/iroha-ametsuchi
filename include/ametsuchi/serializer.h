@@ -20,11 +20,18 @@
 
 namespace ametsuchi {
 
-template <typename T>
+template<typename T>
 class Serializer {
   ByteArray serialize(const T &obj) = 0;
   T deserialize(const ByteArray &blob) = 0;
 };
+
+
+class TXSerializer{
+
+};
+
+
 }
 
 #endif  // AMETSUCHI_SERIALIZER_H
