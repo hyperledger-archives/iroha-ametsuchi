@@ -18,6 +18,7 @@
 #ifndef AMETSUCHI_FILE_H
 #define AMETSUCHI_FILE_H
 
+#include <memory>
 #include <string>
 
 namespace ametsuchi {
@@ -25,16 +26,29 @@ namespace file {
 
 class File {
  public:
-  explicit File(const std::string& path);
+  explicit File(const std::string &path);
 
-  virtual void open() = 0;
-  virtual void close() = 0;
+  virtual ~File() = 0;
 
-  virtual ~File();
+ protected:
+  std::string path_;
+  std::unique_ptr<FILE, decltype(&std::fclose)> file_;
+};
 
- private:
-  std::string _path;
-  FILE * _file;
+class SequentialFile : public File {
+ public:
+  explicit SequentialFile(const std::string &path);
+
+  template <typename T>
+  void read(T *data, std::size_t size, std::size_t offset);
+};
+
+class AppendableFile : public File {
+ public:
+  explicit AppendableFile(const std::string &path);
+
+  template <typename T>
+  void append(const T &data);
 };
 
 }  // namespace file

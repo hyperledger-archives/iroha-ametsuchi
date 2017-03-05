@@ -15,32 +15,39 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/file/writable_file.h>
+#include <gtest/gtest.h>
+
+#include <ametsuchi/file/file.h>
+#include <ametsuchi/globals.h>
 
 namespace ametsuchi {
 namespace file {
 
-WritableFile::WritableFile(const std::string& path) : File(path) {}
+const std::string filename = "test";
 
-bool WritableFile::open() {
-  file = fopen(path.c_str(), "wb");
-  if (!file)
-    return false;
-  else
-    return true;
-}
+TEST(FileTest, AppendTest) {
+  {
+    AppendableFile af(filename);
 
+    ByteArray wdata = {1, 2, 3};
+    af.append(wdata);
 
+    wdata = {3, 2, 1};
+    af.append(wdata);
+  }
 
-template <typename T>
-void WritableFile::write(const T* blob, const uint64_t size) {
-  throw std::exception("not implemented");
-}
+  {
+    SequentialFile sf(filename);
 
-// for uint8_t
-template <>
-void WritableFile::write(const uint8_t* blob, const uint64_t size) {
-  fwrite(blob, sizeof(uint8_t), size, _file);
+    ByteArray wdata = {1, 2, 3, 3, 2, 1};
+
+    ByteArray rdata(6);
+    sf.read(rdata.data(), rdata.size(), 0);
+
+    ASSERT_EQ(wdata, rdata);
+  }
+
+  remove(filename.c_str());
 }
 }
 }

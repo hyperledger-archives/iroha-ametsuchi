@@ -16,17 +16,34 @@
  */
 
 #include <ametsuchi/file/file.h>
+#include <ametsuchi/globals.h>
 
 namespace ametsuchi {
 namespace file {
 
-File::File(const std::string &path) : _path(path) {}
+File::File(const std::string &path) : path_(path), file_(nullptr, &std::fclose) {}
 
-File::~File() {
-  if (_file) {
-    fclose(_file);
-  }
+File::~File() {}
+
+AppendableFile::AppendableFile(const std::string &path) : File(path) {
+  file_.reset(fopen(path_.c_str(), "ab"));
 }
 
+template <>
+void AppendableFile::append<ByteArray>(const ByteArray &data) {
+  fwrite(data.data(), sizeof(ByteArray::value_type), data.size(), file_.get());
 }
+
+SequentialFile::SequentialFile(const std::string &path) : File(path) {
+  file_.reset(fopen(path_.c_str(), "rb"));
 }
+
+template <>
+void SequentialFile::read<ByteArray::value_type>(ByteArray::value_type *data,
+                                                 std::size_t size,
+                                                 std::size_t offset) {
+  fseek(file_.get(), offset, SEEK_CUR);
+  fread(data, sizeof(ByteArray::value_type), size, file_.get());
+}
+}  // namespace file
+}  // namespace ametsuchi

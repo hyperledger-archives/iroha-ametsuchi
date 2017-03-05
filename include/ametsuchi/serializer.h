@@ -18,14 +18,13 @@
 #ifndef AMETSUCHI_SERIALIZER_H
 #define AMETSUCHI_SERIALIZER_H
 
-namespace ametsuchi{
+namespace ametsuchi {
 
 template <typename T>
-class Serializer{
-  ByteArray serialize(const T& obj) = 0;
-  T deserialize(const ByteArray& blob) = 0;
+class Serializer {
+  ByteArray serialize(const T &obj) = 0;
+  T deserialize(const ByteArray &blob) = 0;
 };
-
 }
 
 #endif  // AMETSUCHI_SERIALIZER_H
