@@ -149,4 +149,20 @@ TEST(CacheTest, PutEvicted) {
   }
 }
 
+TEST(CacheTest, Strategy) {
+  uint64_t max_size = 2;
+  Cache<int, int> cache(max_size);
+  cache.put(1, 2);
+  cache.put(2, 3);
+  // 1-2 2-3
+  ASSERT_EQ(*cache.put(3, 4), 2);
+  // 3-4 2-3
+  cache.setMRU();
+  ASSERT_EQ(*cache.put(4, 5), 4);
+  // 4-5 2-3
+  cache.setLRU();
+  ASSERT_EQ(*cache.put(5, 6), 3);
+  // 4-5 5-6
+}
+
 }  // namespace ametsuchi

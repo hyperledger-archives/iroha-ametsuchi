@@ -35,7 +35,6 @@ include(cmake/functions.cmake)
 set(LIBAMETSUCHI_NAME ametsuchi)
 add_library(${LIBAMETSUCHI_NAME}
   src/ametsuchi/file/file.cc
-  include/ametsuchi/file/file.h
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
   flatbuffers

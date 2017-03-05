@@ -21,7 +21,6 @@
 #include <memory>
 #include <string>
 #include <ametsuchi/globals.h>
-#include "file_state.h"
 
 namespace ametsuchi {
 namespace file {

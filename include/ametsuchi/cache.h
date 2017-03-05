@@ -24,7 +24,7 @@
 
 namespace ametsuchi {
 /**
- * Implementation of LRU (last recently used) in-memory cache.
+ * Implementation of LRU (least recently used) / MRU (most recently used) in-memory cache.
  * Implements move semantics -- it means, that it should "own" data item:
  *    Example:
  *
@@ -40,7 +40,7 @@ namespace ametsuchi {
 template <typename K, typename V>
 class Cache {
  public:
-  explicit Cache(uint64_t max_size);
+  explicit Cache(uint64_t max_size, bool isMRU = false);
 
   /**
    * Put item into a cache. If item is already in the cache, its flag "last used
@@ -77,6 +77,16 @@ class Cache {
    */
   uint64_t size();
 
+  /**
+   * Sets LRU eviction strategy
+   */
+  void setLRU();
+
+  /**
+   * Sets MRU eviction strategy
+   */
+  void setMRU();
+
  private:
   using Entry = typename std::pair<K, V>;
   using Iter = typename std::list<Entry>::iterator;
@@ -95,13 +105,14 @@ class Cache {
 
   uint64_t max_cache_size;
   uint64_t current_size;
+  bool isMRU;
 };
 
 /// IMPLEMENTATION
 
 template <typename K, typename V>
-Cache<K, V>::Cache(uint64_t max_size)
-    : max_cache_size(max_size), current_size(0) {
+Cache<K, V>::Cache(uint64_t max_size, bool isMRU)
+    : max_cache_size(max_size), current_size(0), isMRU(isMRU) {
   iters_map.reserve(max_size);
 }
 
@@ -122,10 +133,14 @@ std::unique_ptr<V> Cache<K, V>::put(K key, V&& value) {
   } else {  // key not found
     std::unique_ptr<V> evicted;
     if (current_size == this->max_cache_size) {  // cache is full
-      auto& lru = lru_list.back();               // O(1)
-      evicted.reset(new V{lru.second});          // move evicted value to the new place
-      iters_map.erase(lru.first);                // O(1)
-      lru_list.pop_back();
+      auto& element = isMRU ? lru_list.front() : lru_list.back();  // O(1)
+      evicted.reset(new V{element.second});      // move evicted value to the new place
+      iters_map.erase(element.first);  // O(1)
+      if (isMRU) {
+        lru_list.pop_front();
+      } else {
+        lru_list.pop_back();
+      }
       current_size--;
     }
 
@@ -179,6 +194,16 @@ void Cache<K, V>::clear() {
 template <typename K, typename V>
 uint64_t Cache<K, V>::size() {
   return current_size;
+}
+
+template <typename K, typename V>
+void Cache<K, V>::setLRU() {
+  isMRU = false;
+}
+
+template <typename K, typename V>
+void Cache<K, V>::setMRU() {
+  isMRU = true;
 }
 
 }  // namespace ametsuchi
