@@ -25,7 +25,7 @@
 namespace ametsuchi {
 namespace file {
 
-using offset_t = std::result_of<decltype(&std::ftell)(FILE*)>::type;
+using offset_t = uint64_t;
 
 class File {
  public:

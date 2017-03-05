@@ -15,30 +15,25 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_INDEX_H
-#define AMETSUCHI_INDEX_H
+#ifndef AMETSUCHI_FIXED_TABLE_H
+#define AMETSUCHI_FIXED_TABLE_H
 
-#include <ametsuchi/file/file.h>
-#include <utility>
-#include <map>
+#include "table.h>
 
-namespace ametsuchi {
-namespace table {
+namespace ametsuchi{
+namespace table{
 
-using ametsuchi::file::offset_t;
+class FixedTable: public Table{
+ public:
+  FixedTable(/*TODO add parameters*/);
+ private:
+  size_t key_size;
+  size_t value_size;
 
-// offset + length of record
-using Pointer = std::pair<offset_t, uint64_t>;
+  size_t entry_size;
+};
 
-/**
- * In-memory index (temporarily).
- *
- * Should be changed to data structure, which is able to store whole index on
- * disk and only "hot" index in-memory.
- */
-using Index = std::map<ByteArray, Pointer>;
+}
+}
 
-}  // namespace table
-}  // namespace ametsuchi
-
-#endif  // AMETSUCHI_INDEX_H
+#endif  // AMETSUCHI_FIXED_TABLE_H

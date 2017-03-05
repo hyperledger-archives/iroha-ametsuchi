@@ -21,108 +21,78 @@
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
 #include <ametsuchi/serializer.h>
+#include <ametsuchi/status.h>
 #include <cstring>
 #include <string>
+#include <utility>
+#include <vector>
+#include "index.h"
 
 namespace ametsuchi {
-
 namespace table {
-
-using tag_t = uint64_t;
-using flag_t = uint8_t;
-using length_t = uint32_t;
 
 class Table {
  public:
-  explicit Table(const std::string &path);
+  explicit Table(const std::string &path, uint64_t key_size,
+                 uint64_t value_size);
 
- private:
-  enum class Flags : flag_t { Removed, Valid };
+  virtual bool putBatch(const std::vector<std::pair<ByteArray, ByteArray>> &batch);
+  virtual bool put(const ByteArray &key, const ByteArray &value);
+  virtual ByteArray &get(const ByteArray &key);
+  virtual bool exists(const ByteArray &key);
+  virtual bool remove(const ByteArray &key);
+  virtual uint64_t size();
 
-  file::AppendableFile file_;
+  // bidirectional iterator
+  class Iterator;
+
+  enum class Flags : uint8_t { Placeholder = 0, Valid = 1, Removed = 2 };
+
+  struct Record;
+
+ protected:
+  Index index_;
+
+  file::AppendableFile w_;
+  file::SequentialFile r_;
+
+  std::string path_;
 };
 
-struct Record {
-  tag_t tag;
-  flag_t flags;  // look at Table::Flags
-  length_t length;
-  ByteArray blob;
 
-  Record(tag_t t, flag_t f, length_t l, ByteArray b)
-      : tag(t), flags(f), length(l), blob(std::move(b)) {}
+class Table::Iterator {
+ public:
+  Iterator();
+  ~Iterator();
+  Iterator(const Iterator &it);
+  Iterator(const Iterator &&it);
+  void operator=(const Iterator &r);    // =
+  void operator=(const Iterator &&r);   // =
+  Iterator &operator++();               // postfix++
+  Iterator &operator++(int);            // ++prefix
+  Iterator &operator--();               // postfix--
+  Iterator &operator--(int);            // --prefix
+  Record &operator*();                  // dereference
+  Record &operator->();                 // dereference
+  bool operator==(const Iterator &it);  // ==
+  bool operator<(const Iterator &it);   // <
+  bool operator>(const Iterator &it);   // >
+ protected:
+  offset_t offset;
+};
 
-  Record() : tag(0), flags(0), length(0), blob(0) {}
+struct Table::Record {
+  Table::Flags flags;
+  ByteArray key;
+  ByteArray value;
+
+  Record(Table::Flags f, const ByteArray &k, const ByteArray &v)
+      : flags(f), key(std::move(k)), value(std::move(v)) {}
+
+  Record() : flags(table::Table::Flags::Placeholder), key(0), value(0) {}
 };
 
 }  // namespace table
-
-namespace serialize {
-/**
- * Serializer/deserializer for Record.
- * Should as effective as possible.
- */
-
-using Record = table::Record;
-template <>
-class Serializer<Record> {
- public:
-  ByteArray serialize(const Record *r) {
-    using table::tag_t;
-    using table::flag_t;
-    using table::length_t;
-
-    size_t total = sizeof(tag_t) + sizeof(flag_t) + sizeof(length_t) +
-                   (sizeof(ByteArray::value_type) * r->blob.size());
-
-    ByteArray ret(total);
-
-    ByteArray::value_type *ptr = ret.data();
-
-    // serialize tag
-    *reinterpret_cast<tag_t *>(ptr) = r->tag;
-    ptr += sizeof(tag_t);
-
-    // serialize flags
-    *reinterpret_cast<flag_t *>(ptr) = r->flags;
-    ptr += sizeof(flag_t);
-
-    // serialize length
-    *reinterpret_cast<length_t *>(ptr) = r->length;
-    ptr += sizeof(length_t);
-
-    // serialize bytes
-    memcpy(ptr, reinterpret_cast<const ByteArray::value_type *>(r->blob.data()),
-           (sizeof(ByteArray::value_type) * r->blob.size()));
-
-    return ret;
-  }
-
-  Record deserialize(const ByteArray *b) {
-    using table::tag_t;
-    using table::flag_t;
-    using table::length_t;
-
-    Record ret;
-    const ByteArray::value_type *ptr = b->data();
-
-    memcpy(&ret.tag, ptr, sizeof(tag_t));
-    ptr += sizeof(tag_t);
-
-    memcpy(&ret.flags, ptr, sizeof(flag_t));
-    ptr += sizeof(flag_t);
-
-    memcpy(&ret.length, ptr, sizeof(length_t));
-    ptr += sizeof(length_t);
-
-    size_t n = (sizeof(ByteArray::value_type) * ret.length);
-    ret.blob = ByteArray{ptr, ptr + n};
-
-    return ret;
-  }
-};
-
-
-}  // namespace serialize
 }  // namespace ametsuchi
 
 #endif  // AMETSUCHI_TABLE_H
