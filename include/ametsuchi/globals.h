@@ -27,13 +27,4 @@ namespace ametsuchi {
 
 using byte_t = uint8_t;
 using ByteArray = std::vector<byte_t>;
-
-
-using tag_t = uint64_t;
-
-struct tx_entry {
-  tag_t tag;
-  ByteArray value;
-};
-
 }

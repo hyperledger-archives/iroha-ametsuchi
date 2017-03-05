@@ -15,20 +15,34 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_SERIALIZER_H
-#define AMETSUCHI_SERIALIZER_H
+#include <ametsuchi/table/table.h>
+#include <gtest/gtest.h>
 
 namespace ametsuchi {
-namespace serialize {
 
+TEST(Table, RecordSerializer) {
+  using table::Record;
+  using RecordSerializer = serialize::Serializer<Record>;
 
-template <typename T>
-class Serializer {
-  virtual ByteArray serialize(const T *obj) = 0;
-  virtual T deserialize(const ByteArray *blob) = 0;
-};
+  RecordSerializer s;
+  Record r(1, 2, 3, {1, 2, 3});
+
+  ByteArray a = s.serialize(&r);
+
+  Record e = s.deserialize(&a);
+
+  ASSERT_EQ(r.tag, e.tag);
+  ASSERT_EQ(r.flags, e.flags);
+  ASSERT_EQ(r.length, e.length);
+  ASSERT_EQ(r.blob.size(), e.blob.size());
+
+  ASSERT_TRUE(r.blob == e.blob);
+  ASSERT_EQ(r.blob, e.blob);
+
+  ASSERT_EQ(e.tag, 1);
+  ASSERT_EQ(e.flags, 2);
+  ASSERT_EQ(e.length, 3);
+  ASSERT_EQ(e.blob.size(), 3);
+}
 
 }
-}
-
-#endif  // AMETSUCHI_SERIALIZER_H

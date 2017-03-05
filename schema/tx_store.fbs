@@ -1,4 +1,4 @@
-namespace tx_store;
+namespace  tx_store;
 
 table Vector{
   length: ulong;

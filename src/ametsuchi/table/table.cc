@@ -15,20 +15,14 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_SERIALIZER_H
-#define AMETSUCHI_SERIALIZER_H
+namespace ametsuchi{
+namespace table{
 
-namespace ametsuchi {
-namespace serialize {
+Table::Table(const std::string &path): file_(path){
+
+}
 
 
-template <typename T>
-class Serializer {
-  virtual ByteArray serialize(const T *obj) = 0;
-  virtual T deserialize(const ByteArray *blob) = 0;
-};
 
 }
 }
-
-#endif  // AMETSUCHI_SERIALIZER_H

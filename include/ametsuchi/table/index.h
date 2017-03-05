@@ -15,32 +15,11 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_TX_STORE_H
-#define AMETSUCHI_TX_STORE_H
+#ifndef AMETSUCHI_INDEX_H
+#define AMETSUCHI_INDEX_H
 
-#include <generated/tx_store_generated.h>
-#include <string>
-#include "cache.h"
-#include "file/file.h"
-#include "status.h"
+namespace ametsuchi{
 
-namespace ametsuchi {
-
-class AppendableFile;
-class Serialzier;
-
-template <typename T, Serializer<T> serializer>
-class TXStore {
- public:
-  explicit TXStore(const std::string& path);
-
-  Status append(const T& tx);
-
- private:
-  AppendableFile file_;
-
-  uint64_t total_tags;
-};
 }
 
-#endif  // AMETSUCHI_TX_STORE_H
+#endif  // AMETSUCHI_INDEX_H
