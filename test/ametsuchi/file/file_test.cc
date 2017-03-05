@@ -36,6 +36,7 @@ class FileTest : public ::testing::Test{
 TEST_F(FileTest, AppendTest) {
   {
     AppendableFile af(filename);
+    af.open();
 
     ByteArray wdata = {1, 2, 3};
     af.append(wdata);
@@ -46,6 +47,7 @@ TEST_F(FileTest, AppendTest) {
 
   {
     SequentialFile sf(filename);
+    sf.open();
 
     ByteArray wdata = {1, 2, 3, 3, 2, 1};
 
@@ -57,6 +59,7 @@ TEST_F(FileTest, AppendTest) {
 
   {
     SequentialFile sf(filename);
+    sf.open();
 
     ByteArray wdata = {1, 2, 3, 3, 2, 1};
 
@@ -70,6 +73,7 @@ TEST_F(FileTest, AppendTest) {
 TEST_F(FileTest, PositionTest){
   {
     AppendableFile af(filename);
+    af.open();
 
     ASSERT_EQ(af.position(), 0);
 
@@ -85,11 +89,31 @@ TEST_F(FileTest, PositionTest){
   }
   {
     SequentialFile sf(filename);
+    sf.open();
 
     ByteArray rdata = sf.read(2, 2);
 
     ASSERT_EQ(sf.position(), 4);
   }
+}
+
+TEST_F(FileTest, SimultaneousReadWrite){
+  AppendableFile af(filename);
+  SequentialFile sf(filename);
+  
+  af.open();
+  sf.open();
+
+  af.append(ByteArray{1, 2, 3});
+  ASSERT_EQ(sf.read(2, 0), ByteArray({1, 2}));
+
+  af.append(ByteArray{4, 5, 6});
+  ASSERT_EQ(sf.read(2, 2), ByteArray({5, 6}));
+}
+
+TEST_F(FileTest, NonexistantFile){
+  SequentialFile sf(filename);
+  ASSERT_EQ(sf.open(), false);
 }
 }
 }

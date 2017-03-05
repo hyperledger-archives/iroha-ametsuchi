@@ -25,13 +25,17 @@
 namespace ametsuchi {
 namespace file {
 
-using offset_t = std::result_of<decltype(&ftell)(FILE*)>::type;
+using offset_t = std::result_of<decltype(&std::ftell)(FILE*)>::type;
 
 class File {
  public:
   explicit File(const std::string &path);
 
   offset_t position() const;
+
+  virtual bool open() = 0;
+
+  void close();
 
   virtual ~File() = 0;
 
@@ -41,21 +45,23 @@ class File {
 };
 
 class SequentialFile : public File {
+  using File::File;
  public:
-  explicit SequentialFile(const std::string &path);
+  bool open() override;
 
   template <typename T>
-  void read(T *data, std::size_t size, std::size_t offset);
+  std::size_t read(T *data, std::size_t size, offset_t offset);
 
-  ByteArray read(std::size_t size, std::size_t offset);
+  ByteArray read(std::size_t size, offset_t offset);
 };
 
 class AppendableFile : public File {
+  using File::File;
  public:
-  explicit AppendableFile(const std::string &path);
+  bool open() override;
 
   template <typename T>
-  void append(const T &data);
+  std::size_t append(const T &data);
 };
 
 }  // namespace file
