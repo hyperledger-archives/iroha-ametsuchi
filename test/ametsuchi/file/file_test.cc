@@ -24,27 +24,6 @@ namespace ametsuchi {
 namespace file {
 
 const std::string filename = "test";
-/*
-TEST(FileTest, WriteTest) {
-  WritableFile wf(filename);
-
-  ByteArray wdata = {1, 2, 3};
-  wf.write(wdata);
-
-  ByteArray rdata(3);
-  wf.read(rdata, 0);
-
-  ASSERT_EQ(wdata, rdata);
-
-  wdata = {3, 2, 1};
-  wf.write(wdata);
-
-  wf.read(rdata, 0);
-
-  ASSERT_EQ(wdata, rdata);
-
-  remove(filename.c_str());
-}*/
 
 TEST(FileTest, AppendTest) {
   {
@@ -56,12 +35,15 @@ TEST(FileTest, AppendTest) {
     wdata = {3, 2, 1};
     af.append(wdata);
   }
+
   {
     SequentialFile sf(filename);
 
     ByteArray wdata = {1, 2, 3, 3, 2, 1};
+
     ByteArray rdata(6);
     sf.read(rdata.data(), rdata.size(), 0);
+
     ASSERT_EQ(wdata, rdata);
   }
 

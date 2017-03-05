@@ -20,7 +20,6 @@
 
 #include <memory>
 #include <string>
-#include <exception>
 
 namespace ametsuchi {
 namespace file {
@@ -33,25 +32,23 @@ class File {
 
  protected:
   std::string path_;
-  std::unique_ptr<FILE, decltype(&fclose)> file_;
+  std::unique_ptr<FILE, decltype(&std::fclose)> file_;
 };
 
 class SequentialFile : public File {
  public:
-  SequentialFile(const std::string &path);
+  explicit SequentialFile(const std::string &path);
 
   template <typename T>
   void read(T *data, std::size_t size, std::size_t offset);
-
 };
 
 class AppendableFile : public File {
  public:
-  AppendableFile(const std::string &path);
+  explicit AppendableFile(const std::string &path);
 
   template <typename T>
   void append(const T &data);
-
 };
 
 }  // namespace file
