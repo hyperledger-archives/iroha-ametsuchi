@@ -35,7 +35,7 @@ class File {
 
   virtual bool open() = 0;
 
-  void close();
+  virtual void close();
 
   virtual ~File() = 0;
 
@@ -62,6 +62,39 @@ class AppendableFile : public File {
 
   template <typename T>
   std::size_t append(const T &data);
+};
+
+class RandomAccessFile : public File {
+  using File::File;
+ public:
+  bool open() override;
+
+  template <typename T>
+  std::size_t read(T *data, std::size_t size, offset_t offset);
+
+  ByteArray read(std::size_t size, offset_t offset);
+
+ protected:
+  int fd_;
+};
+
+class MMapFile : public File{
+  using File::File;
+ public:
+  bool open() override;
+
+  template <typename T>
+  std::size_t read(T *data, std::size_t size, offset_t offset);
+
+  ByteArray read(std::size_t size, offset_t offset);
+
+  template <typename T>
+  std::size_t write(const T &data, offset_t offset);
+
+  void close() override;
+
+ protected:
+  int fd_;
 };
 
 }  // namespace file
