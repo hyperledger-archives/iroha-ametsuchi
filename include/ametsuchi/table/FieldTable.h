@@ -24,43 +24,44 @@
 #include "table.h"
 
 namespace ametsuchi{
-namespace table {
+    namespace table {
 
-using offset_t = uint64_t;
+        using offset_t = uint64_t;
 
-class FieldArray {
-public:
-    explicit FieldArray(const std::string &path);
-    bool put(const ByteArray &value);
-    ByteArray &get(const offset_t);
+        class FieldTable {
+        public:
+            explicit FieldTable(const std::string &path);
+            bool put(const ByteArray &value);
+            ByteArray &get(const offset_t);
 
-    class ForwardIterator;
-    struct Record;
+            class ForwardIterator;
 
-private:
-    std::unique_ptr<file::File> file_;
-};
+        private:
+            std::unique_ptr<file::File> file_;
+            std::string path_;
+            char separator;
+        };
 
-class FieldArray::ForwardIterator {
-    public:
-        ForwardIterator();
-        ~ForwardIterator();
-        ForwardIterator(const ForwardIterator &it);
-        ForwardIterator(const ForwardIterator &&it);
-        void operator=(const ForwardIterator &r);    // =
-        void operator=(const ForwardIterator &&r);   // =
-        ForwardIterator &operator++();               // postfix++
-        ForwardIterator &operator++(int);            // ++prefix
-        Record &operator*();                  // dereference
-        Record &operator->();                 // dereference
-        bool operator==(const ForwardIterator &it);  // ==
-        bool operator<(const ForwardIterator &it);   // <
-        bool operator>(const ForwardIterator &it);   // >
-    protected:
-        offset_t offset;
-    };
+        class FieldTable::ForwardIterator {
+        public:
+            ForwardIterator();
+            ~ForwardIterator();
+            ForwardIterator(const ForwardIterator &it);
+            ForwardIterator(const ForwardIterator &&it);
+            void operator=(const ForwardIterator &r);    // =
+            void operator=(const ForwardIterator &&r);   // =
+            ForwardIterator &operator++();               // postfix++
+            ForwardIterator &operator++(int);            // ++prefix
+            ByteArray &operator*();                  // dereference
+            ByteArray &operator->();                 // dereference
+            bool operator==(const ForwardIterator &it);  // ==
+            bool operator<(const ForwardIterator &it);   // <
+            bool operator>(const ForwardIterator &it);   // >
+        protected:
+            offset_t offset;
+        };
 
-}
+    }
 }
 
 #endif //AMETSUCHI_DISK_ARRAY_H

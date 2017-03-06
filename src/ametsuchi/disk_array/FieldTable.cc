@@ -20,5 +20,34 @@
 namespace ametsuchi {
 namespace table {
 
+//FieldTable::FieldTable(const file::File &file1) : file_(file1){}
+FieldTable::FieldTable(const std::string &path) : path_(path), separator('@') {};
+
+bool FieldTable::put(const ByteArray &value) {
+    std::unique_ptr<file::AppendableFile> file_ = std::unique_ptr<file::AppendableFile>(new file::AppendableFile(path_));
+    ByteArray memory(4+value.size()); // assume size of flatbuffer would fit to 4 bytes
+
+    uint32_t size = value.size();
+    uint8_t* ptr = memory.data();
+
+    PUT_UINT(ptr, size, uint32_t);
+    PUT_BYTE_ARRAY(ptr, value);
+
+    file_->append(memory);
+    return true;
+}
+
+ByteArray &FieldTable::get(const offset_t offset) {
+    std::unique_ptr<file::SequentialFile> file_ = std::unique_ptr<file::AppendableFile>(new file::SequentialFile(path_));
+
+    ByteArray lengthBytes = file_->read(sizeof(uint32_t), offset);
+    uint32_t length = 0;
+
+    GET_UINT(&length, lengthBytes.data(), uint32_t);
+    ByteArray value = file_->read(length, offset+sizeof(uint32_t));
+    return value;
+}
+
+
 }
 }
