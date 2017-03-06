@@ -18,20 +18,74 @@
 #ifndef AMETSUCHI_FIXED_TABLE_H
 #define AMETSUCHI_FIXED_TABLE_H
 
-#include "table.h>
+#include <ametsuchi/globals.h>
+#include <ametsuchi/file/file.h>
+
+#include <string>
+#include <algorithm>
 
 namespace ametsuchi{
 namespace table{
 
-class FixedTable: public Table{
+template<typename T>
+class FixedTable {
  public:
-  FixedTable(/*TODO add parameters*/);
- private:
-  size_t key_size;
-  size_t value_size;
+  FixedTable(const std::string &path);
 
-  size_t entry_size;
+  void append(const T &data);
+
+  void appendBatch(const std::vector<T> &data);
+
+  T get(file::offset_t offset);
+
+  std::vector<T> getBatch(uint64_t num, file::offset_t offset);
+
+  void replace(T t, file::offset_t offset);
+
+ private:
+  std::unique_ptr<file::AppendableFile> w_;
+  std::unique_ptr<file::SequentialFile> r_;
 };
+
+
+// imp
+template<typename T>
+FixedTable<T>::FixedTable(const std::string &path) :
+  w_(std::make_unique<file::AppendableFile>(path)),
+  r_(std::make_unique<file::SequentialFile>(path)) {
+w_->open();
+r_->open();
+}
+
+template<typename T>
+void FixedTable<T>::append(const T &data) {
+uint8_t flag = 0;
+w_->append((std::vector<uint8_t>){flag});
+w_->append(data);
+}
+
+template<typename T>
+void FixedTable<T>::appendBatch(const std::vector<T> &data) {
+std::for_each(data.begin(), data.end(), [this](const auto &elem){
+    append(elem);
+});
+}
+
+template<typename T>
+T FixedTable<T>::get(file::offset_t offset) {
+return *(T*)r_->read(sizeof(T), offset).data();
+}
+
+template<typename T>
+std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t offset) {
+auto array = r_->read(sizeof(T) * num, offset);
+return std::vector<T>(array.begin(), array.end());
+}
+
+template<typename T>
+void FixedTable<T>::replace(T t, file::offset_t offset) {
+// TODO: requires random file implementation
+}
 
 }
 }
