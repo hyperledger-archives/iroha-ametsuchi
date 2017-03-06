@@ -116,5 +116,20 @@ TEST(Serialize, MacrosTest) {
   ASSERT_EQ(value, ByteArray({4, 3, 2, 1}));
 }
 
+TEST(Serialize, SstreamTest){
+  std::stringstream s;
+
+  uint64_t a = 0x1111111111111111;
+  uint32_t b = 0x22222222;
+  uint16_t c = 0x3333;
+  uint8_t d = 0x44;
+  ByteArray key = {5, 6, 7, 8};
+  ByteArray value = {4, 3, 2, 1};
+
+  s << a << b << c << d << key.size();
+//  s.write(reinterpret_cast<unsigned char*>(key.data()), key.size());
+
+}
+
 }  // namespace serialize
 }  // namespace ametsuchi

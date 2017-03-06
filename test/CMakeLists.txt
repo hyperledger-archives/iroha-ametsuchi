@@ -6,6 +6,11 @@ AddTest(table_test ametsuchi/table/table_test.cc)
 
 AddTest(serialize_test ametsuchi/serialize_test.cc)
 
+AddTest(field_table_test ametsuchi/table/field_table_test.cc)
+target_link_libraries(field_table_test
+        PRIVATE ${LIBAMETSUCHI_NAME}
+        )
+
 AddTest(comparator_test ametsuchi/comparator_test.cc)
 target_link_libraries(comparator_test
   PRIVATE spdlog
