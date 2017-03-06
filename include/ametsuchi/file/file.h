@@ -26,6 +26,7 @@ namespace ametsuchi {
 namespace file {
 
 using offset_t = uint64_t;
+using flag_t = uint8_t;
 
 class File {
  public:
@@ -56,7 +57,7 @@ class SequentialFile : public File {
   }
 
   template <typename T>
-  std::size_t read(std::vector<T> data, std::size_t num, offset_t offset) {
+  std::size_t read(std::vector<T> &data, std::size_t num, offset_t offset) {
     data.reserve(num);
     std::fseek(file_.get(), offset, SEEK_CUR);
     return std::fread(&data[0], sizeof(T), num, file_.get());
@@ -79,7 +80,7 @@ class AppendableFile : public File {
 
   template <typename T>
   std::size_t append(const T &data) {
-    auto res = std::fwrite(data, sizeof(T), 1, file_.get());
+    auto res = std::fwrite(&data, sizeof(T), 1, file_.get());
     std::fflush(file_.get());
     return res;
   }

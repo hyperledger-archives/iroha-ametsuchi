@@ -40,51 +40,53 @@ class FixedTable {
 
   std::vector<T> getBatch(uint64_t num, file::offset_t offset);
 
-  void replace(T t, file::offset_t offset);
+  void replace(const T& t, file::offset_t offset);
 
  private:
-  std::unique_ptr<file::AppendableFile> w_;
-  std::unique_ptr<file::SequentialFile> r_;
+  file::AppendableFile w_;
+  file::SequentialFile r_;
 };
 
 
 // imp
 template<typename T>
-FixedTable<T>::FixedTable(const std::string &path) :
-  w_(std::make_unique<file::AppendableFile>(path)),
-  r_(std::make_unique<file::SequentialFile>(path)) {
-w_->open();
-r_->open();
+FixedTable<T>::FixedTable(const std::string &path) : w_(path), r_(path) {
+  w_.open();
+  r_.open();
 }
 
 template<typename T>
 void FixedTable<T>::append(const T &data) {
-uint8_t flag = 0;
-w_->append((std::vector<uint8_t>){flag});
-w_->append(data);
+  file::flag_t flag = 0;
+  w_.append(std::vector<file::flag_t>{flag});
+  w_.append(data);
 }
 
 template<typename T>
 void FixedTable<T>::appendBatch(const std::vector<T> &data) {
-std::for_each(data.begin(), data.end(), [this](const auto &elem){
+  std::for_each(data.begin(), data.end(), [this](const auto &elem){
     append(elem);
-});
+  });
 }
 
 template<typename T>
 T FixedTable<T>::get(file::offset_t offset) {
-return *(T*)r_->read(sizeof(T), offset).data();
+  ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), offset);
+  file::flag_t flag = ptr[0];
+  // TODO: handle somehow flag
+  T t = *(T*)&ptr[1];
+  return t;
 }
 
 template<typename T>
 std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t offset) {
-auto array = r_->read(sizeof(T) * num, offset);
-return std::vector<T>(array.begin(), array.end());
+auto array = r_.read(sizeof(T) * num, offset);
+  return std::vector<T>(array.begin(), array.end());
 }
 
 template<typename T>
-void FixedTable<T>::replace(T t, file::offset_t offset) {
-// TODO: requires random file implementation
+void FixedTable<T>::replace(const T& t, file::offset_t offset) {
+  // r_.
 }
 
 }
