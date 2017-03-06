@@ -35,6 +35,7 @@ include(cmake/functions.cmake)
 set(LIBAMETSUCHI_NAME ametsuchi)
 add_library(${LIBAMETSUCHI_NAME}
   src/ametsuchi/file/file.cc
+  src/ametsuchi/table/field_table.cc
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
   flatbuffers
