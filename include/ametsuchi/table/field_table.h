@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_DISK_ARRAY_H
-#define AMETSUCHI_DISK_ARRAY_H
+#ifndef AMETSUCHI_FIELD_TABLE_H
+#define AMETSUCHI_FIELD_TABLE_H
 
 #include <memory>
 #include <ametsuchi/globals.h>
@@ -30,16 +30,15 @@ namespace ametsuchi{
 
         class FieldTable {
         public:
-            explicit FieldTable(const std::string &path);
-            explicit FieldTable(std::unique_ptr<file::SequentialFile> seqFile, std::unique_ptr<file::AppendableFile> appFile);
+            explicit FieldTable(file::SequentialFile& seqFile, file::AppendableFile& appFile);
             bool put(const ByteArray &value);
             ByteArray &get(const offset_t);
 
             class ForwardIterator;
 
         private:
-            std::unique_ptr<file::SequentialFile> seqFile_;
-            std::unique_ptr<file::AppendableFile> appFile_;
+            file::SequentialFile& seqFile_;
+            file::AppendableFile& appFile_;
             std::string path_;
         };
 
@@ -65,7 +64,9 @@ namespace ametsuchi{
             ForwardIterator& cur_;
         };
 
+        FieldTable::FieldTable(file::SequentialFile &seqFile, file::AppendableFile &appFile): seqFile_(seqFile), appFile_(appFile){}
+
     }
 }
 
-#endif //AMETSUCHI_DISK_ARRAY_H
+#endif //AMETSUCHI_FIELD_TABLE_H

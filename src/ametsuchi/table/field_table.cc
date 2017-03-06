@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-#include "ametsuchi/table/FieldTable.h"
+#include "ametsuchi/table/field_table.h"
 
 namespace ametsuchi {
 namespace table {
 
-//FieldTable::FieldTable(const file::File &file1) : file_(file1){}
-FieldTable::FieldTable(const std::string &path) : path_(path){};
-FieldTable::FieldTable(
-        std::unique_ptr<file::SequentialFile> seqFile,
-        std::unique_ptr<file::AppendableFile> appFile) : seqFile_(seqFile), appFile_(appFile){};
+//FieldTable::FieldTable(
+//        AppendableFile& seqFile,
+//        AppendableFile& appFile) {
+//    appFile.open();
+//    seqFile.open();
+//}
+
 
 bool FieldTable::put(const ByteArray &value) {
     ByteArray memory(4+value.size()); // assume size of value would fit into 4 bytes
@@ -35,16 +37,16 @@ bool FieldTable::put(const ByteArray &value) {
     PUT_UINT(ptr, size, uint32_t);
     PUT_BYTE_ARRAY(ptr, value);
 
-    appFile_->append(memory);
+    appFile_.append(memory);
     return true;
 }
 
 ByteArray &FieldTable::get(const offset_t offset) {
-    ByteArray lengthBytes = seqFile_->read(sizeof(uint32_t), offset);
+    ByteArray lengthBytes = seqFile_.read(sizeof(uint32_t), offset);
     uint32_t length = 0;
 
     GET_UINT(&length, lengthBytes.data(), uint32_t);
-    ByteArray value = file_->read(length, offset+sizeof(uint32_t));
+    ByteArray value = seqFile_.read(length, offset+sizeof(uint32_t));
     return value;
 }
 
