@@ -50,7 +50,17 @@ class SequentialFile : public File {
   bool open() override;
 
   template <typename T>
-  std::size_t read(T *data, std::size_t size, offset_t offset);
+  std::size_t read(T *data, std::size_t num, offset_t offset) {
+    std::fseek(file_.get(), offset, SEEK_CUR);
+    return std::fread(data, sizeof(T), num, file_.get());
+  }
+
+  template <typename T>
+  std::size_t read(std::vector<T> data, std::size_t num, offset_t offset) {
+    data.reserve(num);
+    std::fseek(file_.get(), offset, SEEK_CUR);
+    return std::fread(&data[0], sizeof(T), num, file_.get());
+  }
 
   ByteArray read(std::size_t size, offset_t offset);
 };
@@ -61,7 +71,18 @@ class AppendableFile : public File {
   bool open() override;
 
   template <typename T>
-  std::size_t append(const T &data);
+  std::size_t append(const std::vector<T> &data) {
+    auto res = std::fwrite(data.data(), sizeof(T), data.size(), file_.get());
+    std::fflush(file_.get());
+    return res;
+  }
+
+  template <typename T>
+  std::size_t append(const T &data) {
+    auto res = std::fwrite(data, sizeof(T), 1, file_.get());
+    std::fflush(file_.get());
+    return res;
+  }
 };
 
 }  // namespace file
