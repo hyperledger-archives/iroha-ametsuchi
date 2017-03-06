@@ -15,16 +15,30 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_DB_H
+#define AMETSUCHI_DB_H
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
 #include <string>
-#include <memory>
+#include "status.h"
+#include "tx_store.h"
 
 namespace ametsuchi {
 
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
+/**
+ * Interface to tx_store and world_state
+ * @tparam T - flatbuffers, protobuf, any serializable structure
+ */
+template <typename T>
+class Ametsuchi {
+ public:
+  Status open(const std::string& path);
+  Status close();
+
+  bool append(const T& tx);
+  T get(const ByteArray& tx_hash);
+
+ private:
+};
 }
+
+#endif  // AMETSUCHI_DB_H

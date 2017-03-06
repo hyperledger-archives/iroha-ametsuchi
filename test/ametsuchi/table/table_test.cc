@@ -15,16 +15,10 @@
  * limitations under the License.
  */
 
-#pragma once
+#include <ametsuchi/table/table.h>
+#include <gtest/gtest.h>
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
 
-namespace ametsuchi {
-
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
+TEST(TableTest, Dummy){
+  ASSERT_EQ(1,1);
 }

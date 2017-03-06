@@ -15,33 +15,16 @@
  * limitations under the License.
  */
 
-#pragma once
+#include <ametsuchi/ametsuchi.h>
 
-#include <string>
-#include <cstdio>
+namespace ametsuchi{
 
-namespace ametsuchi {
-namespace io {
-
-const std::string name = "_test_database.db";
-
-#define CLEANUP (remove(name.c_str()))
-
-std::size_t CreateAndWrite(const char *bytes, std::size_t len) {
-    FILE* f = fopen(name.c_str(), "wb+");
-    if (!f) return 0;
-    std::size_t written = fwrite(bytes, 1, len, f);
-    fclose(f);
-    return written;
+Status Ametsuchi::open(const std::string &path) {
+  /**
+   * Create new TX_store
+   * return Status
+   */
+   return nullptr;
 }
 
-std::size_t ReadFile(char *bytes, std::size_t len) {
-    FILE *f = fopen(name.c_str(), "rb");
-    if (!f) return 0;
-    std::size_t written = fread(bytes, 1, len, f);
-    fclose(f);
-    return written;
-}
-
-}
 }

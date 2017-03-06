@@ -15,16 +15,25 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_FIXED_TABLE_H
+#define AMETSUCHI_FIXED_TABLE_H
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
+#include "table.h>
 
-namespace ametsuchi {
+namespace ametsuchi{
+namespace table{
 
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
+class FixedTable: public Table{
+ public:
+  FixedTable(/*TODO add parameters*/);
+ private:
+  size_t key_size;
+  size_t value_size;
+
+  size_t entry_size;
+};
+
 }
+}
+
+#endif  // AMETSUCHI_FIXED_TABLE_H

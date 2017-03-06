@@ -15,16 +15,30 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_INDEX_H
+#define AMETSUCHI_INDEX_H
 
-#include <cstdint>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <memory>
+#include <ametsuchi/file/file.h>
+#include <utility>
+#include <map>
 
 namespace ametsuchi {
+namespace table {
 
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
-}
+using ametsuchi::file::offset_t;
+
+// offset + length of record
+using Pointer = std::pair<offset_t, uint64_t>;
+
+/**
+ * In-memory index (temporarily).
+ *
+ * Should be changed to data structure, which is able to store whole index on
+ * disk and only "hot" index in-memory.
+ */
+using Index = std::map<ByteArray, Pointer>;
+
+}  // namespace table
+}  // namespace ametsuchi
+
+#endif  // AMETSUCHI_INDEX_H

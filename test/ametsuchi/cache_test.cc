@@ -17,12 +17,11 @@
 
 #include <gtest/gtest.h>
 
-#include <ametsuchi/pager/cache.h>
+#include <ametsuchi/cache.h>
 #include <ametsuchi/globals.h>
 #include <chrono>
 
 namespace ametsuchi {
-namespace pager {
 
 template <typename T>
 struct Counter {
@@ -124,7 +123,7 @@ TEST(CacheTest, RemoveAndSize) {
   ASSERT_EQ(cache.size(), 0u);
 }
 
-TEST(CacheTest, Clear){
+TEST(CacheTest, Clear) {
   int max_size = 10;
   Cache<int, int> cache(max_size);
 
@@ -137,5 +136,33 @@ TEST(CacheTest, Clear){
   ASSERT_EQ(cache.size(), 0u);
 }
 
-}  // namespace ametsuchi
+TEST(CacheTest, PutEvicted) {
+  int max_size = 3;
+  Cache<int, int> cache(max_size);
+  for (int i = 0; i < 3 * max_size; i++) {
+    auto evicted = cache.put(i, i + 1);
+    if (i < max_size) {
+      ASSERT_EQ(evicted, nullptr);
+    } else {
+      ASSERT_EQ(*evicted, i + 1 - max_size);
+    }
+  }
 }
+
+TEST(CacheTest, Strategy) {
+  uint64_t max_size = 2;
+  Cache<int, int> cache(max_size);
+  cache.put(1, 2);
+  cache.put(2, 3);
+  // 1-2 2-3
+  ASSERT_EQ(*cache.put(3, 4), 2);
+  // 3-4 2-3
+  cache.setMRU();
+  ASSERT_EQ(*cache.put(4, 5), 4);
+  // 4-5 2-3
+  cache.setLRU();
+  ASSERT_EQ(*cache.put(5, 6), 3);
+  // 4-5 5-6
+}
+
+}  // namespace ametsuchi

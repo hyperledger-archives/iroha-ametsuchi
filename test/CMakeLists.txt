@@ -1,6 +1,22 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin)
 
-AddTest(ametsuchi_cache_test ametsuchi/pager/cache_test.cc)
-AddTest(ametsuchi_db_test ametsuchi/db_test.cc)
-AddTest(ametsuchi_filevfs_test ametsuchi/io/filevfs_test.cc)
+AddTest(cache_test ametsuchi/cache_test.cc)
+
+AddTest(table_test ametsuchi/table/table_test.cc)
+
+AddTest(serialize_test ametsuchi/serialize_test.cc)
+
+AddTest(comparator_test ametsuchi/comparator_test.cc)
+target_link_libraries(comparator_test
+  PRIVATE spdlog
+  )
+
 AddTest(module_keccak module/keccak_test.cc)
+target_link_libraries(module_keccak
+  PRIVATE keccak
+)
+
+AddTest(file_test ametsuchi/file/file_test.cc)
+target_link_libraries(file_test
+  PRIVATE ${LIBAMETSUCHI_NAME}
+  )

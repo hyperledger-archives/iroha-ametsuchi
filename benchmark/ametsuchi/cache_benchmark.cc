@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/pager/cache.h>
+#include <ametsuchi/cache.h>
 #include <benchmark/benchmark.h>
 #include <stdint.h>
 #include <algorithm>
@@ -47,7 +47,7 @@ static void Cache_RandomAccess(benchmark::State& state) {
   auto sequence = generateAccessSequence(0, state.range(0), state.range(1));
   auto begin = sequence.begin();
   auto end = sequence.end();
-  ametsuchi::pager::Cache<int, Page> cache(state.range(2));
+  ametsuchi::Cache<int, Page> cache(state.range(2));
   uint64_t items = 0;
   while (state.KeepRunning()) {
     // simulate cache
@@ -56,14 +56,12 @@ static void Cache_RandomAccess(benchmark::State& state) {
       cache.put(*begin, Page());
     }
 
-    state.PauseTiming();
     if (begin == end)
       begin = sequence.begin();
     else
       ++begin;
 
     items++;
-    state.ResumeTiming();
   }
 
   state.SetBytesProcessed(sizeof(Page) * static_cast<uint64_t>(state.range(1)) *
