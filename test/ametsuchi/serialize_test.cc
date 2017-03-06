@@ -81,7 +81,7 @@ TEST(Serialize, SstreamTest){
   ByteArray value = {4, 3, 2, 1};
 
   s << a << b << c << d << key.size();
-  s.write(reinterpret_cast<unsigned char*>(key.data()), key.size());
+  s.write(reinterpret_cast<char*>(key.data()), key.size());
 
 }
 }  // namespace serialize
