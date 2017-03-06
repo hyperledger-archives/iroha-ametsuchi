@@ -24,6 +24,90 @@ namespace ametsuchi {
 namespace serialize {
 
 /**
+ * Serialize a variable of given type.
+ * @tparam T type of value
+ * @param dst destination pointer address
+ * @param value value to serialize
+ */
+template <typename T>
+inline void put(ByteArray::value_type **dst, const T &value);
+
+template <>
+inline void put<uint64_t>(ByteArray::value_type **dst, const uint64_t &value) {
+  *reinterpret_cast<uint64_t *>(*dst) = value;
+  *dst += sizeof(uint64_t);
+}
+
+template <>
+inline void put<uint32_t>(ByteArray::value_type **dst, const uint32_t &value) {
+  *reinterpret_cast<uint32_t *>(*dst) = value;
+  *dst += sizeof(uint32_t);
+}
+
+template <>
+inline void put<uint16_t>(ByteArray::value_type **dst, const uint16_t &value) {
+  *reinterpret_cast<uint16_t *>(*dst) = value;
+  *dst += sizeof(uint16_t);
+}
+
+template <>
+inline void put<uint8_t>(ByteArray::value_type **dst, const uint8_t &value) {
+  **dst = value;
+  *dst += sizeof(uint8_t);
+}
+
+template <>
+inline void put<ByteArray>(ByteArray::value_type **dst,
+                           const ByteArray &value) {
+  size_t size = value.size();
+  put(dst, size);
+  std::memcpy(*dst, value.data(), size);
+  *dst += size;
+}
+
+/**
+ * Deserialize a variable of given type.
+ * @tparam T type of value
+ * @param value value to deserialize
+ * @param src source pointer address
+ */
+template <typename T>
+inline void get(T *value, const ByteArray::value_type **src);
+
+template <>
+inline void get<uint64_t>(uint64_t *value, const ByteArray::value_type **src) {
+  std::memcpy(value, *src, sizeof(uint64_t));
+  *src += sizeof(uint64_t);
+}
+
+template <>
+inline void get<uint32_t>(uint32_t *value, const ByteArray::value_type **src) {
+  std::memcpy(value, *src, sizeof(uint32_t));
+  *src += sizeof(uint32_t);
+}
+
+template <>
+inline void get<uint16_t>(uint16_t *value, const ByteArray::value_type **src) {
+  std::memcpy(value, *src, sizeof(uint16_t));
+  *src += sizeof(uint16_t);
+}
+
+template <>
+inline void get<uint8_t>(uint8_t *value, const ByteArray::value_type **src) {
+  std::memcpy(value, *src, sizeof(uint8_t));
+  *src += sizeof(uint8_t);
+}
+
+template <>
+inline void get<ByteArray>(ByteArray *value,
+                           const ByteArray::value_type **src) {
+  size_t n = 0;
+  get(&n, src);
+  *value = ByteArray{*src, *src + n};
+  *src += n;
+}
+
+/**
  * WARNING!!!
  * Be very careful with these macroses. They work really fast, but don't have
  * any validation checks.
@@ -90,13 +174,12 @@ namespace serialize {
     src += n;                      \
   }
 
-
 template <typename T>
 class Serializer {
   virtual ByteArray serialize(const T *obj) = 0;
   virtual T deserialize(const ByteArray *blob) = 0;
 };
-}
-}
+}  // namespace serialize
+}  // namespace ametsuchi
 
 #endif  // AMETSUCHI_SERIALIZER_H
