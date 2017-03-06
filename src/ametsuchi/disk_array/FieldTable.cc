@@ -21,11 +21,13 @@ namespace ametsuchi {
 namespace table {
 
 //FieldTable::FieldTable(const file::File &file1) : file_(file1){}
-FieldTable::FieldTable(const std::string &path) : path_(path), separator('@') {};
+FieldTable::FieldTable(const std::string &path) : path_(path){};
+FieldTable::FieldTable(
+        std::unique_ptr<file::SequentialFile> seqFile,
+        std::unique_ptr<file::AppendableFile> appFile) : seqFile_(seqFile), appFile_(appFile){};
 
 bool FieldTable::put(const ByteArray &value) {
-    std::unique_ptr<file::AppendableFile> file_ = std::unique_ptr<file::AppendableFile>(new file::AppendableFile(path_));
-    ByteArray memory(4+value.size()); // assume size of flatbuffer would fit to 4 bytes
+    ByteArray memory(4+value.size()); // assume size of value would fit into 4 bytes
 
     uint32_t size = value.size();
     uint8_t* ptr = memory.data();
@@ -33,14 +35,12 @@ bool FieldTable::put(const ByteArray &value) {
     PUT_UINT(ptr, size, uint32_t);
     PUT_BYTE_ARRAY(ptr, value);
 
-    file_->append(memory);
+    appFile_->append(memory);
     return true;
 }
 
 ByteArray &FieldTable::get(const offset_t offset) {
-    std::unique_ptr<file::SequentialFile> file_ = std::unique_ptr<file::AppendableFile>(new file::SequentialFile(path_));
-
-    ByteArray lengthBytes = file_->read(sizeof(uint32_t), offset);
+    ByteArray lengthBytes = seqFile_->read(sizeof(uint32_t), offset);
     uint32_t length = 0;
 
     GET_UINT(&length, lengthBytes.data(), uint32_t);
@@ -48,6 +48,37 @@ ByteArray &FieldTable::get(const offset_t offset) {
     return value;
 }
 
+
+FieldTable::ForwardIterator::ForwardIterator() {
+    offset_ = 0;
+    value_ = FieldTable::get(offset_);
+}
+
+FieldTable::ForwardIterator::ForwardIterator(offset_t offset) {
+    offset_ = offset;
+    value_ = FieldTable::get(offset_);
+}
+
+FieldTable::ForwardIterator::ForwardIterator(const FieldTable::ForwardIterator &it){
+    cur_ = std::move(it);
+}
+
+FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
+    return ForwardIterator(offset_+(4+value_.size()));
+}
+
+ByteArray &FieldTable::ForwardIterator::operator*() {
+    return value_;
+}
+
+
+bool FieldTable::ForwardIterator::operator==(const FieldTable::ForwardIterator &it) {
+    return offset_ == it.offset_;
+}
+
+bool FieldTable::ForwardIterator::operator<(const FieldTable::ForwardIterator &it) {
+    return offset_ < it.offset_;
+}
 
 }
 }

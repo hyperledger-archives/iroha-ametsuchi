@@ -31,20 +31,22 @@ namespace ametsuchi{
         class FieldTable {
         public:
             explicit FieldTable(const std::string &path);
+            explicit FieldTable(std::unique_ptr<file::SequentialFile> seqFile, std::unique_ptr<file::AppendableFile> appFile);
             bool put(const ByteArray &value);
             ByteArray &get(const offset_t);
 
             class ForwardIterator;
 
         private:
-            std::unique_ptr<file::File> file_;
+            std::unique_ptr<file::SequentialFile> seqFile_;
+            std::unique_ptr<file::AppendableFile> appFile_;
             std::string path_;
-            char separator;
         };
 
         class FieldTable::ForwardIterator {
         public:
             ForwardIterator();
+            ForwardIterator(offset_t offset);
             ~ForwardIterator();
             ForwardIterator(const ForwardIterator &it);
             ForwardIterator(const ForwardIterator &&it);
@@ -58,7 +60,9 @@ namespace ametsuchi{
             bool operator<(const ForwardIterator &it);   // <
             bool operator>(const ForwardIterator &it);   // >
         protected:
-            offset_t offset;
+            offset_t offset_;
+            ByteArray value_;
+            ForwardIterator& cur_;
         };
 
     }
