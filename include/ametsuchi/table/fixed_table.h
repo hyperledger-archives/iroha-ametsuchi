@@ -92,7 +92,9 @@ std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t index) {
 
 template<typename T>
 void FixedTable<T>::replace(const T& t, file::offset_t index) {
-  // r_.
+  // TODO: requires random writer
+  // if record exists and new record length <= old record length, then it should be in-place replace.
+  // otherwise, append to the end of table + invalidate old record (set removed = true)
 }
 
 }

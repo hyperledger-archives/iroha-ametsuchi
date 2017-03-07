@@ -20,10 +20,10 @@
 #include <ametsuchi/table/fixed_table.h>
 #include <ametsuchi/globals.h>
 
-namespace ametsuchi{
-namespace table{
+namespace ametsuchi {
+namespace table {
 
-class FileTest : public ::testing::Test{
+class FileTest : public ::testing::Test {
  protected:
 
   virtual void TearDown() {
@@ -61,7 +61,6 @@ TEST_F(FileTest, AppendGetTest) {
   ASSERT_EQ(fb.d, d);
 }
 
-
 TEST_F(FileTest, AppendGetBatchTest) {
   FixedTable<ExampleFB> table(filename);
   uint64_t i[] = {0x12345678, 0x87654321, 0xfedcba9876543210, 0x123456789abcdef};
@@ -84,6 +83,26 @@ TEST_F(FileTest, AppendGetBatchTest) {
     ASSERT_EQ(it2->i, it1->i);
     ASSERT_EQ(it2->d, it1->d);
   }
+}
+
+TEST_F(FileTest, AppendReplaceGetTest) {
+  // Remove when FixedTable::replace will be implemented
+  return;
+  FixedTable<ExampleFB> table(filename);
+  uint64_t i = 0x12345678;
+  double d = 1234567e+89;
+  table.append(FB(A, i, d));
+  auto fb1 = table.get(0);
+  table.replace(FB(B, -i, -d), 0);
+  auto fb2 = table.get(0);
+
+  ASSERT_STREQ(fb1.str, STR_16(A));
+  ASSERT_EQ(fb1.i, i);
+  ASSERT_EQ(fb1.d, d);
+
+  ASSERT_STREQ(fb2.str, STR_16(B));
+  ASSERT_EQ(fb2.i, -i);
+  ASSERT_EQ(fb2.d, -d);
 }
 
 }
