@@ -34,15 +34,15 @@ TEST(Serialize, FunctionTest){
   ByteArray key = {5, 6, 7, 8};
   ByteArray value = {4, 3, 2, 1};
 
-  ByteArray::value_type *ptr = memory.data();
+  ametsuchi::byte_t *ptr = memory.data();
 
   // serialize
-  put(&ptr, key);
-  put(&ptr, a);
-  put(&ptr, b);
-  put(&ptr, c);
-  put(&ptr, d);
-  put(&ptr, value);
+  put(ptr, key);
+  put(ptr, a);
+  put(ptr, b);
+  put(ptr, c);
+  put(ptr, d);
+  put(ptr, value);
 
   // invalidate values
   a = 0;
@@ -53,14 +53,14 @@ TEST(Serialize, FunctionTest){
   value = {0};
 
   // deserialize
-  const ByteArray::value_type *p = memory.data();  // pointer to the beginning
+  const ametsuchi::byte_t *p = memory.data();  // pointer to the beginning
 
-  get(&key, &p);
-  get(&a, &p);
-  get(&b, &p);
-  get(&c, &p);
-  get(&d, &p);
-  get(&value, &p);
+  get(&key, p);
+  get(&a, p);
+  get(&b, p);
+  get(&c, p);
+  get(&d, p);
+  get(&value, p);
 
   ASSERT_EQ(a, 0x1111111111111111);
   ASSERT_EQ(b, 0x22222222);
