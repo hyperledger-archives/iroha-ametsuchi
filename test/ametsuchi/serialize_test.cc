@@ -24,6 +24,52 @@
 namespace ametsuchi {
 namespace serialize {
 
+TEST(Serialize, FunctionTest){
+  ByteArray memory(1024);
+
+  uint64_t a = 0x1111111111111111;
+  uint32_t b = 0x22222222;
+  uint16_t c = 0x3333;
+  uint8_t d = 0x44;
+  ByteArray key = {5, 6, 7, 8};
+  ByteArray value = {4, 3, 2, 1};
+
+  ametsuchi::byte_t *ptr = memory.data();
+
+  // serialize
+  put(ptr, key);
+  put(ptr, a);
+  put(ptr, b);
+  put(ptr, c);
+  put(ptr, d);
+  put(ptr, value);
+
+  // invalidate values
+  a = 0;
+  b = 0;
+  c = 0;
+  d = 0;
+  key = {0};
+  value = {0};
+
+  // deserialize
+  const ametsuchi::byte_t *p = memory.data();  // pointer to the beginning
+
+  get(&key, p);
+  get(&a, p);
+  get(&b, p);
+  get(&c, p);
+  get(&d, p);
+  get(&value, p);
+
+  ASSERT_EQ(a, 0x1111111111111111);
+  ASSERT_EQ(b, 0x22222222);
+  ASSERT_EQ(c, 0x3333);
+  ASSERT_EQ(d, 0x44);
+  ASSERT_EQ(key, ByteArray({5, 6, 7, 8}));
+  ASSERT_EQ(value, ByteArray({4, 3, 2, 1}));
+}
+
 TEST(Serialize, MacrosTest) {
   ByteArray memory(1024);
 
@@ -70,19 +116,5 @@ TEST(Serialize, MacrosTest) {
   ASSERT_EQ(value, ByteArray({4, 3, 2, 1}));
 }
 
-TEST(Serialize, SstreamTest){
-  std::stringstream s;
-
-  uint64_t a = 0x1111111111111111;
-  uint32_t b = 0x22222222;
-  uint16_t c = 0x3333;
-  uint8_t d = 0x44;
-  ByteArray key = {5, 6, 7, 8};
-  ByteArray value = {4, 3, 2, 1};
-
-  s << a << b << c << d << key.size();
-//  s.write(reinterpret_cast<unsigned char*>(key.data()), key.size());
-
-}
 }  // namespace serialize
 }  // namespace ametsuchi

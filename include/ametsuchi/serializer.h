@@ -19,9 +19,61 @@
 #define AMETSUCHI_SERIALIZER_H
 
 #include <cstring>
+#include <ametsuchi/globals.h>
 
 namespace ametsuchi {
 namespace serialize {
+
+/**
+ * Serialize a variable of given type.
+ * @tparam T type of value
+ * @param dst destination pointer address
+ * @param value value to serialize
+ */
+
+template<typename T>
+inline void put(ametsuchi::byte_t *&dst, const T &value);
+
+template<>
+inline void put<ByteArray>(ametsuchi::byte_t *&dst,
+                           const ByteArray &value) {
+  size_t size = value.size();
+  put(dst, size);
+  std::memcpy(dst, value.data(), size);
+  dst += size;
+}
+
+template <typename T>
+inline void put(ametsuchi::byte_t *&dst, const T &value) {
+  static_assert(std::is_trivial<T>::value, "Passing non-trivial type");
+  *reinterpret_cast<T *>(dst) = value;
+  dst += sizeof(T);
+}
+
+/**
+ * Deserialize a variable of given type.
+ * @tparam T type of value
+ * @param value value to deserialize
+ * @param src source pointer address
+ */
+template <typename T>
+inline void get(T *value, const ametsuchi::byte_t *&src);
+
+template <>
+inline void get<ByteArray>(ByteArray *value,
+                           const ametsuchi::byte_t *&src) {
+  size_t n = 0;
+  get(&n, src);
+  *value = ByteArray{src, src + n};
+  src += n;
+}
+
+template <typename T>
+inline void get(T *value, const ametsuchi::byte_t *&src) {
+  static_assert(std::is_trivial<T>::value, "Passing non-trivial type");
+  std::memcpy(value, src, sizeof(T));
+  src += sizeof(T);
+}
 
 /**
  * WARNING!!!
@@ -70,7 +122,7 @@ namespace serialize {
     size_t size = array.size();                                                \
     PUT_UINT(dst, size, size_t);                                               \
     std::memcpy(dst,                                                           \
-                reinterpret_cast<const ByteArray::value_type *>(array.data()), \
+                reinterpret_cast<const ametsuchi::byte_t *>(array.data()), \
                 size);                                                         \
     dst += size;                                                               \
   }
@@ -90,13 +142,12 @@ namespace serialize {
     src += n;                      \
   }
 
-
 template <typename T>
 class Serializer {
   virtual ByteArray serialize(const T *obj) = 0;
   virtual T deserialize(const ByteArray *blob) = 0;
 };
-}
-}
+}  // namespace serialize
+}  // namespace ametsuchi
 
 #endif  // AMETSUCHI_SERIALIZER_H

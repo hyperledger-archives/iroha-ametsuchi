@@ -82,4 +82,4 @@ BENCHMARK(Cache_RandomAccess)
     ->Ranges({{1 << 8, 1 << 15}, {1 << 15, 1 << 16}, {256, 256}})
     ->Complexity(benchmark::oAuto);
 
-BENCHMARK_MAIN();
+BENCHMARK_MAIN()

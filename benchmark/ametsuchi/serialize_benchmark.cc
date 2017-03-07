@@ -20,6 +20,44 @@
 #include <benchmark/benchmark.h>
 #include <sstream>
 
+static void SerializeFunction(benchmark::State& state) {
+  using ametsuchi::ByteArray;
+  using ametsuchi::serialize::put;
+  using ametsuchi::serialize::get;
+
+  uint64_t a = 0x2222222222222222;
+  uint32_t b = 0x33333333;
+  uint16_t c = 0x4444;
+  uint8_t d = 0x55;
+
+  ByteArray data(state.range(0), 1u);
+  ByteArray a_(state.range(0) + 200u);
+
+  while (state.KeepRunning()) {
+    // put
+    ametsuchi::byte_t* pw = a_.data();
+    put(pw, a);
+    put(pw, b);
+    put(pw, c);
+    put(pw, d);
+    put(pw, data);
+
+    // get
+    const ametsuchi::byte_t* pr = a_.data();
+    get(&a, pr);
+    get(&b, pr);
+    get(&c, pr);
+    get(&d, pr);
+    get(&data, pr);
+
+    assert(a == 0x2222222222222222);
+    assert(b == 0x33333333);
+    assert(c == 0x4444);
+    assert(d == 0x55);
+    assert(data[0] == 1);
+  }
+}
+
 static void SerializeMacros(benchmark::State& state) {
   using ametsuchi::ByteArray;
   uint64_t a = 0x2222222222222222;
@@ -70,17 +108,24 @@ static void SerializeSstream(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     // put
-    s << a << b << c << d;
-    s << size;
+    s.write(reinterpret_cast<const char*>(&a), sizeof(a));
+    s.write(reinterpret_cast<const char*>(&b), sizeof(b));
+    s.write(reinterpret_cast<const char*>(&c), sizeof(c));
+    s.write(reinterpret_cast<const char*>(&d), sizeof(d));
+    s.write(reinterpret_cast<const char*>(&size), sizeof(size));
     for (auto&& b : data) {
-      s << b;
+      s.write(reinterpret_cast<const char*>(&b), sizeof(b));
     }
 
     // get
-    s >> a >> b >> c >> d;
-    s >> size;
+    s.read(reinterpret_cast<char*>(&a), sizeof(a));
+    s.read(reinterpret_cast<char*>(&b), sizeof(b));
+    s.read(reinterpret_cast<char*>(&c), sizeof(c));
+    s.read(reinterpret_cast<char*>(&d), sizeof(d));
+    s.read(reinterpret_cast<char*>(&size), sizeof(size));
     for (size_t i = 0; i < size; i++) {
-      s >> data[i];
+      s.read(reinterpret_cast<char*>(data.data() + i),
+             sizeof(ametsuchi::byte_t));
     }
 
     assert(a == 0x2222222222222222);
@@ -91,6 +136,7 @@ static void SerializeSstream(benchmark::State& state) {
   }
 }
 
+BENCHMARK(SerializeFunction)->Range(1, 1 << 20);
 BENCHMARK(SerializeMacros)->Range(1, 1 << 20);
 BENCHMARK(SerializeSstream)->Range(1, 1 << 20);
-BENCHMARK_MAIN();
+BENCHMARK_MAIN()

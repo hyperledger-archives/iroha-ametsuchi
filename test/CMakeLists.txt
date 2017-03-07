@@ -24,4 +24,9 @@ target_link_libraries(module_keccak
 AddTest(file_test ametsuchi/file/file_test.cc)
 target_link_libraries(file_test
   PRIVATE ${LIBAMETSUCHI_NAME}
-  )
+)
+
+AddTest(fixed_table_test ametsuchi/table/fixed_table_test.cc)
+target_link_libraries(fixed_table_test
+  PRIVATE ${LIBAMETSUCHI_NAME}
+)
