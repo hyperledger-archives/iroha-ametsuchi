@@ -20,89 +20,125 @@
 namespace ametsuchi {
 namespace table {
 
-FieldTable::FieldTable(file::SequentialFile &seqFile, file::AppendableFile &appFile): seqFile_(seqFile), appFile_(appFile), fileLength(0){}
+Field::Field(const std::string &p) : rw_(p), file_size(0) {
+  // get file length
+  ra_.seekEnd();
+  file_size = ra_.position();
 
-offset_t FieldTable::put(const ByteArray &value) {
-    appFile_.open();
-    ByteArray memory(BUF_SIZE); // think about which memory size to choose
-
-    uint8_t* ptr = memory.data();
-
-    PUT_BYTE_ARRAY(ptr, value);
-
-    memory.resize(8+value.size()); // sizeof(size_t) + size of byte array to put
-    appFile_.append(memory);
-    appFile_.close();
-
-    offset_t offsetToThisValue = fileLength;
-    fileLength += memory.size();
-    return offsetToThisValue; // returns offset to just added byte array
+  ra_.open();
+  r_.open();
 }
 
-ByteArray FieldTable::get(const offset_t offset) {
-    seqFile_.open();
 
-    ByteArray bytes = seqFile_.read(BUF_SIZE, offset); // the same as above
-
-    const uint8_t* p = bytes.data();
-    ByteArray value = {0};
-    GET_BYTE_ARRAY(value, p);
-    seqFile_.close();
-    return value;
+Field::~Field() {
+  ra_.close();
+  r_.close();
 }
 
-FieldTable::ForwardIterator FieldTable::begin() {
-    return ForwardIterator(*this);
+
+offset_t Field::append(const ByteArray &value) {
+  size_t old_length = file_size;
+
+  // append
+  // flag | length | bytes
+  ra_.append(file::Flag::EXISTS);
+  ra_.append(value.size());
+  ra_.append(value);
+
+  file_size = ra_.position();
+
+  return old_length;  // offset to new value
 }
 
-FieldTable::ForwardIterator FieldTable::end() {
-    auto fi = ForwardIterator(*this, fileLength);
-    return fi;
+
+ByteArray Field::get(const offset_t offset) {
+  ByteArray flag = r_.read(1, offset);
+  switch (flag[0]) {
+    case file::Flag::EXISTS:
+      return r_.readByteArray(offset + sizeof(file::flag_t));
+    case file::Flag::REMOVED:
+      return nullptr;
+    default:
+      return nullptr;
+  }
 }
 
-FieldTable::ForwardIterator::ForwardIterator(FieldTable& ft): ft_(ft) {
-    offset_ = 0;
-    value_ = ft_.get(offset_);
-}
 
-FieldTable::ForwardIterator::ForwardIterator(FieldTable &ft, offset_t offset): ft_(ft), offset_(offset) {
-    value_ = ft_.get(offset);
-}
-
-//        FieldTable::ForwardIterator::~ForwardIterator() {}
-
-FieldTable::ForwardIterator::ForwardIterator(const FieldTable::ForwardIterator &it):
-        ft_(it.ft_), offset_(it.offset_), value_(it.value_){
-}
-
-FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
-    offset_ += value_.size() + 8; // size of current value + 8 for length of value
-    value_ = ft_.get(offset_);
-    return *this;
-}
-
-FieldTable::ForwardIterator FieldTable::ForwardIterator::operator++(int) {
-    ForwardIterator iterator(*this);
-    offset_ += value_.size() + 8; // size of current value + 8 for length of value
-    value_ = ft_.get(offset_);
-    return iterator;
-}
-
-ByteArray &FieldTable::ForwardIterator::operator*() {
-    return value_;
-}
-
-bool FieldTable::ForwardIterator::operator==(const FieldTable::ForwardIterator &it) {
-    return offset_ == it.offset_;
-}
-
-bool FieldTable::ForwardIterator::operator<(const FieldTable::ForwardIterator &it) {
-    return offset_ < it.offset_;
-}
-
-bool FieldTable::ForwardIterator::operator>(const FieldTable::ForwardIterator &it) {
-    return offset_ > it.offset_;
-}
+bool Field::update(const offset_t offset, const ByteArray &new_value) {
+  ra_.seek(offset);
 
 }
+
+bool Field::remove(const offset_t offset) {
+  ra_.seek(offset);
+  ra_.append(file::Flag::REMOVED);
+  ra_.seekEnd();
 }
+
+
+Field::ForwardIterator Field::begin() {
+  return ForwardIterator(*this);
+}
+
+
+Field::ForwardIterator Field::end() {
+  return ForwardIterator(*this, file_size);
+}
+
+
+Field::ForwardIterator::ForwardIterator(Field &ft) : ft_(ft) {
+  offset_ = 0;
+  value_  = ft_.get(offset_);
+}
+
+
+Field::ForwardIterator::ForwardIterator(Field &ft, offset_t offset)
+    : ft_(ft), offset_(offset) {
+  value_ = ft_.get(offset);
+}
+
+
+Field::ForwardIterator::ForwardIterator(
+    const Field::ForwardIterator &it)
+    : ft_(it.ft_), offset_(it.offset_), value_(it.value_) {}
+
+
+Field::ForwardIterator &Field::ForwardIterator::operator++() {
+  offset_ +=
+      value_.size() + 8;  // size of current value + 8 for length of value
+  value_ = ft_.get(offset_);
+  return *this;
+}
+
+
+Field::ForwardIterator Field::ForwardIterator::operator++(int) {
+  ForwardIterator iterator(*this);
+  offset_ +=
+      value_.size() + 8;  // size of current value + 8 for length of value
+  value_ = ft_.get(offset_);
+  return iterator;
+}
+
+
+ByteArray &Field::ForwardIterator::operator*() { return value_; }
+
+
+bool Field::ForwardIterator::operator==(
+    const Field::ForwardIterator &it) {
+  return offset_ == it.offset_;
+}
+
+
+bool Field::ForwardIterator::operator<(
+    const Field::ForwardIterator &it) {
+  return offset_ < it.offset_;
+}
+
+
+bool Field::ForwardIterator::operator>(
+    const Field::ForwardIterator &it) {
+  return offset_ > it.offset_;
+}
+
+}  // namespace table
+}  // namespace ametsuchi

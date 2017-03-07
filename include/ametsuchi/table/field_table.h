@@ -18,54 +18,104 @@
 #ifndef AMETSUCHI_FIELD_TABLE_H
 #define AMETSUCHI_FIELD_TABLE_H
 
-#include <memory>
-#include <ametsuchi/globals.h>
 #include <ametsuchi/file/file.h>
+#include <ametsuchi/globals.h>
 #include <ametsuchi/table/table.h>
+#include <memory>
+#include <string>
+#include "iterator.h"
 
-namespace ametsuchi{
-    namespace table {
+namespace ametsuchi {
+namespace table {
 
-        using offset_t = uint64_t;
 
-        class FieldTable {
-        public:
-            class ForwardIterator;
+class Field {
+ public:
 
-            explicit FieldTable(file::SequentialFile& seqFile, file::AppendableFile& appFile);
-            offset_t put(const ByteArray &value);
-            ByteArray get(const offset_t);
-            ForwardIterator begin();
-            ForwardIterator end();
+  class ForwardIterator;
 
-        private:
-            file::SequentialFile& seqFile_;
-            file::AppendableFile& appFile_;
-            std::string path_;
-            offset_t fileLength;
+  struct Record;
 
-            static const size_t BUF_SIZE = 1024;
-        };
+  enum class Flag{
+    VALID = 0,
+    REMOVED = 1
+    // rest is reserved for future use
+  };
 
-        class FieldTable::ForwardIterator {
-        public:
-            ForwardIterator(FieldTable& ft);
-            ForwardIterator(FieldTable& ft, offset_t offset);
-//            ~ForwardIterator();
-            ForwardIterator(const ForwardIterator &it);
-            ForwardIterator &operator++();               // postfix++
-            ForwardIterator operator++(int);            // ++prefix
-            ByteArray &operator*();                  // dereference
-            bool operator==(const ForwardIterator &it);  // ==
-            bool operator<(const ForwardIterator &it);   // <
-            bool operator>(const ForwardIterator &it);   // >
-        protected:
-            FieldTable& ft_;
-            offset_t offset_;
-            ByteArray value_;
-        };
+  explicit Field(const std::string &path);
+  ~Field();
 
-    }
-}
 
-#endif //AMETSUCHI_FIELD_TABLE_H
+  /**
+   * Appends value in the end in the following format:
+   *   flag | length | bytes
+   *  ubyte | ulong  | ubyte[length]
+   *
+   * @param value
+   * @return offset to this value in file
+   */
+  offset_t append(const ByteArray &value);
+
+  /**
+   * Reads value in table by given offset
+   * @return ByteArray
+   */
+  ByteArray get(const offset_t offset);
+
+  /**
+   * Updates value at the given offset. Algorithm is the following:
+   *   - append new value in the end
+   *   - invalidate old value (change flag to file::Flag::REMOVED)
+   *   - seek to end
+   * @param offset
+   * @param new_value
+   * @return
+   */
+  bool update(const offset_t offset, const ByteArray &new_value);
+
+  /**
+   * Removes record from table.
+   *    - seek to offset
+   *    - overwrite flag
+   *    - seek to end
+   * @param offset
+   * @return
+   */
+  bool remove(const offset_t offset);
+
+  ForwardIterator begin();
+  ForwardIterator end();
+
+ private:
+  file::ReadWriteFile rw_;
+  std::string         path_;
+  offset_t            file_size;
+};
+
+class Field::ForwardIterator : public Iterator {
+ public:
+  ForwardIterator(Field &ft);
+  ForwardIterator(Field &ft, offset_t offset);
+  ForwardIterator(const ForwardIterator &it);
+  ForwardIterator &operator++();               // postfix++
+  ForwardIterator operator++(int);             // ++prefix
+  ByteArray &operator*();                      // dereference
+  bool operator==(const ForwardIterator &it);  // ==
+  bool operator<(const ForwardIterator &it);   // <
+  bool operator>(const ForwardIterator &it);   // >
+ protected:
+  Field &ft_;
+  offset_t    offset_;
+  ByteArray   value_;
+};
+
+
+struct Field::Record {
+  Field::Flag flag;
+  ByteArray  data;
+};
+
+}  // namespace table
+}  // namespace ametsuchi
+
+#endif  // AMETSUCHI_FIELD_TABLE_H

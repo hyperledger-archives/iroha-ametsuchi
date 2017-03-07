@@ -15,18 +15,26 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <cstdint>
-#include <cstdlib>
-#include <memory>
-#include <string>
-#include <vector>
+#ifndef AMETSUCHI_ITERATOR_H
+#define AMETSUCHI_ITERATOR_H
 
 namespace ametsuchi {
+namespace table {
 
-using byte_t    = uint8_t;
-using ByteArray = std::vector<byte_t>;
-
-using offset_t = int64_t;
+class Table::Iterator {
+ public:
+  virtual Iterator()                    = 0;
+  virtual ~Iterator()                   = 0;
+  virtual Iterator(const Iterator &it)  = 0;
+  virtual Iterator(const Iterator &&it) = 0;
+  virtual void operator=(const Iterator &r) = 0;   // =
+  virtual void operator=(const Iterator &&r) = 0;  // =
+  virtual Record &operator*()                = 0;  // dereference
+  virtual Record &operator->()               = 0;  // dereference
+ protected:
+  offset_t offset;
+};
 }
+}
+
+#endif  // AMETSUCHI_ITERATOR_H

@@ -18,24 +18,16 @@
 #ifndef AMETSUCHI_FIXED_TABLE_H
 #define AMETSUCHI_FIXED_TABLE_H
 
-#include <ametsuchi/globals.h>
 #include <ametsuchi/file/file.h>
+#include <ametsuchi/globals.h>
 
-#include <string>
 #include <algorithm>
+#include <string>
 
-namespace ametsuchi{
-namespace table{
+namespace ametsuchi {
+namespace table {
 
-#pragma pack(push)
-#pragma pack(1)
-enum FixedTableFlags {
-  REMOVED = 1,
-  // rest is reserved
-};
-#pragma pack(pop)
-
-template<typename T>
+template <typename T>
 class FixedTable {
  public:
   FixedTable(const std::string &path);
@@ -48,7 +40,7 @@ class FixedTable {
 
   std::vector<T> getBatch(uint64_t num, file::offset_t index);
 
-  void replace(const T& t, file::offset_t index);
+  void replace(const T &t, file::offset_t index);
 
   void remove(file::offset_t index);
 
@@ -60,73 +52,70 @@ class FixedTable {
   file::SequentialFile r_;
 };
 
-
 // imp
-template<typename T>
+template <typename T>
 FixedTable<T>::FixedTable(const std::string &path) : w_(path), r_(path) {
   w_.open();
   r_.open();
 }
 
-template<typename T>
+template <typename T>
 void FixedTable<T>::append(const T &data) {
   file::flag_t flag = 0;
   w_.append(std::vector<file::flag_t>{flag});
   w_.append(data);
 }
 
-template<typename T>
+template <typename T>
 void FixedTable<T>::appendBatch(const std::vector<T> &data) {
-  std::for_each(data.begin(), data.end(), [this](const auto &elem){
-    this->append(elem);
-  });
+  std::for_each(data.begin(), data.end(), [this](const auto &elem) { this->append(elem); });
 }
 
-template<typename T>
+template <typename T>
 T FixedTable<T>::get(file::offset_t index) {
   ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), index * sizeof(T));
   // file::flag_t flag = ptr[0];
   // TODO: handle somehow flag
-  T t = *(T*)&ptr[1];
+  T t = *(T *)&ptr[1];
   return t;
 }
 
-template<typename T>
+template <typename T>
 std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t index) {
   ByteArray array = r_.read((sizeof(T) + sizeof(file::flag_t)) * num, index * sizeof(T));
   // std::vector<file::flag_t> flags;
   std::vector<T> v;
   for (auto i = array.begin(); i != array.end(); i += sizeof(T) + sizeof(file::flag_t)) {
     // flags.push_back(*i);
-    v.push_back(*(T*)((&*i) + 1));
+    v.push_back(*(T *)((&*i) + 1));
   }
   return v;
 }
 
-template<typename T>
-void FixedTable<T>::replace(const T&, file::offset_t) {
+template <typename T>
+void FixedTable<T>::replace(const T &, file::offset_t) {
   // TODO: requires random writer
-  // if record exists and new record length <= old record length, then it should be in-place replace.
-  // otherwise, append to the end of table + invalidate old record (set removed = true)
+  // if record exists and new record length <= old record length, then it should
+  // be in-place replace.
+  // otherwise, append to the end of table + invalidate old record (set removed
+  // = true)
 }
 
-template<typename T>
+template <typename T>
 void FixedTable<T>::remove(file::offset_t) {
   // TODO: requires random writer
 }
 
-template<typename T>
+template <typename T>
 file::flag_t FixedTable<T>::getFlag(file::offset_t index) {
   ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), index * sizeof(T));
-  return *(file::flag_t*)ptr.data();
+  return *(file::flag_t *)ptr.data();
 }
 
-template<typename T>
+template <typename T>
 void FixedTable<T>::setFlag(file::offset_t, file::flag_t) {
   // TODO: requires random writer
 }
-
-
 }
 }
 
