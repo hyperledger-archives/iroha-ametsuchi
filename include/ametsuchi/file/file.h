@@ -39,9 +39,12 @@ class File {
 
   bool is_opened();
 
-  void seek_from_start(offset_t offset);
-  void seek_from_current(offset_t offset);
-
+  /**
+   * Optimized seek. If offset is closer to cursor position, seek will be
+   * performed from current pointer position, otherwise from start
+   * @param offset
+   */
+  void seek(offset_t offset);
   void seek_to_end();
   void seek_to_start();
 
@@ -50,6 +53,8 @@ class File {
 
   bool can_read();
   bool can_write();
+
+  bool remove();
 
   /**
    * Reads exactly \p size bytes from file at current cursor position.
@@ -68,6 +73,10 @@ class File {
   std::unique_ptr<FILE, decltype(&std::fclose)> file_;
 
   struct stat statistics;  // https://linux.die.net/man/2/stat
+
+ private:
+  void seek_from_start(offset_t offset);
+  void seek_from_current(offset_t offset);
 };
 
 

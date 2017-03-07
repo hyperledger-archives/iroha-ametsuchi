@@ -18,11 +18,12 @@
 #include <ametsuchi/exception.h>
 #include <ametsuchi/file/file.h>
 #include <spdlog/spdlog.h>
+#include <cstdio>
 
 namespace ametsuchi {
 namespace file {
 
-static auto console = spdlog::stdout_color_mt("console");
+static auto console = spdlog::stdout_color_mt("file");
 
 /////////
 /// File
@@ -62,6 +63,10 @@ void File::seek_from_start(offset_t offset) {
   std::fseek(file_.get(), offset, SEEK_SET);
 }
 
+void File::seek_to_end() { std::fseek(file_.get(), 0, SEEK_END); }
+
+void File::seek_to_start() { rewind(file_.get()); }
+
 ByteArray File::read(size_t size) {
   ByteArray ret(size);
   auto      res =
@@ -98,10 +103,12 @@ ReadWriteFile::ReadWriteFile(const std::string &path) : File::File(path) {
 
 
 bool ReadWriteFile::open() {
+  file_.reset(std::fopen(path_.c_str(), "r+b"));
+  if (!file_.get()) {
+    file_.reset(std::fopen(path_.c_str(), "w+b"));
+  }
   // to read statistics
   bool opened = File::open();
-
-  file_.reset(std::fopen(path_.c_str(), "rab"));
   return !!file_ && opened;
 }
 
@@ -115,9 +122,9 @@ offset_t ReadWriteFile::append(const ByteArray &data) {
   size_ += size;
   size_t written;
   if ((written = write(data)) != size) {
-    throw exception::IOError("we write " + std::to_string(size) +
-                             "bytes, but " + std::to_string(written) +
-                             " written");
+    console->critical("we write " + std::to_string(size) + "bytes, but " +
+                      std::to_string(written) + " written");
+    throw exception::IOError("ReadWriteFile::append");
   }
 
   return old_fsize;  // offset at which data is written
@@ -131,6 +138,22 @@ size_t ReadWriteFile::write(const ByteArray &data) {
   return res;
 }
 
+
+bool File::remove() {
+  close();
+  unlink(path_.c_str());
+}
+
+void File::seek(offset_t offset) {
+  offset_t pos = position();
+  if (offset > pos) {
+    seek_from_current(offset - pos);
+  } else if (offset < pos && pos - offset > offset) {
+    seek_from_current(pos - offset);
+  } else {
+    seek_from_start(offset);
+  }
+}
 
 }  // namespace file
 }  // namespace ametsuchi

@@ -24,11 +24,10 @@ namespace ametsuchi {
 namespace file {
 
 TEST(FileTest, ReadWriteFileTest) {
-  std::string filename = "/tmp/test1";
-  remove(filename);
-
+  std::string   filename = "/tmp/test1";
   ReadWriteFile f(filename);
-  auto          opened = f.open();
+  f.remove();
+  auto opened = f.open();
 
   ASSERT_TRUE(opened);
   ASSERT_TRUE(f.is_opened());
@@ -57,12 +56,16 @@ TEST(FileTest, ReadWriteFileTest) {
   // close and then open
   f.close();
   ASSERT_FALSE(f.is_opened());
+
   opened = f.open();
   ASSERT_TRUE(opened);
   ASSERT_TRUE(f.is_opened());
 
   ByteArray res = f.read(f.size());
-  ASSERT_EQ(ByteArray({0xfe, 0xfa, 0xfe, 3, 4, 3, 4, 0xff, 0xff, 0xff}), res);
+  ASSERT_EQ(ByteArray({0xfe, 0xfa, 0xfe, 3, 4, 3, 4, 0xff, 0xff, 0xff}), res)
+      << "wrong answer";
+
+  f.close();
 }
 
 

@@ -19,12 +19,4 @@
 
 namespace ametsuchi{
 
-Status Ametsuchi::open(const std::string &path) {
-  /**
-   * Create new TX_store
-   * return Status
-   */
-   return nullptr;
-}
-
 }
