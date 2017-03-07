@@ -19,6 +19,7 @@
 #define AMETSUCHI_SERIALIZER_H
 
 #include <cstring>
+#include <ametsuchi/globals.h>
 
 namespace ametsuchi {
 namespace serialize {
@@ -29,40 +30,23 @@ namespace serialize {
  * @param dst destination pointer address
  * @param value value to serialize
  */
-template <typename T>
-inline void put(ByteArray::value_type **dst, const T &value);
 
-template <>
-inline void put<uint64_t>(ByteArray::value_type **dst, const uint64_t &value) {
-  *reinterpret_cast<uint64_t *>(*dst) = value;
-  *dst += sizeof(uint64_t);
-}
+template<typename T>
+inline void put(ametsuchi::byte_t *&dst, const T &value);
 
-template <>
-inline void put<uint32_t>(ByteArray::value_type **dst, const uint32_t &value) {
-  *reinterpret_cast<uint32_t *>(*dst) = value;
-  *dst += sizeof(uint32_t);
-}
-
-template <>
-inline void put<uint16_t>(ByteArray::value_type **dst, const uint16_t &value) {
-  *reinterpret_cast<uint16_t *>(*dst) = value;
-  *dst += sizeof(uint16_t);
-}
-
-template <>
-inline void put<uint8_t>(ByteArray::value_type **dst, const uint8_t &value) {
-  **dst = value;
-  *dst += sizeof(uint8_t);
-}
-
-template <>
-inline void put<ByteArray>(ByteArray::value_type **dst,
+template<>
+inline void put<ByteArray>(ametsuchi::byte_t *&dst,
                            const ByteArray &value) {
   size_t size = value.size();
   put(dst, size);
-  std::memcpy(*dst, value.data(), size);
-  *dst += size;
+  std::memcpy(dst, value.data(), size);
+  dst += size;
+}
+
+template <typename T>
+inline void put(ametsuchi::byte_t *&dst, const T &value) {
+  *reinterpret_cast<T *>(dst) = value;
+  dst += sizeof(T);
 }
 
 /**
@@ -72,39 +56,21 @@ inline void put<ByteArray>(ByteArray::value_type **dst,
  * @param src source pointer address
  */
 template <typename T>
-inline void get(T *value, const ByteArray::value_type **src);
-
-template <>
-inline void get<uint64_t>(uint64_t *value, const ByteArray::value_type **src) {
-  std::memcpy(value, *src, sizeof(uint64_t));
-  *src += sizeof(uint64_t);
-}
-
-template <>
-inline void get<uint32_t>(uint32_t *value, const ByteArray::value_type **src) {
-  std::memcpy(value, *src, sizeof(uint32_t));
-  *src += sizeof(uint32_t);
-}
-
-template <>
-inline void get<uint16_t>(uint16_t *value, const ByteArray::value_type **src) {
-  std::memcpy(value, *src, sizeof(uint16_t));
-  *src += sizeof(uint16_t);
-}
-
-template <>
-inline void get<uint8_t>(uint8_t *value, const ByteArray::value_type **src) {
-  std::memcpy(value, *src, sizeof(uint8_t));
-  *src += sizeof(uint8_t);
-}
+inline void get(T *value, const ametsuchi::byte_t *&src);
 
 template <>
 inline void get<ByteArray>(ByteArray *value,
-                           const ByteArray::value_type **src) {
+                           const ametsuchi::byte_t *&src) {
   size_t n = 0;
   get(&n, src);
-  *value = ByteArray{*src, *src + n};
-  *src += n;
+  *value = ByteArray{src, src + n};
+  src += n;
+}
+
+template <typename T>
+inline void get(T *value, const ametsuchi::byte_t *&src) {
+  std::memcpy(value, src, sizeof(T));
+  src += sizeof(T);
 }
 
 /**
@@ -154,7 +120,7 @@ inline void get<ByteArray>(ByteArray *value,
     size_t size = array.size();                                                \
     PUT_UINT(dst, size, size_t);                                               \
     std::memcpy(dst,                                                           \
-                reinterpret_cast<const ByteArray::value_type *>(array.data()), \
+                reinterpret_cast<const ametsuchi::byte_t *>(array.data()), \
                 size);                                                         \
     dst += size;                                                               \
   }

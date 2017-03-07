@@ -35,20 +35,20 @@ static void SerializeFunction(benchmark::State& state) {
 
   while (state.KeepRunning()) {
     // put
-    ByteArray::value_type* pw = a_.data();
-    put(&pw, a);
-    put(&pw, b);
-    put(&pw, c);
-    put(&pw, d);
-    put(&pw, data);
+    ametsuchi::byte_t* pw = a_.data();
+    put(pw, a);
+    put(pw, b);
+    put(pw, c);
+    put(pw, d);
+    put(pw, data);
 
     // get
-    const ByteArray::value_type* pr = a_.data();
-    get(&a, &pr);
-    get(&b, &pr);
-    get(&c, &pr);
-    get(&d, &pr);
-    get(&data, &pr);
+    const ametsuchi::byte_t* pr = a_.data();
+    get(&a, pr);
+    get(&b, pr);
+    get(&c, pr);
+    get(&d, pr);
+    get(&data, pr);
 
     assert(a == 0x2222222222222222);
     assert(b == 0x33333333);
@@ -125,7 +125,7 @@ static void SerializeSstream(benchmark::State& state) {
     s.read(reinterpret_cast<char*>(&size), sizeof(size));
     for (size_t i = 0; i < size; i++) {
       s.read(reinterpret_cast<char*>(data.data() + i),
-             sizeof(ByteArray::value_type));
+             sizeof(ametsuchi::byte_t));
     }
 
     assert(a == 0x2222222222222222);

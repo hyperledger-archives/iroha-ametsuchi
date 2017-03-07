@@ -36,7 +36,7 @@ void File::close() {
 ByteArray SequentialFile::read(std::size_t size, offset_t offset) {
   ByteArray ret(size);
   std::fseek(file_.get(), offset, SEEK_CUR);
-  auto res = std::fread(ret.data(), sizeof(ByteArray::value_type), size, file_.get());
+  auto res = std::fread(ret.data(), sizeof(ametsuchi::byte_t), size, file_.get());
   ret.resize(res);
   // http://stackoverflow.com/a/17473871/1953079
   return ret;
