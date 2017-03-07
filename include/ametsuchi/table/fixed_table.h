@@ -65,14 +65,14 @@ void FixedTable<T>::append(const T &data) {
 template<typename T>
 void FixedTable<T>::appendBatch(const std::vector<T> &data) {
   std::for_each(data.begin(), data.end(), [this](const auto &elem){
-    append(elem);
+    this->append(elem);
   });
 }
 
 template<typename T>
 T FixedTable<T>::get(file::offset_t offset) {
   ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), offset);
-  file::flag_t flag = ptr[0];
+  // file::flag_t flag = ptr[0];
   // TODO: handle somehow flag
   T t = *(T*)&ptr[1];
   return t;
@@ -80,8 +80,14 @@ T FixedTable<T>::get(file::offset_t offset) {
 
 template<typename T>
 std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t offset) {
-auto array = r_.read(sizeof(T) * num, offset);
-  return std::vector<T>(array.begin(), array.end());
+  ByteArray array = r_.read((sizeof(T) + sizeof(file::flag_t)) * num, offset);
+  // std::vector<file::flag_t> flags;
+  std::vector<T> v;
+  for (auto i = array.begin(); i != array.end(); i += sizeof(T) + sizeof(file::flag_t)) {
+    // flags.push_back(*i);
+    v.push_back(*(T*)((&*i) + 1));
+  }
+  return v;
 }
 
 template<typename T>

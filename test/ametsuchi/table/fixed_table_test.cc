@@ -47,17 +47,43 @@ struct ExampleFB {
                   #c#c#c#c\
                   #c#c#c#c\
                   #c#c#c
+#define FB(c, i, d) ExampleFB{STR_16(c), i, d}
 
 TEST_F(FileTest, AppendGetTest) {
   FixedTable<ExampleFB> table(filename);
   uint64_t i = 0x12345678;
   double d = 1234567e+89;
-  table.append(ExampleFB{STR_16(A), i, d,});
+  table.append(FB(A, i, d));
   auto fb = table.get(0);
 
   ASSERT_STREQ(fb.str, STR_16(A));
   ASSERT_EQ(fb.i, i);
   ASSERT_EQ(fb.d, d);
+}
+
+
+TEST_F(FileTest, AppendGetBatchTest) {
+  FixedTable<ExampleFB> table(filename);
+  uint64_t i[] = {0x12345678, 0x87654321, 0xfedcba9876543210, 0x123456789abcdef};
+  double d[] = {1234567e+89, 9876543e+21, 0xfedcba9876543, 0x123456789abcde};
+  std::vector<ExampleFB> base_fbs = {
+    FB(A, i[0], d[0]),
+    FB(B, i[1], d[1]),
+    FB(C, i[2], d[2]),
+    FB(D, i[3], d[3])
+  };
+  table.appendBatch(base_fbs);
+  auto received_fbs = table.getBatch(base_fbs.size(), 0);
+
+  ASSERT_EQ(received_fbs.size(), base_fbs.size());
+
+  auto it1 = base_fbs.begin();
+  auto it2 = received_fbs.begin();
+  for (; it1 != base_fbs.end(); ++it1, ++it2) {
+    ASSERT_STREQ(it2->str, it1->str);
+    ASSERT_EQ(it2->i, it1->i);
+    ASSERT_EQ(it2->d, it1->d);
+  }
 }
 
 }
