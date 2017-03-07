@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/table/table.h>
 #include <gtest/gtest.h>
 
 

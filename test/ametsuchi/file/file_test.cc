@@ -23,54 +23,56 @@
 namespace ametsuchi {
 namespace file {
 
-class FileTest : public ::testing::Test{
- protected:
+TEST(FileTest, ReadWriteFileTest) {
+  std::string   filename = "/tmp/test1";
+  ReadWriteFile f(filename);
+  f.remove();
+  auto opened = f.open();
 
-  virtual void TearDown() {
-    remove(filename.c_str());
-  }
+  ASSERT_TRUE(opened);
+  ASSERT_TRUE(f.is_opened());
 
-  const std::string filename = "/tmp/test_db";
-};
+  ASSERT_EQ(f.size(), 0) << "file is not empty";
 
-TEST_F(FileTest, AppendTest) {
-  {
-    AppendableFile af(filename);
-    af.open();
+  auto s = f.append(ByteArray({1, 2, 3}));
+  ASSERT_EQ(f.size() - 3, s) << "incorrect offset";
 
-    ByteArray wdata = {1, 2, 3};
-    af.append(wdata);
+  s = f.append(ByteArray({3, 4, 3, 4}));
+  ASSERT_EQ(f.size() - 4, s) << "incorrect offset";
+  ASSERT_EQ(f.size(), 7) << "incorrect size";
+  ASSERT_EQ(f.position(), 7) << "incorrect position";
 
-    wdata = {3, 2, 1};
-    af.append(wdata);
-  }
+  // cursor now in the end
+  s = f.write(ByteArray({0xff, 0xff, 0xff}));
+  ASSERT_EQ(s, 3) << "size of written bytes differs";
+  ASSERT_EQ(f.position(), 10) << "cursor is not in the end";
 
-  {
-    SequentialFile sf(filename);
-    sf.open();
+  f.seek_to_start();
+  ASSERT_EQ(f.position(), 0) << "cursor is not at the start";
 
-    ByteArray wdata = {1, 2, 3, 3, 2, 1};
+  s = f.write(ByteArray({0xfe, 0xfa, 0xfe}));
+  ASSERT_EQ(s, 3) << "size of written bytes differs";
 
-    ByteArray rdata(6);
-    sf.read(rdata.data(), rdata.size(), 0);
+  // close and then open
+  f.close();
+  ASSERT_FALSE(f.is_opened());
 
-    ASSERT_EQ(wdata, rdata);
-  }
+  opened = f.open();
+  ASSERT_TRUE(opened);
+  ASSERT_TRUE(f.is_opened());
 
-  {
-    SequentialFile sf(filename);
-    sf.open();
+  ByteArray res = f.read(f.size());
+  ASSERT_EQ(ByteArray({0xfe, 0xfa, 0xfe, 3, 4, 3, 4, 0xff, 0xff, 0xff}), res)
+      << "wrong answer";
 
-    ByteArray wdata = {1, 2, 3, 3, 2, 1};
-
-    ByteArray rdata = sf.read(wdata.size(), 0);
-
-    ASSERT_EQ(wdata, rdata);
-  }
-
+  f.close();
 }
 
-TEST_F(FileTest, PositionTest){
+
+
+/*
+TEST_F(FileTest, PositionTest) {
+  Re
   {
     AppendableFile af(filename);
     af.open();
@@ -97,10 +99,10 @@ TEST_F(FileTest, PositionTest){
   }
 }
 
-TEST_F(FileTest, SimultaneousReadWrite){
+TEST_F(FileTest, SimultaneousReadWrite) {
   AppendableFile af(filename);
   SequentialFile sf(filename);
-  
+
   af.open();
   sf.open();
 
@@ -111,9 +113,10 @@ TEST_F(FileTest, SimultaneousReadWrite){
   ASSERT_EQ(sf.read(2, 2), ByteArray({5, 6}));
 }
 
-TEST_F(FileTest, NonexistantFile){
+TEST_F(FileTest, NonexistantFile) {
   SequentialFile sf(filename);
   ASSERT_EQ(sf.open(), false);
 }
+ */
 }
 }

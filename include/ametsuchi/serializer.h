@@ -18,8 +18,8 @@
 #ifndef AMETSUCHI_SERIALIZER_H
 #define AMETSUCHI_SERIALIZER_H
 
-#include <cstring>
 #include <ametsuchi/globals.h>
+#include <cstring>
 
 namespace ametsuchi {
 namespace serialize {
@@ -31,24 +31,8 @@ namespace serialize {
  * @param value value to serialize
  */
 
-template<typename T>
-inline void put(ametsuchi::byte_t *&dst, const T &value);
-
-template<>
-inline void put<ByteArray>(ametsuchi::byte_t *&dst,
-                           const ByteArray &value) {
-  size_t size = value.size();
-  put(dst, size);
-  std::memcpy(dst, value.data(), size);
-  dst += size;
-}
-
 template <typename T>
-inline void put(ametsuchi::byte_t *&dst, const T &value) {
-  static_assert(std::is_trivial<T>::value, "Passing non-trivial type");
-  *reinterpret_cast<T *>(dst) = value;
-  dst += sizeof(T);
-}
+inline void put(ametsuchi::byte_t *&dst, const T &value);
 
 /**
  * Deserialize a variable of given type.
@@ -59,14 +43,45 @@ inline void put(ametsuchi::byte_t *&dst, const T &value) {
 template <typename T>
 inline void get(T *value, const ametsuchi::byte_t *&src);
 
+
+template <typename T>
+inline size_t size(const T &r) {
+  static_assert(std::is_trivial<T>::value, "Passing non-trivial type");
+  return sizeof(T);
+}
+
+
 template <>
-inline void get<ByteArray>(ByteArray *value,
-                           const ametsuchi::byte_t *&src) {
+inline size_t size(const ByteArray &b) {
+  return b.size() * sizeof(byte_t);
+}
+
+
+template <>
+inline void put<ByteArray>(ametsuchi::byte_t *&dst, const ByteArray &value) {
+  size_t size = value.size();
+  put(dst, size);
+  std::memcpy(dst, value.data(), size);
+  dst += size;
+}
+
+
+template <>
+inline void get<ByteArray>(ByteArray *value, const ametsuchi::byte_t *&src) {
   size_t n = 0;
   get(&n, src);
   *value = ByteArray{src, src + n};
   src += n;
 }
+
+
+template <typename T>
+inline void put(ametsuchi::byte_t *&dst, const T &value) {
+  static_assert(std::is_trivial<T>::value, "Passing non-trivial type");
+  *reinterpret_cast<T *>(dst) = value;
+  dst += sizeof(T);
+}
+
 
 template <typename T>
 inline void get(T *value, const ametsuchi::byte_t *&src) {
@@ -121,9 +136,8 @@ inline void get(T *value, const ametsuchi::byte_t *&src) {
   {                                                                            \
     size_t size = array.size();                                                \
     PUT_UINT(dst, size, size_t);                                               \
-    std::memcpy(dst,                                                           \
-                reinterpret_cast<const ametsuchi::byte_t *>(array.data()), \
-                size);                                                         \
+    std::memcpy(                                                               \
+        dst, reinterpret_cast<const ametsuchi::byte_t *>(array.data()), size); \
     dst += size;                                                               \
   }
 
@@ -142,11 +156,6 @@ inline void get(T *value, const ametsuchi::byte_t *&src) {
     src += n;                      \
   }
 
-template <typename T>
-class Serializer {
-  virtual ByteArray serialize(const T *obj) = 0;
-  virtual T deserialize(const ByteArray *blob) = 0;
-};
 }  // namespace serialize
 }  // namespace ametsuchi
 

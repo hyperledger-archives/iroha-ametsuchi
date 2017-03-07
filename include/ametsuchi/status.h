@@ -24,8 +24,6 @@
 
 namespace ametsuchi {
 
-enum class Status { OK, CANT_OPEN_DB };
-
 
 /**
  * This function is used to dump any object into string. Consider it as
