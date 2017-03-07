@@ -37,6 +37,19 @@ TEST_F(FieldTableTest, AppendTest) {
         file::AppendableFile af(filename);
         file::SequentialFile sf(filename);
         FieldTable ft(sf, af);
+
+        ByteArray wdata1 = {4, 3, 2, 1};
+        offset_t offset1 = ft.put(wdata1);
+
+        ByteArray wdata2 = {5,6,7,8};
+        offset_t offset2 = ft.put(wdata2);
+
+        ByteArray rdata1 = ft.get(offset1);
+        ASSERT_EQ(wdata1, rdata1);
+
+        ByteArray rdata2 = ft.get(offset2);
+        ASSERT_EQ(wdata2, rdata2);
+
     }
 }
 

@@ -21,7 +21,7 @@
 #include <memory>
 #include <ametsuchi/globals.h>
 #include <ametsuchi/file/file.h>
-#include "table.h"
+#include <ametsuchi/table/table.h>
 
 namespace ametsuchi{
     namespace table {
@@ -31,8 +31,8 @@ namespace ametsuchi{
         class FieldTable {
         public:
             explicit FieldTable(file::SequentialFile& seqFile, file::AppendableFile& appFile);
-            bool put(const ByteArray &value);
-            ByteArray &get(const offset_t);
+            offset_t put(const ByteArray &value);
+            ByteArray get(const offset_t);
 
             class ForwardIterator;
 
@@ -40,6 +40,7 @@ namespace ametsuchi{
             file::SequentialFile& seqFile_;
             file::AppendableFile& appFile_;
             std::string path_;
+            offset_t fileLength;
         };
 
         class FieldTable::ForwardIterator {
@@ -64,8 +65,36 @@ namespace ametsuchi{
             ForwardIterator& cur_;
         };
 
-        FieldTable::FieldTable(file::SequentialFile &seqFile, file::AppendableFile &appFile): seqFile_(seqFile), appFile_(appFile){}
+        FieldTable::FieldTable(file::SequentialFile &seqFile, file::AppendableFile &appFile): seqFile_(seqFile), appFile_(appFile), fileLength(0){}
 
+        offset_t FieldTable::put(const ByteArray &value) {
+            appFile_.open();
+            ByteArray memory(1024); // assume size of value would fit into 4 bytes
+
+            uint8_t* ptr = memory.data();
+
+            PUT_BYTE_ARRAY(ptr, value);
+
+            memory.resize(8+value.size());
+            appFile_.append(memory);
+            appFile_.close();
+
+            offset_t offsetToThisValue = fileLength;
+            fileLength += memory.size();
+            return offsetToThisValue;
+        }
+
+        ByteArray FieldTable::get(const offset_t offset) {
+            seqFile_.open();
+
+            ByteArray bytes = seqFile_.read(1024, offset);
+
+            const uint8_t* p = bytes.data();
+            ByteArray value = {0};
+            GET_BYTE_ARRAY(value, p);
+            seqFile_.close();
+            return value;
+        }
     }
 }
 

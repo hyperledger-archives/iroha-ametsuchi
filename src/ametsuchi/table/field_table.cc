@@ -15,40 +15,10 @@
  * limitations under the License.
  */
 
-#include "ametsuchi/table/field_table.h"
+#include <ametsuchi/table/field_table.h>
 
 namespace ametsuchi {
 namespace table {
-
-//FieldTable::FieldTable(
-//        AppendableFile& seqFile,
-//        AppendableFile& appFile) {
-//    appFile.open();
-//    seqFile.open();
-//}
-
-
-bool FieldTable::put(const ByteArray &value) {
-    ByteArray memory(4+value.size()); // assume size of value would fit into 4 bytes
-
-    uint32_t size = value.size();
-    uint8_t* ptr = memory.data();
-
-    PUT_UINT(ptr, size, uint32_t);
-    PUT_BYTE_ARRAY(ptr, value);
-
-    appFile_.append(memory);
-    return true;
-}
-
-ByteArray &FieldTable::get(const offset_t offset) {
-    ByteArray lengthBytes = seqFile_.read(sizeof(uint32_t), offset);
-    uint32_t length = 0;
-
-    GET_UINT(&length, lengthBytes.data(), uint32_t);
-    ByteArray value = seqFile_.read(length, offset+sizeof(uint32_t));
-    return value;
-}
 
 
 FieldTable::ForwardIterator::ForwardIterator() {
