@@ -18,7 +18,6 @@
 #include <gtest/gtest.h>
 
 #include <ametsuchi/table/field_table.h>
-#include <ametsuchi/file/file.h>
 
 namespace ametsuchi{
 namespace table{
@@ -41,7 +40,7 @@ TEST_F(FieldTableTest, AppendTest) {
         ByteArray wdata1 = {4, 3, 2, 1};
         offset_t offset1 = ft.put(wdata1);
 
-        ByteArray wdata2 = {5,6,7,8};
+        ByteArray wdata2 = {5, 6, 7, 8};
         offset_t offset2 = ft.put(wdata2);
 
         ByteArray rdata1 = ft.get(offset1);
