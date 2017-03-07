@@ -27,16 +27,13 @@ namespace table {
 
 using ametsuchi::file::offset_t;
 
-// offset + length of record
-using Pointer = std::pair<offset_t, uint64_t>;
-
 /**
  * In-memory index (temporarily).
  *
  * Should be changed to data structure, which is able to store whole index on
  * disk and only "hot" index in-memory.
  */
-using Index = std::map<ByteArray, Pointer>;
+using Index = std::map<ByteArray, offset_t>;
 
 }  // namespace table
 }  // namespace ametsuchi
