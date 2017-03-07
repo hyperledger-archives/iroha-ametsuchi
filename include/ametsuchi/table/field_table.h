@@ -53,13 +53,9 @@ namespace ametsuchi{
             ForwardIterator(FieldTable& ft, offset_t offset);
 //            ~ForwardIterator();
             ForwardIterator(const ForwardIterator &it);
-            ForwardIterator(const ForwardIterator &&it);
-            void operator=(const ForwardIterator &r);    // =
-            void operator=(const ForwardIterator &&r);   // =
             ForwardIterator &operator++();               // postfix++
             ForwardIterator operator++(int);            // ++prefix
             ByteArray &operator*();                  // dereference
-            ByteArray &operator->();                 // dereference
             bool operator==(const ForwardIterator &it);  // ==
             bool operator<(const ForwardIterator &it);   // <
             bool operator>(const ForwardIterator &it);   // >

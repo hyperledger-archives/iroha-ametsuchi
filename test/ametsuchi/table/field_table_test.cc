@@ -74,10 +74,13 @@ TEST_F(FieldTableTest, IteratorTest) {
         for (auto iter = ft.begin(); iter < ft.end(); iter++){
             if (count == 0)
                 ASSERT_EQ(wdata1, *iter);
-            else if (count == 1)
+            else if (count == 1) {
                 ASSERT_EQ(wdata2, *iter);
+                ASSERT_TRUE(++iter == ft.end());
+            }
             count++;
         }
+
 
     }
 }
