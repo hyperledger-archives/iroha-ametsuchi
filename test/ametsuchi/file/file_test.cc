@@ -100,7 +100,7 @@ TEST_F(FileTest, PositionTest){
 TEST_F(FileTest, SimultaneousReadWrite){
   AppendableFile af(filename);
   SequentialFile sf(filename);
-  
+
   af.open();
   sf.open();
 
@@ -114,6 +114,25 @@ TEST_F(FileTest, SimultaneousReadWrite){
 TEST_F(FileTest, NonexistantFile){
   SequentialFile sf(filename);
   ASSERT_EQ(sf.open(), false);
+}
+
+TEST_F(FileTest, RandomAccessTest){
+  {
+    AppendableFile af(filename);
+    af.open();
+
+    af.append(ByteArray{1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+  }
+  RandomAccessFile raf(filename);
+  raf.open();
+
+  ASSERT_EQ(raf.read(2, 0), ByteArray({1, 2}));
+
+  ASSERT_EQ(raf.read(2, 2), ByteArray({3, 4}));
+
+  ASSERT_EQ(raf.read(2, 3), ByteArray({4, 5}));
+
+  ASSERT_EQ(raf.read(5, 9), ByteArray({10}));
 }
 }
 }

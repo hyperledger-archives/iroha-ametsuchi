@@ -17,6 +17,7 @@
 
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
+#include <unistd.h>
 
 namespace ametsuchi {
 namespace file {
@@ -29,6 +30,7 @@ offset_t File::position() const {
 }
 
 File::~File() {}
+
 void File::close() {
   file_.reset(nullptr);
 }
@@ -50,6 +52,41 @@ bool SequentialFile::open() {
 bool AppendableFile::open() {
   file_.reset(std::fopen(path_.c_str(), "ab"));
   return !!file_;
+}
+
+bool RandomAccessFile::open() {
+  file_.reset(std::fopen(path_.c_str(), "rb"));
+  fd_ = fileno(file_.get());
+  return !!file_;
+}
+
+template <>
+std::size_t RandomAccessFile::read<ByteArray::value_type>(ByteArray::value_type *data,
+                                                        std::size_t size,
+                                                        offset_t offset) {
+  auto res = pread(fd_, data, size * sizeof(ByteArray::value_type), offset);
+  return res < 0 ? 0 : res;
+}
+
+ByteArray RandomAccessFile::read(std::size_t size, offset_t offset) {
+  ByteArray ret(size);
+  auto res = pread(fd_, ret.data(), size * sizeof(ByteArray::value_type), offset);
+  if (res < 0){
+    res = 0;
+  }
+  ret.resize(res);
+  return ret;
+}
+
+bool MMapFile::open() {
+  file_.reset(std::fopen(path_.c_str(), "r+b"));
+  fd_ = fileno(file_.get());
+  return !!file_;
+}
+
+void MMapFile::close() {
+  File::close();
+//  munmap();
 }
 }  // namespace file
 }  // namespace ametsuchi
