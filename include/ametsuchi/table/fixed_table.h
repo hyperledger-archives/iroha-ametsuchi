@@ -36,11 +36,11 @@ class FixedTable {
 
   void appendBatch(const std::vector<T> &data);
 
-  T get(file::offset_t offset);
+  T get(file::offset_t index);
 
-  std::vector<T> getBatch(uint64_t num, file::offset_t offset);
+  std::vector<T> getBatch(uint64_t num, file::offset_t index);
 
-  void replace(const T& t, file::offset_t offset);
+  void replace(const T& t, file::offset_t index);
 
  private:
   file::AppendableFile w_;
@@ -70,8 +70,8 @@ void FixedTable<T>::appendBatch(const std::vector<T> &data) {
 }
 
 template<typename T>
-T FixedTable<T>::get(file::offset_t offset) {
-  ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), offset);
+T FixedTable<T>::get(file::offset_t index) {
+  ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), index * sizeof(T));
   // file::flag_t flag = ptr[0];
   // TODO: handle somehow flag
   T t = *(T*)&ptr[1];
@@ -79,8 +79,8 @@ T FixedTable<T>::get(file::offset_t offset) {
 }
 
 template<typename T>
-std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t offset) {
-  ByteArray array = r_.read((sizeof(T) + sizeof(file::flag_t)) * num, offset);
+std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t index) {
+  ByteArray array = r_.read((sizeof(T) + sizeof(file::flag_t)) * num, index * sizeof(T));
   // std::vector<file::flag_t> flags;
   std::vector<T> v;
   for (auto i = array.begin(); i != array.end(); i += sizeof(T) + sizeof(file::flag_t)) {
@@ -91,7 +91,7 @@ std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t offset) {
 }
 
 template<typename T>
-void FixedTable<T>::replace(const T& t, file::offset_t offset) {
+void FixedTable<T>::replace(const T& t, file::offset_t index) {
   // r_.
 }
 
