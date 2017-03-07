@@ -30,11 +30,13 @@ namespace ametsuchi{
 
         class FieldTable {
         public:
+            class ForwardIterator;
+
             explicit FieldTable(file::SequentialFile& seqFile, file::AppendableFile& appFile);
             offset_t put(const ByteArray &value);
             ByteArray get(const offset_t);
-
-            class ForwardIterator;
+            ForwardIterator begin();
+            ForwardIterator end();
 
         private:
             file::SequentialFile& seqFile_;
@@ -45,24 +47,24 @@ namespace ametsuchi{
 
         class FieldTable::ForwardIterator {
         public:
-            ForwardIterator();
-            ForwardIterator(offset_t offset);
-            ~ForwardIterator();
+            ForwardIterator(FieldTable& ft);
+            ForwardIterator(FieldTable& ft, offset_t offset);
+//            ~ForwardIterator();
             ForwardIterator(const ForwardIterator &it);
             ForwardIterator(const ForwardIterator &&it);
             void operator=(const ForwardIterator &r);    // =
             void operator=(const ForwardIterator &&r);   // =
             ForwardIterator &operator++();               // postfix++
-            ForwardIterator &operator++(int);            // ++prefix
+            ForwardIterator operator++(int);            // ++prefix
             ByteArray &operator*();                  // dereference
             ByteArray &operator->();                 // dereference
             bool operator==(const ForwardIterator &it);  // ==
             bool operator<(const ForwardIterator &it);   // <
             bool operator>(const ForwardIterator &it);   // >
         protected:
+            FieldTable& ft_;
             offset_t offset_;
             ByteArray value_;
-            ForwardIterator& cur_;
         };
 
         FieldTable::FieldTable(file::SequentialFile &seqFile, file::AppendableFile &appFile): seqFile_(seqFile), appFile_(appFile), fileLength(0){}
@@ -94,6 +96,55 @@ namespace ametsuchi{
             GET_BYTE_ARRAY(value, p);
             seqFile_.close();
             return value;
+        }
+
+        FieldTable::ForwardIterator FieldTable::begin() {
+            return ForwardIterator(*this);
+        }
+
+        FieldTable::ForwardIterator FieldTable::end() {
+            auto fi = ForwardIterator(*this, fileLength);
+            return fi;
+        }
+
+        FieldTable::ForwardIterator::ForwardIterator(FieldTable& ft): ft_(ft) {
+            offset_ = 0;
+            value_ = ft_.get(offset_);
+        }
+
+        FieldTable::ForwardIterator::ForwardIterator(FieldTable &ft, offset_t offset): ft_(ft), offset_(offset) {
+            value_ = ft_.get(offset);
+        }
+
+//        FieldTable::ForwardIterator::~ForwardIterator() {}
+
+        FieldTable::ForwardIterator::ForwardIterator(const FieldTable::ForwardIterator &it):
+                ft_(it.ft_), offset_(it.offset_), value_(it.value_){
+        }
+
+        FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
+            offset_ += value_.size() + 8;
+            value_ = ft_.get(offset_);
+            return *this;
+        }
+
+        FieldTable::ForwardIterator FieldTable::ForwardIterator::operator++(int) {
+            ForwardIterator iterator(*this);
+            offset_ += value_.size() + 8;
+            value_ = ft_.get(offset_);
+            return iterator;
+        }
+
+        ByteArray &FieldTable::ForwardIterator::operator*() {
+            return value_;
+        }
+
+        bool FieldTable::ForwardIterator::operator==(const FieldTable::ForwardIterator &it) {
+            return offset_ == it.offset_;
+        }
+
+        bool FieldTable::ForwardIterator::operator<(const FieldTable::ForwardIterator &it) {
+            return offset_ < it.offset_;
         }
     }
 }

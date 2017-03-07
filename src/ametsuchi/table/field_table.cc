@@ -21,36 +21,39 @@ namespace ametsuchi {
 namespace table {
 
 
-FieldTable::ForwardIterator::ForwardIterator() {
-    offset_ = 0;
-    value_ = FieldTable::get(offset_);
-}
+    FieldTable::ForwardIterator::ForwardIterator(FieldTable& ft): ft_(ft) {
+        offset_ = 0;
+        value_ = ft_.get(offset_);
+    }
 
-FieldTable::ForwardIterator::ForwardIterator(offset_t offset) {
-    offset_ = offset;
-    value_ = FieldTable::get(offset_);
-}
+    FieldTable::ForwardIterator::ForwardIterator(FieldTable& ft, offset_t offset) : ft_(ft) {
+        offset_ = offset;
+        value_ = ft.get(offset_);
+    }
 
-FieldTable::ForwardIterator::ForwardIterator(const FieldTable::ForwardIterator &it){
-    cur_ = std::move(it);
-}
+    FieldTable::ForwardIterator::ForwardIterator(const FieldTable::ForwardIterator &it): offset_(it.offset_), value_(it.value_), ft_(it.ft_){
+    }
 
-FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
-    return ForwardIterator(offset_+(4+value_.size()));
-}
+    FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
+        return ForwardIterator(offset_+(4+value_.size()));
+    }
 
-ByteArray &FieldTable::ForwardIterator::operator*() {
-    return value_;
-}
+    ByteArray &FieldTable::ForwardIterator::operator*() {
+        return value_;
+    }
 
 
-bool FieldTable::ForwardIterator::operator==(const FieldTable::ForwardIterator &it) {
-    return offset_ == it.offset_;
-}
+    bool FieldTable::ForwardIterator::operator==(const FieldTable::ForwardIterator &it) {
+        return offset_ == it.offset_;
+    }
 
-bool FieldTable::ForwardIterator::operator<(const FieldTable::ForwardIterator &it) {
-    return offset_ < it.offset_;
-}
+    bool FieldTable::ForwardIterator::operator<(const FieldTable::ForwardIterator &it) {
+        return offset_ < it.offset_;
+    }
+
+    FieldTable::ForwardIterator FieldTable::begin() {
+        return ForwardIterator(*this);
+    }
 
 }
 }
