@@ -86,7 +86,7 @@ TEST_F(FileTest, AppendGetBatchTest) {
 }
 
 TEST_F(FileTest, AppendReplaceGetTest) {
-  // Remove when FixedTable::replace will be implemented
+  // Remove when required method will be implemented
   return;
   FixedTable<ExampleFB> table(filename);
   uint64_t i = 0x12345678;
@@ -103,6 +103,36 @@ TEST_F(FileTest, AppendReplaceGetTest) {
   ASSERT_STREQ(fb2.str, STR_16(B));
   ASSERT_EQ(fb2.i, -i);
   ASSERT_EQ(fb2.d, -d);
+}
+
+TEST_F(FileTest, GetFlagTest) {
+  // Remove when required method will be implemented
+  return;
+  FixedTable<int> table(filename);
+  table.append(0x12345678);
+  ASSERT_NE(table.getFlag(0), table::REMOVED);
+}
+
+TEST_F(FileTest, SetGetFlagsTest) {
+  // Remove when required method will be implemented
+  return;
+  FixedTable<int> table(filename);
+  table.append(0x12345678);
+  // this probably can break for some day
+  // replace 0 for some default value
+  ASSERT_EQ(table.getFlag(0), 0);
+  table.setFlag(0, table::REMOVED);
+  ASSERT_EQ(table.getFlag(0), table::REMOVED);
+}
+
+TEST_F(FileTest, RemoveTest) {
+  // Remove when required method will be implemented
+  return;
+  FixedTable<int> table(filename);
+  table.append(0x12345678);
+  ASSERT_NE(table.getFlag(0), table::REMOVED);
+  table.remove(0);
+  ASSERT_EQ(table.getFlag(0), table::REMOVED);
 }
 
 }

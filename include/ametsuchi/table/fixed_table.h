@@ -27,6 +27,14 @@
 namespace ametsuchi{
 namespace table{
 
+#pragma pack(push)
+#pragma pack(1)
+enum FixedTableFlags {
+  REMOVED = 1,
+  // rest is reserved
+};
+#pragma pack(pop)
+
 template<typename T>
 class FixedTable {
  public:
@@ -41,6 +49,11 @@ class FixedTable {
   std::vector<T> getBatch(uint64_t num, file::offset_t index);
 
   void replace(const T& t, file::offset_t index);
+
+  void remove(file::offset_t index);
+
+  file::flag_t getFlag(file::offset_t index);
+  void setFlag(file::offset_t index, file::flag_t flags);
 
  private:
   file::AppendableFile w_;
@@ -91,11 +104,28 @@ std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t index) {
 }
 
 template<typename T>
-void FixedTable<T>::replace(const T& t, file::offset_t index) {
+void FixedTable<T>::replace(const T&, file::offset_t) {
   // TODO: requires random writer
   // if record exists and new record length <= old record length, then it should be in-place replace.
   // otherwise, append to the end of table + invalidate old record (set removed = true)
 }
+
+template<typename T>
+void FixedTable<T>::remove(file::offset_t) {
+  // TODO: requires random writer
+}
+
+template<typename T>
+file::flag_t FixedTable<T>::getFlag(file::offset_t index) {
+  ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), index * sizeof(T));
+  return *(file::flag_t*)ptr.data();
+}
+
+template<typename T>
+void FixedTable<T>::setFlag(file::offset_t, file::flag_t) {
+  // TODO: requires random writer
+}
+
 
 }
 }
