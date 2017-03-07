@@ -38,6 +38,8 @@ class Exception : public std::exception {
    */
   explicit Exception(const std::string& message) : msg_(message) {}
 
+  explicit Exception(const std::string&& message) : msg_(message) {}
+
   /** Destructor.
    * Virtual to allow for subclassing.
    */
@@ -59,7 +61,9 @@ class Exception : public std::exception {
 
 class IOError : public Exception {
  public:
-  IOError(const char* message) : Exception(message) {}
+  explicit IOError(const char* message) : Exception(message) {}
+  explicit IOError(const std::string& message) : Exception(message) {}
+  explicit IOError(const std::string&& message) : Exception(message) {}
 };
 }
 }

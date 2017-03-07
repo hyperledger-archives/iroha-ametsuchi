@@ -19,6 +19,9 @@
 #define AMETSUCHI_FILE_H
 
 #include <ametsuchi/globals.h>
+#include <sys/stat.h>   //
+#include <sys/types.h>  // for stat
+#include <unistd.h>     //
 #include <memory>
 #include <string>
 
@@ -26,18 +29,15 @@ namespace ametsuchi {
 namespace file {
 
 
-using flag_t = uint8_t;
-
-
 class File {
  public:
   explicit File(const std::string &path);
   virtual ~File() = 0;
 
-  virtual bool open() = 0;
+  virtual bool open();
   void         close();
 
-  bool is_open();
+  bool is_opened();
 
   void seek_from_start(offset_t offset);
   void seek_from_current(offset_t offset);
@@ -66,6 +66,8 @@ class File {
 
   std::string path_;  // path to current file
   std::unique_ptr<FILE, decltype(&std::fclose)> file_;
+
+  struct stat statistics;  // https://linux.die.net/man/2/stat
 };
 
 
@@ -74,8 +76,6 @@ class File {
  * No locking, individual pointer.
  */
 class ReadOnlyFile : public File {
-  using File::File;
-
  public:
   explicit ReadOnlyFile(const std::string &path);
   bool open() override;
@@ -87,7 +87,6 @@ class ReadOnlyFile : public File {
  * Only one writer to file is possible.
  */
 class ReadWriteFile : public File {
-  using File::File;
   // TODO(warchant): add file locking after open using flock or smth like this
  public:
   explicit ReadWriteFile(const std::string &path);

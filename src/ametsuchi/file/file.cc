@@ -15,13 +15,14 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/file/file.h>
-#include <ametsuchi/globals.h>
-
 #include <ametsuchi/exception.h>
+#include <ametsuchi/file/file.h>
+#include <spdlog/spdlog.h>
 
 namespace ametsuchi {
 namespace file {
+
+static auto console = spdlog::stdout_color_mt("console");
 
 /////////
 /// File
@@ -30,11 +31,22 @@ File::File(const std::string &path)
 
 File::~File() {}
 
-offset_t File::position() const { return std::ftell(file_); }
+bool File::open() {
+  if (stat(path_.c_str(), &statistics) == -1) {
+    console->critical("can not get access to file " + path_);
+    return false;
+  }
+
+  size_ = (size_t)(statistics.st_size);
+
+  return true;
+}
+
+offset_t File::position() const { return std::ftell(file_.get()); }
 
 size_t File::size() const { return size_; }
 
-bool File::is_open() { return file_ != nullptr; }
+bool File::is_opened() { return file_.get() != nullptr; }
 
 bool File::can_read() { return read_; }
 
@@ -43,16 +55,17 @@ bool File::can_write() { return write_; }
 void File::close() { file_.reset(nullptr); }
 
 void File::seek_from_current(offset_t offset) {
-  std::fseek(file_, offset, SEEK_CUR);
+  std::fseek(file_.get(), offset, SEEK_CUR);
 }
 
 void File::seek_from_start(offset_t offset) {
-  std::fseek(file_, offset, SEEK_SET);
+  std::fseek(file_.get(), offset, SEEK_SET);
 }
 
 ByteArray File::read(size_t size) {
   ByteArray ret(size);
-  auto res = std::fread(ret.data(), sizeof(ametsuchi::byte_t), size, file_);
+  auto      res =
+      std::fread(ret.data(), sizeof(ametsuchi::byte_t), size, file_.get());
 
   if (res != size) ret.resize(res);
 
@@ -61,16 +74,36 @@ ByteArray File::read(size_t size) {
 
 ////////////////
 /// ReadOnlyFile
-ReadOnlyFile::ReadOnlyFile(const std::string &path)
-    : File(path), read_(true), write_(false) {}
+ReadOnlyFile::ReadOnlyFile(const std::string &path) : File::File(path) {
+  read_  = true;
+  write_ = false;
+}
 
 
+bool ReadOnlyFile::open() {
+  // to read statistics
+  bool opened = File::open();
+
+  file_.reset(std::fopen(path_.c_str(), "rb"));
+  return !!file_ && opened;
+}
 
 
 /////////////////
 /// ReadWriteFile
-ReadWriteFile::ReadWriteFile(const std::string &path)
-    : File(path), read_(true), write_(true) {}
+ReadWriteFile::ReadWriteFile(const std::string &path) : File::File(path) {
+  read_  = true;
+  write_ = true;
+}
+
+
+bool ReadWriteFile::open() {
+  // to read statistics
+  bool opened = File::open();
+
+  file_.reset(std::fopen(path_.c_str(), "rab"));
+  return !!file_ && opened;
+}
 
 
 offset_t ReadWriteFile::append(const ByteArray &data) {
@@ -80,8 +113,11 @@ offset_t ReadWriteFile::append(const ByteArray &data) {
   size_t size      = data.size();
 
   size_ += size;
-  if (write(data) != size) {
-    return -1;
+  size_t written;
+  if ((written = write(data)) != size) {
+    throw exception::IOError("we write " + std::to_string(size) +
+                             "bytes, but " + std::to_string(written) +
+                             " written");
   }
 
   return old_fsize;  // offset at which data is written
@@ -89,9 +125,9 @@ offset_t ReadWriteFile::append(const ByteArray &data) {
 
 
 size_t ReadWriteFile::write(const ByteArray &data) {
-  auto res =
-      std::fwrite(data.data(), sizeof(ametsuchi::byte_t), data.size(), file_);
-  std::fflush(file_);
+  auto res = std::fwrite(data.data(), sizeof(ametsuchi::byte_t), data.size(),
+                         file_.get());
+  std::fflush(file_.get());
   return res;
 }
 

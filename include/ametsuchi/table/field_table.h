@@ -20,7 +20,6 @@
 
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
-#include <ametsuchi/table/table.h>
 #include <memory>
 #include <string>
 #include "iterator.h"
@@ -28,16 +27,16 @@
 namespace ametsuchi {
 namespace table {
 
+using flag_t = uint8_t;
 
 class Field {
  public:
-
   class ForwardIterator;
 
   struct Record;
 
-  enum class Flag{
-    VALID = 0,
+  enum class Flag : flag_t {
+    VALID   = 0,
     REMOVED = 1
     // rest is reserved for future use
   };
@@ -92,6 +91,7 @@ class Field {
   offset_t            file_size;
 };
 
+
 class Field::ForwardIterator : public Iterator {
  public:
   ForwardIterator(Field &ft);
@@ -104,15 +104,15 @@ class Field::ForwardIterator : public Iterator {
   bool operator<(const ForwardIterator &it);   // <
   bool operator>(const ForwardIterator &it);   // >
  protected:
-  Field &ft_;
-  offset_t    offset_;
-  ByteArray   value_;
+  Field &   ft_;
+  offset_t  offset_;
+  ByteArray value_;
 };
 
 
 struct Field::Record {
   Field::Flag flag;
-  ByteArray  data;
+  ByteArray   data;
 };
 
 }  // namespace table

@@ -39,7 +39,7 @@ add_library(${LIBAMETSUCHI_NAME}
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
   flatbuffers
-#  spdlog
+  spdlog
 #  keccak
   )
 StrictMode(${LIBAMETSUCHI_NAME})
