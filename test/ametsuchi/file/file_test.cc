@@ -19,13 +19,14 @@
 
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
+#include <ametsuchi/serializer.h>
 
 namespace ametsuchi {
 namespace file {
 
 
 TEST(FileTest, ReadWriteFileTest) {
-  std::string   filename = "/tmp/test1";
+  std::string filename = "/tmp/test1";
   ReadWriteFile f(filename);
   f.remove();
   auto opened = f.open();
@@ -120,6 +121,36 @@ TEST(FileTest, ReadOnlyFileTest) {
   ASSERT_EQ(ByteArray({0xfa, 0xfe}), res);
 
   f.close();
+}
+
+TEST(FileTest, HugeFileWriteRead) {
+  size_t size = 10;
+
+  std::string filename = "/tmp/test1";
+  ReadWriteFile writeFile(filename);
+  writeFile.remove();
+
+  if (writeFile.open()) {
+    for (uint32_t i; i < size; i++) {
+      ByteArray memory(4);
+      uint8_t *ptr = memory.data();
+      PUT_UINT(ptr, i, uint32_t);
+      writeFile.write(memory);
+    }
+  }
+  writeFile.close();
+
+  ReadOnlyFile readFile(filename);
+  if (readFile.open()){
+    for (uint32_t i; i < size; i++){
+      ByteArray memory = readFile.read(4);
+      uint32_t res;
+      uint8_t *ptr = memory.data();
+      GET_UINT(&res, ptr, uint32_t);
+      ASSERT_EQ(i, res);
+    }
+  }
+
 }
 
 /*
