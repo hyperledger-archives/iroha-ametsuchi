@@ -18,8 +18,10 @@
 #ifndef AMETSUCHI_FIXED_TABLE_H
 #define AMETSUCHI_FIXED_TABLE_H
 
-#include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
+#include <ametsuchi/table/table.h>
+#include <ametsuchi/file/file.h>
+#include <ametsuchi/serializer.h>
 
 #include <algorithm>
 #include <string>
@@ -30,9 +32,14 @@ namespace table {
 template <typename T>
 class FixedTable {
  public:
+  class ForwardIterator;
+
+  using Record = BaseRecord<T>;
+
   FixedTable(const std::string &path);
 
   void append(const T &data);
+  // void append(const T &&data);
 
   void appendBatch(const std::vector<T> &data);
 
@@ -48,23 +55,28 @@ class FixedTable {
   void setFlag(file::offset_t index, file::flag_t flags);
 
  private:
-  file::AppendableFile w_;
-  file::SequentialFile r_;
+  file::ReadWriteFile file;
 };
 
 // imp
 template <typename T>
-FixedTable<T>::FixedTable(const std::string &path) : w_(path), r_(path) {
-  w_.open();
-  r_.open();
+FixedTable<T>::FixedTable(const std::string &path) : file(path) {
+  file.open();
 }
 
 template <typename T>
 void FixedTable<T>::append(const T &data) {
-  file::flag_t flag = 0;
-  w_.append(std::vector<file::flag_t>{flag});
-  w_.append(data);
+  ByteArray buf;
+  serialize::putRecord(buf, Record{Flag::VALID, data});
+  file.append(buf);
 }
+
+// template <typename T>
+// void FixedTable<T>::append(const T &&data) {
+//   ByteArray buf;
+//   serialize::putRecord(buf, Record{Flag::VALID, data});
+//   file.append(buf);
+// }
 
 template <typename T>
 void FixedTable<T>::appendBatch(const std::vector<T> &data) {
@@ -73,21 +85,21 @@ void FixedTable<T>::appendBatch(const std::vector<T> &data) {
 
 template <typename T>
 T FixedTable<T>::get(file::offset_t index) {
-  ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), index * sizeof(T));
-  // file::flag_t flag = ptr[0];
-  // TODO: handle somehow flag
-  T t = *(T *)&ptr[1];
+  file.seek(index * sizeof(T));
+  ByteArray buf = file.read(sizeof(T) + sizeof(file::flag_t));
+  T t = serialize::getRecord<T>(buf).data;
   return t;
 }
 
 template <typename T>
 std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t index) {
-  ByteArray array = r_.read((sizeof(T) + sizeof(file::flag_t)) * num, index * sizeof(T));
-  // std::vector<file::flag_t> flags;
+  file.seek(index * sizeof(T));
+  ByteArray buf = file.read((sizeof(T) + sizeof(file::flag_t)) * num);
   std::vector<T> v;
-  for (auto i = array.begin(); i != array.end(); i += sizeof(T) + sizeof(file::flag_t)) {
+  for (auto i = buf.begin(); i != buf.end(); i += sizeof(T) + sizeof(file::flag_t)) {
     // flags.push_back(*i);
-    v.push_back(*(T *)((&*i) + 1));
+    const Record &r = *reinterpret_cast<Record*>(&*i);
+    v.push_back(r.data);
   }
   return v;
 }
@@ -108,8 +120,9 @@ void FixedTable<T>::remove(file::offset_t) {
 
 template <typename T>
 file::flag_t FixedTable<T>::getFlag(file::offset_t index) {
-  ByteArray ptr = r_.read(sizeof(T) + sizeof(file::flag_t), index * sizeof(T));
-  return *(file::flag_t *)ptr.data();
+  file.seek(index * sizeof(T));
+  ByteArray buf = file.read(sizeof(T) + sizeof(file::flag_t));
+  return *(file::flag_t *)buf.data();
 }
 
 template <typename T>
