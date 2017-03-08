@@ -28,6 +28,12 @@
 namespace ametsuchi {
 namespace file {
 
+using flag_t = uint8_t;
+using offset_t = int64_t;
+
+inline bool is_valid(offset_t offset) {
+  return offset != INT64_MAX;
+}
 
 class File {
  public:
@@ -62,6 +68,8 @@ class File {
    * @return byte array of \p size
    */
   ByteArray read(size_t size);
+
+  const std::string get_path() const;
 
  protected:
   bool read_;   // true if I can read

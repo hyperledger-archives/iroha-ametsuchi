@@ -77,6 +77,10 @@ ByteArray File::read(size_t size) {
   return ret;
 }
 
+const std::string File::get_path() const {
+  return path_;
+}
+
 ////////////////
 /// ReadOnlyFile
 ReadOnlyFile::ReadOnlyFile(const std::string &path) : File::File(path) {
