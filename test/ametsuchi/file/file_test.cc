@@ -23,6 +23,7 @@
 namespace ametsuchi {
 namespace file {
 
+
 TEST(FileTest, ReadWriteFileTest) {
   std::string   filename = "/tmp/test1";
   ReadWriteFile f(filename);
@@ -75,16 +76,29 @@ TEST(FileTest, ReadWriteFileTest) {
   res = f.read(3);
   ASSERT_EQ(ByteArray({0xfe, 0xfa, 0xfe}), res);
 
+  f.seek_to_end();
+  ASSERT_EQ(f.position(), f.size());
+
+  ASSERT_TRUE(f.can_write());
+  ASSERT_TRUE(f.can_read());
 
 
   f.close();
 }
 
 TEST(FileTest, ReadOnlyFileTest) {
-  std::string  filename = "/tmp/test1";
+  std::string filename = "/tmp/test1";
+
+  ReadWriteFile rwf(filename);
+  rwf.remove();
+  rwf.open();
+  rwf.write(ByteArray({0xfe, 0xfa, 0xfe, 3, 4, 3, 4, 0xff, 0xff, 0xff}));
+  rwf.close();
+
   ReadOnlyFile f(filename);
 
   ASSERT_TRUE(f.can_read());
+  ASSERT_FALSE(f.can_write());
   ASSERT_FALSE(f.is_opened());
 
   auto opened = f.open();
