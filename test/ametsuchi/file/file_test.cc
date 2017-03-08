@@ -67,7 +67,7 @@ TEST(FileTest, ReadWriteFileTest) {
       << "wrong answer";
 
   // testing seek
-  for (int i = 0; i < f.size(); i++) {
+  for (uint32_t i = 0; i < f.size(); i++) {
     f.seek(i);
     ASSERT_EQ(i, f.position());
   }
