@@ -65,6 +65,18 @@ TEST(FileTest, ReadWriteFileTest) {
   ASSERT_EQ(ByteArray({0xfe, 0xfa, 0xfe, 3, 4, 3, 4, 0xff, 0xff, 0xff}), res)
       << "wrong answer";
 
+  // testing seek
+  for (int i = 0; i < f.size(); i++) {
+    f.seek(i);
+    ASSERT_EQ(i, f.position());
+  }
+
+  f.seek(0);
+  res = f.read(3);
+  ASSERT_EQ(ByteArray({0xfe, 0xfa, 0xfe}), res);
+
+
+
   f.close();
 }
 
@@ -88,6 +100,10 @@ TEST(FileTest, ReadOnlyFileTest) {
   res = f.read(4);
   ASSERT_EQ(ByteArray({3, 4, 3, 4}), res);
   ASSERT_EQ(f.position(), 7);
+
+  f.seek(1);
+  res = f.read(2);
+  ASSERT_EQ(ByteArray({0xfa, 0xfe}), res);
 
   f.close();
 }

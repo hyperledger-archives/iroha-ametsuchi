@@ -148,8 +148,8 @@ void File::seek(offset_t offset) {
   offset_t pos = position();
   if (offset > pos) {
     seek_from_current(offset - pos);
-  } else if (offset < pos && pos - offset > offset) {
-    seek_from_current(pos - offset);
+//  } else if (offset < pos && pos - offset > offset) {
+//    seek_from_current(pos - offset);
   } else {
     seek_from_start(offset);
   }
