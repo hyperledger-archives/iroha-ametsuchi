@@ -22,12 +22,11 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <ametsuchi/exception.h>
 
 namespace ametsuchi {
 
 using byte_t    = uint8_t;
 using ByteArray = std::vector<byte_t>;
 
-/// should be signed, because file::ReadWriteFile::write returns -1 in case of error
-using offset_t = int64_t;
 }

@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include <ametsuchi/table/fixed_table.h>
+#include <ametsuchi/table/table.h>
 #include <ametsuchi/globals.h>
 
 namespace ametsuchi {
@@ -110,7 +111,7 @@ TEST_F(FileTest, GetFlagTest) {
   return;
   FixedTable<int> table(filename);
   table.append(0x12345678);
-  ASSERT_NE(table.getFlag(0), table::REMOVED);
+  ASSERT_NE(table.getFlag(0), Flag::REMOVED);
 }
 
 TEST_F(FileTest, SetGetFlagsTest) {
@@ -121,8 +122,8 @@ TEST_F(FileTest, SetGetFlagsTest) {
   // this probably can break for some day
   // replace 0 for some default value
   ASSERT_EQ(table.getFlag(0), 0);
-  table.setFlag(0, table::REMOVED);
-  ASSERT_EQ(table.getFlag(0), table::REMOVED);
+  table.setFlag(0, Flag::REMOVED);
+  ASSERT_EQ(table.getFlag(0), Flag::REMOVED);
 }
 
 TEST_F(FileTest, RemoveTest) {
@@ -130,9 +131,9 @@ TEST_F(FileTest, RemoveTest) {
   return;
   FixedTable<int> table(filename);
   table.append(0x12345678);
-  ASSERT_NE(table.getFlag(0), table::REMOVED);
+  ASSERT_NE(table.getFlag(0), Flag::REMOVED);
   table.remove(0);
-  ASSERT_EQ(table.getFlag(0), table::REMOVED);
+  ASSERT_EQ(table.getFlag(0), Flag::REMOVED);
 }
 
 }
