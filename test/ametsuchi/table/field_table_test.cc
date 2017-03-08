@@ -33,15 +33,13 @@ protected:
 
 TEST_F(FieldTableTest, AppendTest) {
     {
-        file::AppendableFile af(filename);
-        file::SequentialFile sf(filename);
-        FieldTable ft(sf, af);
+        FieldTable ft(filename);
 
         ByteArray wdata1 = {4, 3, 2, 1};
-        offset_t offset1 = ft.put(wdata1);
+        file::offset_t offset1 = ft.append(wdata1);
 
         ByteArray wdata2 = {5, 6, 7, 8};
-        offset_t offset2 = ft.put(wdata2);
+        file::offset_t offset2 = ft.append(wdata2);
 
         ByteArray rdata1 = ft.get(offset1);
         ASSERT_EQ(wdata1, rdata1);
@@ -54,15 +52,13 @@ TEST_F(FieldTableTest, AppendTest) {
 
 TEST_F(FieldTableTest, IteratorTest) {
     {
-        file::AppendableFile af(filename);
-        file::SequentialFile sf(filename);
-        FieldTable ft(sf, af);
+        FieldTable ft(filename);
 
         ByteArray wdata1 = {4, 3, 2, 1};
-        offset_t offset1 = ft.put(wdata1);
+        file::offset_t offset1 = ft.append(wdata1);
 
         ByteArray wdata2 = {5, 6, 7, 8};
-        offset_t offset2 = ft.put(wdata2);
+        file::offset_t offset2 = ft.append(wdata2);
 
         ByteArray rdata1 = ft.get(offset1);
         ASSERT_EQ(wdata1, rdata1);

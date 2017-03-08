@@ -46,7 +46,7 @@ inline void get(T *value, const ametsuchi::byte_t *&src);
 
 template <typename T>
 inline size_t size(const T &r) {
-  static_assert(std::is_trivial<T>::value, "Passing non-trivial type");
+  NON_TRIVIAL_CHECK;
   return sizeof(T);
 }
 
@@ -77,7 +77,7 @@ inline void get<ByteArray>(ByteArray *value, const ametsuchi::byte_t *&src) {
 
 template <typename T>
 inline void put(ametsuchi::byte_t *&dst, const T &value) {
-  static_assert(std::is_trivial<T>::value, "Passing non-trivial type");
+  NON_TRIVIAL_CHECK;
   *reinterpret_cast<T *>(dst) = value;
   dst += sizeof(T);
 }
@@ -85,7 +85,7 @@ inline void put(ametsuchi::byte_t *&dst, const T &value) {
 
 template <typename T>
 inline void get(T *value, const ametsuchi::byte_t *&src) {
-  static_assert(std::is_trivial<T>::value, "Passing non-trivial type");
+  NON_TRIVIAL_CHECK;
   std::memcpy(value, src, sizeof(T));
   src += sizeof(T);
 }

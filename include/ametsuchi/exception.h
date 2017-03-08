@@ -23,6 +23,8 @@
 namespace ametsuchi {
 namespace exception {
 
+#define NON_TRIVIAL_CHECK static_assert(std::is_trivial<T>::value, "Passing non-trivial type")
+
 class Exception : public std::exception {
  public:
   /** Constructor (C strings).
