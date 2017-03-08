@@ -68,7 +68,29 @@ TEST(FileTest, ReadWriteFileTest) {
   f.close();
 }
 
+TEST(FileTest, ReadOnlyFileTest) {
+  std::string  filename = "/tmp/test1";
+  ReadOnlyFile f(filename);
 
+  ASSERT_TRUE(f.can_read());
+  ASSERT_FALSE(f.is_opened());
+
+  auto opened = f.open();
+
+  ASSERT_TRUE(opened);
+  ASSERT_TRUE(f.can_read());
+
+  ByteArray res = f.read(3);
+  ASSERT_EQ(ByteArray({0xfe, 0xfa, 0xfe}), res);
+
+  ASSERT_EQ(f.position(), 3);
+
+  res = f.read(4);
+  ASSERT_EQ(ByteArray({3, 4, 3, 4}), res);
+  ASSERT_EQ(f.position(), 7);
+
+  f.close();
+}
 
 /*
 TEST_F(FileTest, PositionTest) {
