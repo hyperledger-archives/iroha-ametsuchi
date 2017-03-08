@@ -28,7 +28,7 @@ static auto console = spdlog::stdout_color_mt("file");
 /////////
 /// File
 File::File(const std::string &path)
-    : path_(path), file_(nullptr, &std::fclose), read_(false), write_(false) {}
+    : read_(false), write_(false), path_(path), file_(nullptr, &std::fclose) {}
 
 File::~File() {}
 
@@ -75,6 +75,10 @@ ByteArray File::read(size_t size) {
   if (res != size) ret.resize(res);
 
   return ret;
+}
+
+const std::string File::get_path() const {
+  return path_;
 }
 
 ////////////////
@@ -141,15 +145,15 @@ size_t ReadWriteFile::write(const ByteArray &data) {
 
 bool File::remove() {
   close();
-  unlink(path_.c_str());
+  return 0 == unlink(path_.c_str());
 }
 
 void File::seek(offset_t offset) {
   offset_t pos = position();
   if (offset > pos) {
     seek_from_current(offset - pos);
-    //  } else if (offset < pos && pos - offset > offset) {
-    //    seek_from_current(pos - offset);
+  } else if (offset < pos && pos - offset > offset) {
+    seek_from_current(pos - offset);
   } else {
     seek_from_start(offset);
   }

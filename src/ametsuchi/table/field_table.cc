@@ -15,48 +15,33 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/serializer.h>
 #include <ametsuchi/table/field_table.h>
+#include <ametsuchi/table/table.h>
 
 namespace ametsuchi {
-
-/**
- * We define custom serializer for table::Field::Record
- * We need put, size.
- * Define serializer in ametsuchi::serialize namespace.
- */
-namespace serialize {
-
-using Record = table::Field::Record;
-
-template <>
-inline size_t size<Record>(const Record &r) {
-  return size(r.flag) + size(r.data);
-}
-}  // namespace serialize
-
 namespace table {
 
-Field::Field(const std::string &p) : f_(p), file_size(0) {}
+
+FieldTable::FieldTable(const std::string &p) : f_(p), file_size(0) {}
 
 
-Field::~Field() {}
+FieldTable::~FieldTable() {}
 
 
-offset_t Field::append(const ByteArray &data) {
+file::offset_t FieldTable::append(const ByteArray &data) {
   // current size = offset to new record
   size_t offset = f_.size();
 
   // construct record
-  Record record{Record::VALID, data};
+  Record record{Flag::VALID, data};
 
   // buffer to save record
   ByteArray buf(serialize::size(record));
-  uint8_t * ptr = buf.data();
+  // uint8_t * ptr = buf.data();
 
   // put record to buffer
-  serialize::put(ptr, record.flag);
-  serialize::put(ptr, record.data);
+  // serialize::put(buf, record.flag);
+  // serialize::put(buf, record.data);
 
   // append buffer
   f_.append(buf);
@@ -65,24 +50,24 @@ offset_t Field::append(const ByteArray &data) {
 }
 
 
-ByteArray Field::get(const offset_t offset) {
-  if (offset > f_.size()) return ByteArray{0};  // wrong offset
+ByteArray FieldTable::get(const file::offset_t offset) {
+  if (offset > f_.size()) return EMPTY;  // wrong offset
 
   f_.seek(offset);
 
   Record    r;
-  ByteArray b_flag = f_.read(sizeof(flag_t));
+  ByteArray b_flag = f_.read(sizeof(file::flag_t));
   if (b_flag.size() != 1) {
-    return ByteArray{0};  // wrong offset or no data
+    return EMPTY;  // wrong offset or no data
   }
 
   r.flag = b_flag[0];
 
   switch (r.flag) {
-    case table::Field::Record::REMOVED: {
-      return ByteArray{0};  // byte array of size 0
+    case Flag::REMOVED: {
+      return EMPTY;  // byte array of size 0
     }
-    case table::Field::Record::VALID: {
+    case Flag::VALID: {
       // read length
       ByteArray     b_length = f_.read(sizeof(size_t));
       const byte_t *ptr      = b_length.data();
@@ -96,86 +81,86 @@ ByteArray Field::get(const offset_t offset) {
       return data;
     }
     default: {
-      return ByteArray{0};  // wrong offset or no data
+      return EMPTY;  // wrong offset or no data
     }
   }
 }
 
 
-bool Field::remove(const offset_t offset) {
+bool FieldTable::remove(const file::offset_t offset) {
   if (offset > f_.size()) return false;
   f_.seek(offset);
-  f_.write(ByteArray({table::Field::Record::REMOVED}));
+  return sizeof(Record) == f_.write(ByteArray{Flag::REMOVED});
 }
 
-bool Field::update(const offset_t offset, const ByteArray &new_value) {
+file::offset_t FieldTable::update(const file::offset_t offset, const ByteArray &new_value) {
   if (offset > f_.size()) return false;
   remove(offset);
-  append(new_value);
+  return append(new_value);
 }
 
-std::string Field::path() { return path_; }
+std::string FieldTable::path() { return f_.get_path(); }
 
 
 
 //////////////////////////
-/// Field::ForwardIterator
-Field::ForwardIterator Field::begin() { return ForwardIterator(*this); }
+/// FieldTable::ForwardIterator
+FieldTable::ForwardIterator FieldTable::begin() { return ForwardIterator(*this); }
 
 
-Field::ForwardIterator Field::end() {
+FieldTable::ForwardIterator FieldTable::end() {
   return ForwardIterator(*this, f_.size());
 }
 
 
-Field::ForwardIterator::ForwardIterator(Field &ft) : ft_(ft), offset_(0) {
+FieldTable::ForwardIterator::ForwardIterator(FieldTable &ft) : ft_(ft), offset_(0) {
   value_ = ft_.get(offset_);
 }
 
 
-Field::ForwardIterator::ForwardIterator(Field &ft, offset_t offset)
+FieldTable::ForwardIterator::ForwardIterator(FieldTable &ft, file::offset_t offset)
     : ft_(ft), offset_(offset) {
   value_ = ft_.get(offset);
 }
 
 
-Field::ForwardIterator::ForwardIterator(const Field::ForwardIterator &it)
+FieldTable::ForwardIterator::ForwardIterator(const FieldTable::ForwardIterator &it)
     : ft_(it.ft_), offset_(it.offset_), value_(it.value_) {}
 
 
-Field::ForwardIterator &Field::ForwardIterator::operator++() {
+FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
   // bad solution. better is to std::serialize(Record). But do we need to create
   // Record object?
-  offset_ += serialize::size(value_) + sizeof(flag_t);
+  offset_ += serialize::size(value_) + sizeof(file::flag_t);
   value_ = ft_.get(offset_);
   return *this;
 }
 
 
-Field::ForwardIterator Field::ForwardIterator::operator++(int) {
+FieldTable::ForwardIterator FieldTable::ForwardIterator::operator++(int) {
   ForwardIterator iterator(*this);
   // bad solution. better is to std::serialize(Record). But do we need to create
   // Record object?
-  offset_ += serialize::size(value_) + sizeof(flag_t);
+  offset_ += serialize::size(value_) + sizeof(file::flag_t);
   value_ = ft_.get(offset_);
   return iterator;
 }
 
 
-ByteArray &Field::ForwardIterator::operator*() { return value_; }
+ByteArray &FieldTable::ForwardIterator::operator*() { return value_; }
 
 
-bool Field::ForwardIterator::operator==(const Field::ForwardIterator &it) {
+bool FieldTable::ForwardIterator::operator==(const FieldTable::ForwardIterator &it) {
   return offset_ == it.offset_;
 }
 
 
-bool Field::ForwardIterator::operator<(const Field::ForwardIterator &it) {
+bool FieldTable::ForwardIterator::operator<(const FieldTable::ForwardIterator &it) {
   return offset_ < it.offset_;
 }
 
 
-bool Field::ForwardIterator::operator>(const Field::ForwardIterator &it) {
+bool FieldTable::ForwardIterator::operator>(const FieldTable::ForwardIterator &it) {
   return offset_ > it.offset_;
 }
 
