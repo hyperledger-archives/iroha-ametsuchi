@@ -15,18 +15,28 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/globals.h>
 #include <ametsuchi/file/file.h>
+#include <ametsuchi/globals.h>
 #include <benchmark/benchmark.h>
 
 static void FileWrite(benchmark::State& state) {
+  using ametsuchi::ByteArray;
+  using ametsuchi::file::ReadWriteFile;
 
-    using ametsuchi::file::ReadWriteFile;
+  std::string filename = "/tmp/test1";
+  ReadWriteFile f(filename);
 
-    std::string filename = "/tmp/test1";
-    ReadWriteFile f(filename);
+  //    ByteArray data(state.range(0), 1u);
+
+  while (state.KeepRunning()) {
+    f.remove();
     f.open();
+
+    for (uint32_t i = 0; i < state.range(0); i++) {
+      f.write(ByteArray({1, 2, 3, 4, 5, 6, 7}));
+    }
     f.close();
+  }
 }
 
 BENCHMARK(FileWrite)->Range(1, 1 << 20);
