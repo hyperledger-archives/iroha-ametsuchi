@@ -141,16 +141,16 @@ TEST(FileTest, HugeFileWriteRead) {
   writeFile.close();
 
   ReadOnlyFile readFile(filename);
-  if (readFile.open()){
-    for (uint32_t i; i < size; i++){
+  if (readFile.open()) {
+    for (uint32_t i = 0; i < size; i++) {
       ByteArray memory = readFile.read(4);
       uint32_t res;
       uint8_t *ptr = memory.data();
+//      std::cout << readFile.position() << std::endl; // if this is uncommented no failure occurs:)
       GET_UINT(&res, ptr, uint32_t);
       ASSERT_EQ(i, res);
     }
   }
-
 }
 
 /*
