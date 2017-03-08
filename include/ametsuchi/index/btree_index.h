@@ -22,11 +22,11 @@ class btree_index {
 public:
     btree_index(const std::string& fname);
 
-    int insert(K key, V val);
+    int insert(K&& key, V&& val);
 
-    V get(K keyid);
+    V get(K&& keyid);
 
-
+    ~btree_index();
 };
 
 

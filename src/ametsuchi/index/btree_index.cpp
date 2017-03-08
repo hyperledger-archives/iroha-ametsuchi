@@ -9,9 +9,6 @@
 btree_index::btree_index(const std::string& fname) {
 
 
-
-
-
     //TODO: Handle errors
     mdb_env_create(&env);
     mdb_env_set_maxreaders(env, 1);
@@ -34,8 +31,20 @@ btree_index::btree_index(const std::string& fname) {
 }
 
 template <typename K, typename V>
-V btree_index::get(K keyid) {
+V btree_index::get(K&& key) {
+    MDB_val c_key, c_val;
+    MDB_txn *txn;
 
+    c_key.mv_size = sizeof(K);
+    c_key.mv_data = reinterpret_cast<void*>(&key);
+
+    mdb_txn_begin(env, NULL, 0, &txn);
+    mdb_dbi_open(txn, NULL, 0, &dbi);
+
+    mdb_get(txn, dbi, &c_key, &c_val);
+
+    mdb_txn_abort(txn);
+    return reinterpret_cast<V*>(&c_val.mv_data);
 }
 
 template <typename K, typename V>
@@ -61,4 +70,9 @@ int btree_index::insert(K&& key, V&& val) {
     mdb_env_stat(env, &mst);
 
 
+}
+
+btree_index::~btree_index() {
+    mdb_dbi_close(env, dbi);
+    mdb_env_close(env);
 }
