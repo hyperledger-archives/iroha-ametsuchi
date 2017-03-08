@@ -20,6 +20,7 @@
 #include <benchmark/benchmark.h>
 
 static void FileWrite(benchmark::State& state) {
+
     using ametsuchi::file::ReadWriteFile;
 
     std::string filename = "/tmp/test1";
