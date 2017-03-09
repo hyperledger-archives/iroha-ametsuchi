@@ -20,27 +20,8 @@
 #include <benchmark/benchmark.h>
 #include <ametsuchi/serializer.h>
 
+
 static void FileWrite(benchmark::State& state) {
-  using ametsuchi::ByteArray;
-  using ametsuchi::file::ReadWriteFile;
-
-  std::string filename = "/tmp/test1";
-  ReadWriteFile f(filename);
-
-  //    ByteArray data(state.range(0), 1u);
-
-  while (state.KeepRunning()) {
-    f.remove();
-    f.open();
-
-    for (uint32_t i = 0; i < state.range(0); i++) {
-      f.write(ByteArray({1, 2, 3, 4, 5, 6, 7}));
-    }
-    f.close();
-  }
-}
-
-static void HugeFileWrite(benchmark::State& state) {
   using ametsuchi::ByteArray ;
   using ametsuchi::file::ReadWriteFile;
 
@@ -56,8 +37,6 @@ static void HugeFileWrite(benchmark::State& state) {
         ByteArray memory(4);
         uint8_t *ptr = memory.data();
         PUT_UINT(ptr, i, uint32_t);
-        uint32_t a = 0;
-        GET_UINT(&a, ptr, uint32_t);
         writeFile.append(memory);
       }
     }
@@ -65,31 +44,30 @@ static void HugeFileWrite(benchmark::State& state) {
   }
 }
 
-static void HugeFileRead(benchmark::State& state) {
+static void FileRead(benchmark::State& state) {
   using ametsuchi::ByteArray ;
-  using ametsuchi::file::ReadWriteFile;
+  using ametsuchi::file::ReadOnlyFile;
 
   while(state.KeepRunning()) {
     size_t size = state.range(0);
 
     std::string filename = "/tmp/test1";
-    ReadWriteFile writeFile(filename);
-    writeFile.remove();
+    ReadOnlyFile readFile(filename);
 
-    if (writeFile.open()) {
+    if (readFile.open()) {
       for (uint32_t i = 0; i < size; i++) {
-        ByteArray memory(4);
+        ByteArray memory = readFile.read(4);
         uint8_t *ptr = memory.data();
-        PUT_UINT(ptr, i, uint32_t);
         uint32_t a = 0;
         GET_UINT(&a, ptr, uint32_t);
-        writeFile.append(memory);
+        assert(a == i);
       }
     }
-    writeFile.close();
+    readFile.close();
   }
 }
 
 BENCHMARK(FileWrite)->Range(1, 1 << 20);
-BENCHMARK(HugeFileWrite)->Range(1, 1 << 20);
+BENCHMARK(FileWrite)->Range(1, 1 << 20);
+BENCHMARK(FileRead)->Range(1, 1 << 20);
 BENCHMARK_MAIN()
