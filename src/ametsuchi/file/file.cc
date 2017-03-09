@@ -68,13 +68,10 @@ void File::seek_to_end() { std::fseek(file_.get(), 0, SEEK_END); }
 void File::seek_to_start() { rewind(file_.get()); }
 
 ByteArray File::read(size_t size) {
-  ByteArray ret(size);
-  auto      res =
-      std::fread(ret.data(), sizeof(ametsuchi::byte_t), size, file_.get());
+  char buf[size];
+  auto res = std::fread(buf, sizeof(ametsuchi::byte_t), size, file_.get());
 
-  if (res != size) ret.resize(res);
-
-  return ret;
+  return ByteArray{buf, buf + res};
 }
 
 const std::string File::get_path() const {
@@ -152,8 +149,8 @@ void File::seek(offset_t offset) {
   offset_t pos = position();
   if (offset > pos) {
     seek_from_current(offset - pos);
-//  } else if (offset < pos && pos - offset > offset) {
-//    seek_from_current(pos - offset);
+  // } else if (offset < pos && pos - offset > offset) {
+  //   seek_from_current(pos - offset);
   } else {
     seek_from_start(offset);
   }

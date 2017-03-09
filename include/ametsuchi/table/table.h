@@ -20,6 +20,7 @@
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
 #include <ametsuchi/serializer.h>
+#include <iterator>
 
 namespace ametsuchi {
 namespace table {
@@ -57,19 +58,44 @@ inline size_t size(const Record<T> &r) {
 // as in serializer.hpp with the resolving #33
 template<typename T>
 inline Record<T> getRecord(const ByteArray &src) {
+  NON_TRIVIAL_CHECK;
   return *(Record<T>*)src.data();
 }
 
 template<typename T>
+inline void putRecord(ByteArray &dst, T r);
+
+template<typename T>
 inline void putRecord(ByteArray &dst, Record<T> &r) {
-  byte_t *ptr = dst.data();
-  put(ptr, r.data);
+  NON_TRIVIAL_CHECK;
+  size_t size = serialize::size(r.data);
+  auto& bytes = reinterpret_cast<byte_t(&)[size]>(r.data);
+  dst.push_back(r.flag);
+  dst.insert(dst.end(), bytes, bytes + size);
 }
 
 template<typename T>
 inline void putRecord(ByteArray &dst, Record<T> &&r) {
-  byte_t *ptr = dst.data();
-  put(ptr, r.data);
+  Record<T> m = std::move(r);
+  putRecord(dst, m);
+}
+
+template<>
+inline void putRecord(ByteArray &dst, Record<ByteArray> &r) {
+  const auto size = serialize::size(r.data);
+  dst.push_back(r.flag);
+  auto bytes_left = sizeof(size);
+  for (byte_t *ptr = (byte_t*)&size; bytes_left-- != 0; ptr++) {
+    dst.push_back(*ptr);
+  }
+  auto bytes = (byte_t*)r.data.data();
+  dst.insert(dst.end(), bytes, bytes + size);
+}
+
+template<>
+inline void putRecord(ByteArray &dst, Record<ByteArray> &&r) {
+  Record<ByteArray> m = std::move(r);
+  putRecord(dst, m);
 }
 
 }

@@ -21,8 +21,7 @@
 namespace ametsuchi {
 namespace table {
 
-
-FieldTable::FieldTable(const std::string &p) : f_(p), file_size(0) {}
+FieldTable::FieldTable(const std::string &p) : f_(p), file_size(0) {f_.open();}
 
 
 FieldTable::~FieldTable() {}
@@ -31,19 +30,9 @@ FieldTable::~FieldTable() {}
 file::offset_t FieldTable::append(const ByteArray &data) {
   // current size = offset to new record
   size_t offset = f_.size();
+  ByteArray buf;
+  serialize::putRecord(buf, Record{Flag::VALID, data});
 
-  // construct record
-  Record record{Flag::VALID, data};
-
-  // buffer to save record
-  ByteArray buf(serialize::size(record));
-  // uint8_t * ptr = buf.data();
-
-  // put record to buffer
-  // serialize::put(buf, record.flag);
-  // serialize::put(buf, record.data);
-
-  // append buffer
   f_.append(buf);
 
   return offset;  // offset to new value
@@ -69,7 +58,7 @@ ByteArray FieldTable::get(const file::offset_t offset) {
     }
     case Flag::VALID: {
       // read length
-      ByteArray     b_length = f_.read(sizeof(size_t));
+      ByteArray     b_length = f_.read(sizeof(uint64_t));
       const byte_t *ptr      = b_length.data();
       // deserialize length
       uint64_t length;
@@ -102,7 +91,6 @@ file::offset_t FieldTable::update(const file::offset_t offset, const ByteArray &
 std::string FieldTable::path() { return f_.get_path(); }
 
 
-
 //////////////////////////
 /// FieldTable::ForwardIterator
 FieldTable::ForwardIterator FieldTable::begin() { return ForwardIterator(*this); }
@@ -131,7 +119,7 @@ FieldTable::ForwardIterator::ForwardIterator(const FieldTable::ForwardIterator &
 FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
   // bad solution. better is to std::serialize(Record). But do we need to create
   // Record object?
-  offset_ += serialize::size(value_) + sizeof(file::flag_t);
+  offset_ += serialize::size(value_) + sizeof(file::flag_t) + sizeof(uint64_t);
   value_ = ft_.get(offset_);
   return *this;
 }
@@ -141,7 +129,7 @@ FieldTable::ForwardIterator FieldTable::ForwardIterator::operator++(int) {
   ForwardIterator iterator(*this);
   // bad solution. better is to std::serialize(Record). But do we need to create
   // Record object?
-  offset_ += serialize::size(value_) + sizeof(file::flag_t);
+  offset_ += serialize::size(value_) + sizeof(file::flag_t) + sizeof(uint64_t);
   value_ = ft_.get(offset_);
   return iterator;
 }

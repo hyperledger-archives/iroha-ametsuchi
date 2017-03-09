@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <ametsuchi/exception.h>
 
 namespace ametsuchi {
 
