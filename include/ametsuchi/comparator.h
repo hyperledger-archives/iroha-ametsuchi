@@ -22,11 +22,11 @@
 #include "globals.h"
 
 namespace ametsuchi {
-
+namespace comparator {
 template <typename T>
 class Comparator {
  public:
-  virtual int operator()(const T& a, const T& b) = 0;
+  virtual int operator()(const T &a, const T &b) = 0;
 };
 
 /**
@@ -45,7 +45,7 @@ class Comparator {
  */
 class ByteArrayCmp : public Comparator<ByteArray> {
  public:
-  inline int operator()(const ByteArray& a, const ByteArray& b) {
+  inline int operator()(const ByteArray &a, const ByteArray &b) {
     size_t asize = a.size();
     size_t bsize = b.size();
 
@@ -66,6 +66,7 @@ class ByteArrayCmp : public Comparator<ByteArray> {
     }
   }
 };
+}
 }
 
 #endif  // AMETSUCHI_COMPARATOR_H

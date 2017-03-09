@@ -33,13 +33,13 @@ File::File(const std::string &path)
 File::~File() {}
 
 bool File::open() {
+  struct stat statistics;  // https://linux.die.net/man/2/stat
   if (stat(path_.c_str(), &statistics) == -1) {
-    console->critical("can not get access to file " + path_);
+    console->debug("{} does not exist", path_);
     return false;
   }
-
   size_ = (size_t)(statistics.st_size);
-
+  console->debug("{} is opened, its size {}", path_, size_);
   return true;
 }
 
@@ -68,20 +68,46 @@ void File::seek_to_end() { std::fseek(file_.get(), 0, SEEK_END); }
 void File::seek_to_start() { rewind(file_.get()); }
 
 ByteArray File::read(size_t size) {
-  char buf[size];
-  auto res = std::fread(buf, sizeof(ametsuchi::byte_t), size, file_.get());
-
-  return ByteArray{buf, buf + res};
+  ByteArray buf(size, 0);
+  auto res = std::fread(&buf[0], sizeof(ametsuchi::byte_t), size, file_.get());
+  return buf;
 }
 
-const std::string File::get_path() const {
-  return path_;
+const std::string File::get_path() const { return path_; }
+
+bool File::remove() {
+  close();
+  return 0 == unlink(path_.c_str());
 }
+
+
+void File::seek(offset_t offset) {
+  offset_t pos = position();
+  if (offset > pos) {
+    seek_from_current(offset - pos);
+    // } else if (offset < pos && pos - offset > offset) {
+    //   seek_from_current(pos - offset);
+  } else {
+    seek_from_start(offset);
+  }
+}
+
+
+bool File::clear() {
+  auto deleted = remove();
+  auto opened = open();
+  return deleted && opened;
+}
+
+
+bool File::exists() { return access(path_.c_str(), F_OK) != -1; }
+
+
 
 ////////////////
 /// ReadOnlyFile
 ReadOnlyFile::ReadOnlyFile(const std::string &path) : File::File(path) {
-  read_  = true;
+  read_ = true;
   write_ = false;
 }
 
@@ -94,67 +120,6 @@ bool ReadOnlyFile::open() {
   return !!file_ && opened;
 }
 
-
-/////////////////
-/// ReadWriteFile
-ReadWriteFile::ReadWriteFile(const std::string &path) : File::File(path) {
-  read_  = true;
-  write_ = true;
-}
-
-
-bool ReadWriteFile::open() {
-  file_.reset(std::fopen(path_.c_str(), "r+b"));
-  if (!file_.get()) {
-    file_.reset(std::fopen(path_.c_str(), "w+b"));
-  }
-  // to read statistics
-  bool opened = File::open();
-  return !!file_ && opened;
-}
-
-
-offset_t ReadWriteFile::append(const ByteArray &data) {
-  seek_to_end();
-
-  size_t old_fsize = size_;
-  size_t size      = data.size();
-
-  size_ += size;
-  size_t written;
-  if ((written = write(data)) != size) {
-    console->critical("we write " + std::to_string(size) + "bytes, but " +
-                      std::to_string(written) + " written");
-    throw exception::IOError("ReadWriteFile::append");
-  }
-
-  return old_fsize;  // offset at which data is written
-}
-
-
-size_t ReadWriteFile::write(const ByteArray &data) {
-  auto res = std::fwrite(data.data(), sizeof(ametsuchi::byte_t), data.size(),
-                         file_.get());
-  std::fflush(file_.get());
-  return res;
-}
-
-
-bool File::remove() {
-  close();
-  return 0 == unlink(path_.c_str());
-}
-
-void File::seek(offset_t offset) {
-  offset_t pos = position();
-  if (offset > pos) {
-    seek_from_current(offset - pos);
-  // } else if (offset < pos && pos - offset > offset) {
-  //   seek_from_current(pos - offset);
-  } else {
-    seek_from_start(offset);
-  }
-}
 
 }  // namespace file
 }  // namespace ametsuchi

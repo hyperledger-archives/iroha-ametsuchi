@@ -16,12 +16,14 @@
  */
 
 #include <ametsuchi/table/field_table.h>
-#include <ametsuchi/table/table.h>
 
 namespace ametsuchi {
 namespace table {
 
-FieldTable::FieldTable(const std::string &p) : f_(p), file_size(0) {f_.open();}
+FieldTable::FieldTable(const std::string &p)
+    : file_size{0}, f_(new file::RWFileSafe(p)) {
+  if (!f_->open()) throw exception::IOError("FieldTable::" + p);
+}
 
 
 FieldTable::~FieldTable() {}
@@ -29,28 +31,30 @@ FieldTable::~FieldTable() {}
 
 file::offset_t FieldTable::append(const ByteArray &data) {
   // current size = offset to new record
-  size_t offset = f_.size();
+  size_t offset = f_->size();
   ByteArray buf;
   serialize::putRecord(buf, Record{Flag::VALID, data});
 
-  f_.append(buf);
+  f_->append(buf);
 
   return offset;  // offset to new value
 }
 
 
 ByteArray FieldTable::get(const file::offset_t offset) {
-  if (offset > f_.size()) return EMPTY;  // wrong offset
+  if (offset > f_->size()) return EMPTY;  // wrong offset
 
-  f_.seek(offset);
+  f_->seek(offset);
 
-  Record    r;
-  ByteArray b_flag = f_.read(sizeof(file::flag_t));
-  if (b_flag.size() != 1) {
+  Record r;
+  ByteArray header = f_->read(sizeof(file::flag_t) + sizeof(uint64_t));
+
+  if (header.size() != 9) {
     return EMPTY;  // wrong offset or no data
   }
 
-  r.flag = b_flag[0];
+  const byte_t *ptr = header.data();
+  serialize::get(&r.flag, ptr);
 
   switch (r.flag) {
     case Flag::REMOVED: {
@@ -58,14 +62,12 @@ ByteArray FieldTable::get(const file::offset_t offset) {
     }
     case Flag::VALID: {
       // read length
-      ByteArray     b_length = f_.read(sizeof(uint64_t));
-      const byte_t *ptr      = b_length.data();
       // deserialize length
       uint64_t length;
       serialize::get(&length, ptr);
 
       // read data
-      ByteArray data = f_.read(length);
+      ByteArray data = f_->read(length);
 
       return data;
     }
@@ -77,42 +79,48 @@ ByteArray FieldTable::get(const file::offset_t offset) {
 
 
 bool FieldTable::remove(const file::offset_t offset) {
-  if (offset > f_.size()) return false;
-  f_.seek(offset);
-  return sizeof(Record) == f_.write(ByteArray{Flag::REMOVED});
+  if (offset > f_->size()) return false;
+  f_->seek(offset);
+  return sizeof(Record) == f_->write(ByteArray{Flag::REMOVED});
 }
 
-file::offset_t FieldTable::update(const file::offset_t offset, const ByteArray &new_value) {
-  if (offset > f_.size()) return false;
+file::offset_t FieldTable::update(const file::offset_t offset,
+                                  const ByteArray &new_value) {
+  if (offset > f_->size()) return false;
   remove(offset);
   return append(new_value);
 }
 
-std::string FieldTable::path() { return f_.get_path(); }
+std::string FieldTable::path() { return f_->get_path(); }
 
 
 //////////////////////////
 /// FieldTable::ForwardIterator
-FieldTable::ForwardIterator FieldTable::begin() { return ForwardIterator(*this); }
-
-
-FieldTable::ForwardIterator FieldTable::end() {
-  return ForwardIterator(*this, f_.size());
+FieldTable::ForwardIterator FieldTable::begin() {
+  return ForwardIterator(*this);
 }
 
 
-FieldTable::ForwardIterator::ForwardIterator(FieldTable &ft) : ft_(ft), offset_(0) {
+FieldTable::ForwardIterator FieldTable::end() {
+  return ForwardIterator(*this, f_->size());
+}
+
+
+FieldTable::ForwardIterator::ForwardIterator(FieldTable &ft)
+    : ft_(ft), offset_(0) {
   value_ = ft_.get(offset_);
 }
 
 
-FieldTable::ForwardIterator::ForwardIterator(FieldTable &ft, file::offset_t offset)
+FieldTable::ForwardIterator::ForwardIterator(FieldTable &ft,
+                                             file::offset_t offset)
     : ft_(ft), offset_(offset) {
   value_ = ft_.get(offset);
 }
 
 
-FieldTable::ForwardIterator::ForwardIterator(const FieldTable::ForwardIterator &it)
+FieldTable::ForwardIterator::ForwardIterator(
+    const FieldTable::ForwardIterator &it)
     : ft_(it.ft_), offset_(it.offset_), value_(it.value_) {}
 
 
@@ -138,17 +146,20 @@ FieldTable::ForwardIterator FieldTable::ForwardIterator::operator++(int) {
 ByteArray &FieldTable::ForwardIterator::operator*() { return value_; }
 
 
-bool FieldTable::ForwardIterator::operator==(const FieldTable::ForwardIterator &it) {
+bool FieldTable::ForwardIterator::operator==(
+    const FieldTable::ForwardIterator &it) {
   return offset_ == it.offset_;
 }
 
 
-bool FieldTable::ForwardIterator::operator<(const FieldTable::ForwardIterator &it) {
+bool FieldTable::ForwardIterator::operator<(
+    const FieldTable::ForwardIterator &it) {
   return offset_ < it.offset_;
 }
 
 
-bool FieldTable::ForwardIterator::operator>(const FieldTable::ForwardIterator &it) {
+bool FieldTable::ForwardIterator::operator>(
+    const FieldTable::ForwardIterator &it) {
   return offset_ > it.offset_;
 }
 

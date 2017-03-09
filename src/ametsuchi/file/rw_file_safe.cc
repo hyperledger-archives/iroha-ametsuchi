@@ -15,20 +15,11 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <ametsuchi/env.h>
-#include <ametsuchi/exception.h>
-#include <cstdint>
-#include <cstdlib>
-#include <memory>
-#include <string>
-#include <vector>
+#include <ametsuchi/file/rw_file_safe.h>
 
 namespace ametsuchi {
+namespace file {
 
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
-
-std::shared_ptr<Env> ENV;
+RWFileSafe::ReadWriteFile(const std::string &path) : File(path) {}
+}
 }

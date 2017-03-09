@@ -20,7 +20,7 @@
 
 #include <ametsuchi/globals.h>
 #include <sys/stat.h>   //
-#include <sys/types.h>  // for stat
+#include <sys/types.h>  // for stat, access
 #include <unistd.h>     //
 #include <memory>
 #include <string>
@@ -31,17 +31,24 @@ namespace file {
 using flag_t = uint8_t;
 using offset_t = int64_t;
 
-inline bool is_valid(offset_t offset) {
-  return offset != INT64_MAX;
-}
+inline bool is_valid(offset_t offset) { return offset != INT64_MAX; }
 
+/**
+ * Abstraction over file operations:
+ *  - open
+ *  - read
+ *  - write
+ *  - close
+ *  - remove
+ *  - seek
+ */
 class File {
  public:
   explicit File(const std::string &path);
   virtual ~File() = 0;
 
   virtual bool open();
-  void         close();
+  void close();
 
   bool is_opened();
 
@@ -55,12 +62,24 @@ class File {
   void seek_to_start();
 
   offset_t position() const;
-  size_t   size() const;
+  size_t size() const;
 
   bool can_read();
   bool can_write();
 
+  /**
+   * Remove file.
+   * @return true if successfully, false otherwise
+   */
   bool remove();
+
+  /**
+   * Clears contents of file.
+   * @return true, if successfully, false otherwise
+   */
+  bool clear();
+
+  bool exists();
 
   /**
    * Reads exactly \p size bytes from file at current cursor position.
@@ -71,6 +90,12 @@ class File {
 
   const std::string get_path() const;
 
+  /**
+   * Virtual destructor. It is needed to make sure that derived classes call
+   * correct destructor.
+   */
+  virtual ~File();
+
  protected:
   bool read_;   // true if I can read
   bool write_;  // true if I can write
@@ -80,8 +105,6 @@ class File {
   std::string path_;  // path to current file
   std::unique_ptr<FILE, decltype(&std::fclose)> file_;
 
-  struct stat statistics;  // https://linux.die.net/man/2/stat
-
  private:
   void seek_from_start(offset_t offset);
   void seek_from_current(offset_t offset);
@@ -90,38 +113,13 @@ class File {
 
 /**
  * ReadWriteFile is used to concurrently open as many files as you wish.
- * No locking, individual pointer.
+ *  - no locking
+ *  - individual cursor for each reader
  */
 class ReadOnlyFile : public File {
  public:
   explicit ReadOnlyFile(const std::string &path);
   bool open() override;
-};
-
-
-/**
- * ReadWriteFile is used to write to single file. Installs lock on this file.
- * Only one writer to file is possible.
- */
-class ReadWriteFile : public File {
-  // TODO(warchant): add file locking after open using flock or smth like this
- public:
-  explicit ReadWriteFile(const std::string &path);
-  bool open() override;
-
-  /**
-   * Appends \p data to the end of file.
-   * @param data
-   * @return offset, at which data is appended; -1 if not all data is appended
-   */
-  offset_t append(const ByteArray &data);
-
-  /**
-   * Writes \p data at current position.
-   * @param data
-   * @return number of written bytes
-   */
-  size_t write(const ByteArray &data);
 };
 
 

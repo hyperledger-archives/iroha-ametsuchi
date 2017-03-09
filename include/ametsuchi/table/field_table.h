@@ -18,9 +18,9 @@
 #ifndef AMETSUCHI_FIELD_TABLE_H
 #define AMETSUCHI_FIELD_TABLE_H
 
-#include <ametsuchi/table/table.h>
-#include <ametsuchi/file/file.h>
+#include <ametsuchi/file/rw_file_safe.h>
 #include <ametsuchi/globals.h>
+#include <ametsuchi/table/table.h>
 #include <memory>
 #include <string>
 
@@ -63,7 +63,8 @@ class FieldTable {
    * @param new_value
    * @return
    */
-  file::offset_t update(const file::offset_t offset, const ByteArray &new_value);
+  file::offset_t update(const file::offset_t offset,
+                        const ByteArray &new_value);
 
   /**
    * Removes record from table.
@@ -99,7 +100,7 @@ class FieldTable {
   std::string path();
 
  private:
-  file::ReadWriteFile f_;
+  std::unique_ptr<file::ReadWriteFile> f_;
   file::offset_t file_size;
 };
 
@@ -116,8 +117,8 @@ class FieldTable::ForwardIterator {
   ForwardIterator &operator++();    // postfix++
   ForwardIterator operator++(int);  // ++prefix
  protected:
-  FieldTable &   ft_;
-  file::offset_t  offset_;
+  FieldTable &ft_;
+  file::offset_t offset_;
   ByteArray value_;
 };
 

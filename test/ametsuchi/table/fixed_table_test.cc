@@ -17,19 +17,16 @@
 
 #include <gtest/gtest.h>
 
+#include <ametsuchi/globals.h>
 #include <ametsuchi/table/fixed_table.h>
 #include <ametsuchi/table/table.h>
-#include <ametsuchi/globals.h>
 
 namespace ametsuchi {
 namespace table {
 
 class FileTest : public ::testing::Test {
  protected:
-
-  virtual void TearDown() {
-    remove(filename.c_str());
-  }
+  virtual void TearDown() { remove(filename.c_str()); }
 
   const std::string filename = "/tmp/test_db";
 };
@@ -44,11 +41,9 @@ struct ExampleFB {
 #pragma pack(pop)
 
 // 15 char s + ending \0
-#define STR_16(c) #c#c#c#c\
-                  #c#c#c#c\
-                  #c#c#c#c\
-                  #c#c#c
-#define FB(c, i, d) ExampleFB{STR_16(c), i, d}
+#define STR_16(c) #c #c #c #c #c #c #c #c #c #c #c #c #c #c #c
+#define FB(c, i, d) \
+  ExampleFB { STR_16(c), i, d }
 
 TEST_F(FileTest, AppendGetTest) {
   FixedTable<ExampleFB> table(filename);
@@ -64,14 +59,11 @@ TEST_F(FileTest, AppendGetTest) {
 
 TEST_F(FileTest, AppendGetBatchTest) {
   FixedTable<ExampleFB> table(filename);
-  uint64_t i[] = {0x12345678, 0x87654321, 0xfedcba9876543210, 0x123456789abcdef};
+  uint64_t i[] = {0x12345678, 0x87654321, 0xfedcba9876543210,
+                  0x123456789abcdef};
   double d[] = {1234567e+89, 9876543e+21, 0xfedcba9876543, 0x123456789abcde};
-  std::vector<ExampleFB> base_fbs = {
-    FB(A, i[0], d[0]),
-    FB(B, i[1], d[1]),
-    FB(C, i[2], d[2]),
-    FB(D, i[3], d[3])
-  };
+  std::vector<ExampleFB> base_fbs = {FB(A, i[0], d[0]), FB(B, i[1], d[1]),
+                                     FB(C, i[2], d[2]), FB(D, i[3], d[3])};
   table.appendBatch(base_fbs);
   auto received_fbs = table.getBatch(base_fbs.size(), 0);
 
@@ -135,6 +127,5 @@ TEST_F(FileTest, RemoveTest) {
   table.remove(0);
   ASSERT_EQ(table.getFlag(0), Flag::REMOVED);
 }
-
 }
 }
