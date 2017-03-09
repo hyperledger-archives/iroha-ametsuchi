@@ -52,7 +52,10 @@ bool File::can_read() { return read_; }
 
 bool File::can_write() { return write_; }
 
-void File::close() { file_.reset(nullptr); }
+void File::close() {
+  file_.reset(nullptr);
+  size_ = 0;
+}
 
 void File::seek_from_current(offset_t offset) {
   std::fseek(file_.get(), offset, SEEK_CUR);
