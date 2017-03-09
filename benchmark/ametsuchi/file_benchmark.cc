@@ -18,6 +18,7 @@
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
 #include <benchmark/benchmark.h>
+#include <ametsuchi/serializer.h>
 
 static void FileWrite(benchmark::State& state) {
   using ametsuchi::ByteArray;
@@ -64,6 +65,31 @@ static void HugeFileWrite(benchmark::State& state) {
   }
 }
 
-BENCHMARK(HugeFileWrite)->Range(1, 1 << 20);
+static void HugeFileRead(benchmark::State& state) {
+  using ametsuchi::ByteArray ;
+  using ametsuchi::file::ReadWriteFile;
+
+  while(state.KeepRunning()) {
+    size_t size = state.range(0);
+
+    std::string filename = "/tmp/test1";
+    ReadWriteFile writeFile(filename);
+    writeFile.remove();
+
+    if (writeFile.open()) {
+      for (uint32_t i = 0; i < size; i++) {
+        ByteArray memory(4);
+        uint8_t *ptr = memory.data();
+        PUT_UINT(ptr, i, uint32_t);
+        uint32_t a = 0;
+        GET_UINT(&a, ptr, uint32_t);
+        writeFile.append(memory);
+      }
+    }
+    writeFile.close();
+  }
+}
+
 BENCHMARK(FileWrite)->Range(1, 1 << 20);
+BENCHMARK(HugeFileWrite)->Range(1, 1 << 20);
 BENCHMARK_MAIN()
