@@ -2,13 +2,13 @@
 // Created by hdalpha on 08.03.17.
 //
 
-#include "btree_index.h"
+#include <ametsuchi/index/btree_index.h>
 namespace ametsuchi {
 namespace index {
 
 
 template <typename K, typename V>
-btree_index<K, V>::btree_index(const std::string &fname) {
+BTreeIndex<K, V>::BTreeIndex(const std::string &fname) {
   mdb_env_create(&env);
   mdb_env_set_maxreaders(env, 1);
   mdb_env_set_mapsize(env, 10485760);
@@ -21,7 +21,7 @@ btree_index<K, V>::btree_index(const std::string &fname) {
 
 
 template <typename K, typename V>
-V btree_index<K, V>::get(K key) {
+V BTreeIndex<K, V>::get(K &&key) {
   MDB_val c_key, c_val;
   MDB_txn *txn;
 
@@ -41,7 +41,7 @@ V btree_index<K, V>::get(K key) {
 }
 
 template <typename K, typename V>
-void btree_index<K, V>::insert(K key, V val) {
+void BTreeIndex<K, V>::insert(K &&key, V &&val) {
   MDB_val c_key, c_val;
   MDB_txn *txn;
   int res = 0;
@@ -70,7 +70,7 @@ void btree_index<K, V>::insert(K key, V val) {
 }
 
 template <typename K, typename V>
-btree_index<K, V>::~btree_index() {
+BTreeIndex<K, V>::~BTreeIndex() {
   mdb_dbi_close(env, dbi);
   mdb_env_close(env);
 }

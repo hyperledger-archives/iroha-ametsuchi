@@ -36,10 +36,12 @@ set(LIBAMETSUCHI_NAME ametsuchi)
 add_library(${LIBAMETSUCHI_NAME}
   src/ametsuchi/file/file.cc
   src/ametsuchi/table/field_table.cc
+  src/ametsuchi/index/btree_index.cc
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
   flatbuffers
   spdlog
+  LMDB
 #  keccak
   )
 StrictMode(${LIBAMETSUCHI_NAME})

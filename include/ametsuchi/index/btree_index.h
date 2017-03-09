@@ -15,14 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef LIBLMDB_BTREE_INDEX_H
-#define LIBLMDB_BTREE_INDEX_H
+#ifndef AMETSUCHI_BTREE_INDEX_H
+#define AMETSUCHI_BTREE_INDEX_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string>
-#include "lmdb.h"
+
+#include <lmdb.h>
 
 namespace ametsuchi {
 namespace index {
@@ -35,13 +36,13 @@ class BTreeIndex {
   MDB_stat mst;
 
  public:
-  btree_index(const std::string &fname);
+  BTreeIndex(const std::string &fname);
 
-  int insert(K &&key, V &&val);
+  void insert(K &&key, V &&val);
 
   V get(K &&keyid);
 
-  ~btree_index();
+  ~BTreeIndex();
 };
 
 
@@ -49,4 +50,4 @@ class BTreeIndex {
 }  // namespace ametsuchi
 
 
-#endif  // LIBLMDB_BTREE_INDEX_H
+#endif  // AMETSUCHI_BTREE_INDEX_H
