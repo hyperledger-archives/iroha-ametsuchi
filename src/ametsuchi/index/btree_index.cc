@@ -14,10 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <ametsuchi/file/file.h>
 #include <ametsuchi/index/btree_index.h>
+
 namespace ametsuchi {
 namespace index {
 
+using ametsuchi::file::offset_t;
 
-}//namespace index
-}//namespace ametsuchi
+
+
+}  // namespace index
+}  // namespace ametsuchi
