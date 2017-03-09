@@ -61,6 +61,7 @@ class Env {
   }
 
  private:
+  // by default memory_limit is set to max available memory
   uint64_t memory_limit;  // bytes
 
   std::string database_directory;

@@ -17,14 +17,12 @@
 
 #include <ametsuchi/file/rw_file_plain.h>
 
-namespace ametsuchi{
-namespace file{
+namespace ametsuchi {
+namespace file {
 
 /////////////////
 /// RWFilePlain
-RWFilePlain::RWFilePlain(const std::string &path) : ReadWriteFile(path) {
-
-}
+RWFilePlain::RWFilePlain(const std::string &path) : ReadWriteFile(path) {}
 
 
 offset_t RWFilePlain::append(const ByteArray &data) {
@@ -37,7 +35,7 @@ offset_t RWFilePlain::append(const ByteArray &data) {
   size_t written;
   if ((written = write(data)) != size) {
     console->critical("we write " + std::to_string(size) + "bytes, but " +
-      std::to_string(written) + " written");
+                      std::to_string(written) + " written");
     throw exception::IOError("RWFilePlain::append");
   }
 
@@ -52,5 +50,5 @@ size_t RWFilePlain::write(const ByteArray &data) {
   return res;
 }
 
-}
-}
+}  // namespace file
+}  // namespace ametsuchi
