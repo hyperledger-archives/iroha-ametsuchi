@@ -45,7 +45,7 @@ inline bool is_valid(offset_t offset) { return offset != INT64_MAX; }
 class File {
  public:
   explicit File(const std::string &path);
-  virtual ~File() = 0;
+  virtual ~File();
 
   virtual bool open();
   void close();
@@ -89,12 +89,6 @@ class File {
   ByteArray read(size_t size);
 
   const std::string get_path() const;
-
-  /**
-   * Virtual destructor. It is needed to make sure that derived classes call
-   * correct destructor.
-   */
-  virtual ~File();
 
  protected:
   bool read_;   // true if I can read

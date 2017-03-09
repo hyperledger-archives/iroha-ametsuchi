@@ -18,23 +18,13 @@
 #ifndef AMETSUCHI_DB_H
 #define AMETSUCHI_DB_H
 
+#include <ametsuchi/env.h>
 #include <ametsuchi/globals.h>
 #include <ametsuchi/table/fixed_table.h>
 #include <string>
 #include <unordered_map>
 
 namespace ametsuchi {
-
-/**
- * This structure stores current working environment and global per-db settings.
- */
-struct Env {
-  std::string database_path;
-  uint32_t memory_limit;  // bytes
-
-  explicit Env(std::string db_path, uint32_t memlimit = 3500 * 1024 * 1024)
-      : database_path{db_path}, memory_limit{memlimit} {}
-};
 
 /**
  * Interface to tx_store and world_state

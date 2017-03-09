@@ -18,7 +18,6 @@
 #include <ametsuchi/exception.h>
 #include <ametsuchi/file/file.h>
 #include <spdlog/spdlog.h>
-#include <cstdio>
 
 namespace ametsuchi {
 namespace file {

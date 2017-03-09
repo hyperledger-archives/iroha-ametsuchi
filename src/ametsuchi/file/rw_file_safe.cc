@@ -16,10 +16,33 @@
  */
 
 #include <ametsuchi/file/rw_file_safe.h>
+#include <ametsuchi/globals.h>
+#include <cassert>
 
 namespace ametsuchi {
 namespace file {
 
-RWFileSafe::ReadWriteFile(const std::string &path) : File(path) {}
+RWFileSafe::RWFileSafe(const std::string &name) : ReadWriteFile(name) {
+
+}
+
+offset_t RWFileSafe::append(const ByteArray &data) {}
+
+/**
+ * 1. Write to LOG:
+ *   | file size | data size | data
+ *   | ulong     | ulong     | ubyte[data size]
+ * 2. Write to FILE data
+ * 3. Remove file with LOG
+ */
+size_t RWFileSafe::write(const ByteArray &data) {
+  // ensure LOG does not exist
+  assert(!wal_->exists());
+
+  ByteArray buf(2 * sizeof(uint64_t) + data.size());
+  byte_t *ptr = buf.data();
+
+  wal_->write()
+}
 }
 }

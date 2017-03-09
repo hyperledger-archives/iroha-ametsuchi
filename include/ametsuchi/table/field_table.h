@@ -77,7 +77,7 @@ class FieldTable {
 
 
   /**
-   * After updates or removes invalidated memory will be
+   * After updates or removes
    */
   void compact();
 

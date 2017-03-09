@@ -18,8 +18,8 @@
 #ifndef AMETSUCHI_RW_FILE_PLAIN_H
 #define AMETSUCHI_RW_FILE_PLAIN_H
 
-#include <string>
 #include <ametsuchi/file/rw_file.h>
+#include <string>
 
 namespace ametsuchi {
 namespace file {
@@ -35,16 +35,11 @@ namespace file {
 class RWFilePlain : public ReadWriteFile {
  public:
   explicit RWFilePlain(const std::string &path);
-  /**
-   * Open file. If file does not exist, ::open will create it.
-   * @return true if file is opened without errors
-   */
-  bool open() override;
 
   /**
    * Appends \p data to the end of file.
    * @param data
-   * @return offset, at which data is appended; -1 if not all data is appended
+   * @return offset, at which data is appended or empty byte array otherwise
    */
   offset_t append(const ByteArray &data) override;
 

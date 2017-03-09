@@ -15,7 +15,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_GLOBALS_H_
+#define AMETSUCHI_GLOBALS_H_
 
 #include <ametsuchi/env.h>
 #include <ametsuchi/exception.h>
@@ -32,3 +33,5 @@ using ByteArray = std::vector<byte_t>;
 
 std::shared_ptr<Env> ENV;
 }
+
+#endif  // AMETSUCHI_GLOBALS_H_

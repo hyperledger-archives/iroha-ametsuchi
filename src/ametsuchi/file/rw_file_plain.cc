@@ -22,20 +22,8 @@ namespace file{
 
 /////////////////
 /// RWFilePlain
-RWFilePlain::RWFilePlain(const std::string &path) : File::File(path) {
-  read_ = true;
-  write_ = true;
-}
+RWFilePlain::RWFilePlain(const std::string &path) : ReadWriteFile(path) {
 
-
-bool RWFilePlain::open() {
-  file_.reset(std::fopen(path_.c_str(), "r+b"));
-  if (!file_.get()) {
-    file_.reset(std::fopen(path_.c_str(), "w+b"));
-  }
-  // to read statistics
-  bool opened = File::open();
-  return !!file_ && opened;
 }
 
 

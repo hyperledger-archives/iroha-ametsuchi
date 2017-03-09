@@ -18,7 +18,7 @@
 #ifndef AMETSUCHI_RW_FILE_SAFE_H
 #define AMETSUCHI_RW_FILE_SAFE_H
 
-#include <ametsuchi/file/rw_file.h>
+#include <ametsuchi/file/rw_file_plain.h>
 #include <string>
 
 namespace ametsuchi {
@@ -29,21 +29,16 @@ namespace file {
  *  - read and write files
  *  - create system file locks
  *  - use write-ahead log
+ *  - performs crash recovery
  */
 class RWFileSafe : public ReadWriteFile {
  public:
   explicit RWFileSafe(const std::string &path);
 
   /**
-   * Open file. If file does not exist, ::open will create it.
-   * @return true if file is opened without errors
-   */
-  bool open() override;
-
-  /**
    * Appends \p data to the end of file.
    * @param data
-   * @return offset, at which data is appended; -1 if not all data is appended
+   * @return offset, at which data is appended or empty byte array otherwise
    */
   offset_t append(const ByteArray &data) override;
 
@@ -55,10 +50,10 @@ class RWFileSafe : public ReadWriteFile {
   size_t write(const ByteArray &data) override;
 
  private:
-  std::unique_ptr<ReadWriteFile> file_;
-  std::unique_ptr<ReadWriteFile> wal_;
+  std::unique_ptr<RWFilePlain> wal_;
 };
-}
-}
+
+}  // namespace file
+}  // namespace ametsuchi
 
 #endif  // AMETSUCHI_RW_FILE_SAFE_H

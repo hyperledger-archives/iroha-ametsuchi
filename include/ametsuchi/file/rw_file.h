@@ -25,20 +25,28 @@ namespace ametsuchi {
 namespace file {
 
 /**
- * ReadWriteFile is an interface, which to directly write into a file.
+ * ReadWriteFile is an interface.
+ *
+ * ReadWriteFile does:
+ *  - open file for read+write permissions
+ *
+ * ReadWriteFiles does not:
+ *  - know how to write to file
  */
 class ReadWriteFile : public File {
  public:
+  explicit ReadWriteFile(const std::string &path);
+
   /**
    * Open file. If file does not exist, ::open will create it.
    * @return true if file is opened without errors
    */
-  virtual bool open() = 0;
+  bool open() override;
 
   /**
    * Appends \p data to the end of file.
    * @param data
-   * @return offset, at which data is appended; -1 if not all data is appended
+   * @return offset, at which data is appended or empty byte array otherwise
    */
   virtual offset_t append(const ByteArray &data) = 0;
 

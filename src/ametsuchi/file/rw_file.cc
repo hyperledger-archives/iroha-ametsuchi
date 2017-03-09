@@ -15,8 +15,25 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/ametsuchi.h>
+#include <ametsuchi/file/rw_file.h>
 
-namespace ametsuchi{
+namespace ametsuchi {
+namespace file {
 
+
+ReadWriteFile::ReadWriteFile(const std::string &path) : File(path) {
+  read_ = true;
+  write_ = true;
+}
+
+bool ReadWriteFile::open() {
+  file_.reset(std::fopen(path_.c_str(), "r+b"));
+  if (!file_.get()) {
+    file_.reset(std::fopen(path_.c_str(), "w+b"));
+  }
+  // to read statistics
+  bool opened = File::open();
+  return !!file_ && opened;
+}
+}
 }
