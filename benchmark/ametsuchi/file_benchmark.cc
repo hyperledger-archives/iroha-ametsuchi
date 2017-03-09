@@ -68,6 +68,5 @@ static void FileRead(benchmark::State& state) {
 }
 
 BENCHMARK(FileWrite)->Range(1, 1 << 20);
-BENCHMARK(FileWrite)->Range(1, 1 << 20);
 BENCHMARK(FileRead)->Range(1, 1 << 20);
 BENCHMARK_MAIN()
