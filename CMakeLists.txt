@@ -59,7 +59,7 @@ set(AMETSUCHI_SRC
 
   src/ametsuchi/table/field_table.cc
   src/ametsuchi/table/fixed_table.cc
-  )
+  src/ametsuchi/file/rw_file.cc)
 
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)

@@ -34,8 +34,7 @@ offset_t RWFilePlain::append(const ByteArray &data) {
   size_ += size;
   size_t written;
   if ((written = write(data)) != size) {
-    console->critical("we write " + std::to_string(size) + "bytes, but " +
-                      std::to_string(written) + " written");
+    console->critical("we write {} bytes, but {} written", size, written);
     throw exception::IOError("RWFilePlain::append");
   }
 

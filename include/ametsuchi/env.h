@@ -72,7 +72,7 @@ class Env {
   uint64_t get_available_memory() {
     // detect amount of memory
     // http://stackoverflow.com/questions/63166/how-to-determine-cpu-and-memory-consumption-from-inside-a-process
-    sysinfo memInfo;
+    struct sysinfo memInfo;
     sysinfo(&memInfo);
     // to avoid overflow on right hand side
     uint64_t mem = memInfo.totalram;

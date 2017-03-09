@@ -17,15 +17,15 @@
 
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/globals.h>
-#include <benchmark/benchmark.h>
 #include <ametsuchi/serializer.h>
+#include <benchmark/benchmark.h>
 
 
 static void FileWrite(benchmark::State& state) {
-  using ametsuchi::ByteArray ;
+  using ametsuchi::ByteArray;
   using ametsuchi::file::ReadWriteFile;
 
-  while(state.KeepRunning()) {
+  while (state.KeepRunning()) {
     size_t size = state.range(0);
 
     std::string filename = "/tmp/test1";
@@ -35,7 +35,7 @@ static void FileWrite(benchmark::State& state) {
     if (writeFile.open()) {
       for (uint32_t i = 0; i < size; i++) {
         ByteArray memory(4);
-        uint8_t *ptr = memory.data();
+        uint8_t* ptr = memory.data();
         PUT_UINT(ptr, i, uint32_t);
         writeFile.append(memory);
       }
@@ -45,10 +45,10 @@ static void FileWrite(benchmark::State& state) {
 }
 
 static void FileRead(benchmark::State& state) {
-  using ametsuchi::ByteArray ;
+  using ametsuchi::ByteArray;
   using ametsuchi::file::ReadOnlyFile;
 
-  while(state.KeepRunning()) {
+  while (state.KeepRunning()) {
     size_t size = state.range(0);
 
     std::string filename = "/tmp/test1";
@@ -57,7 +57,7 @@ static void FileRead(benchmark::State& state) {
     if (readFile.open()) {
       for (uint32_t i = 0; i < size; i++) {
         ByteArray memory = readFile.read(4);
-        uint8_t *ptr = memory.data();
+        uint8_t* ptr = memory.data();
         uint32_t a = 0;
         GET_UINT(&a, ptr, uint32_t);
         assert(a == i);
@@ -69,4 +69,4 @@ static void FileRead(benchmark::State& state) {
 
 BENCHMARK(FileWrite)->Range(1, 1 << 20);
 BENCHMARK(FileRead)->Range(1, 1 << 20);
-BENCHMARK_MAIN()
+BENCHMARK_MAIN();

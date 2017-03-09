@@ -101,7 +101,12 @@ bool File::clear() {
 
 bool File::exists() { return access(path_.c_str(), F_OK) != -1; }
 
-
+void File::set_path(const std::string &path) {
+  if (is_opened()) {
+    close();
+  }
+  path_ = path;
+}
 
 ////////////////
 /// ReadOnlyFile

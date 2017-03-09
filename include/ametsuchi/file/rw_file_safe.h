@@ -35,6 +35,8 @@ class RWFileSafe : public ReadWriteFile {
  public:
   explicit RWFileSafe(const std::string &path);
 
+  bool open() override;
+
   /**
    * Appends \p data to the end of file.
    * @param data
@@ -50,7 +52,16 @@ class RWFileSafe : public ReadWriteFile {
   size_t write(const ByteArray &data) override;
 
  private:
+  // file_ masks File::file_
+  // reason: we don't want to implement write() twice, in RWFilePlain and here
+  std::unique_ptr<RWFilePlain> file_;
   std::unique_ptr<RWFilePlain> wal_;
+
+  /**
+   * Recovery mechanism.
+   * file_ and wal_ should not be opened and wal_ should exist.
+   */
+  void recover();
 };
 
 }  // namespace file

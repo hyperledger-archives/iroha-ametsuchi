@@ -45,7 +45,7 @@ inline bool is_valid(offset_t offset) { return offset != INT64_MAX; }
 class File {
  public:
   explicit File(const std::string &path);
-  virtual ~File();
+  virtual ~File() = 0;
 
   virtual bool open();
   void close();
@@ -66,6 +66,8 @@ class File {
 
   bool can_read();
   bool can_write();
+
+  void set_path(const std::string &path);
 
   /**
    * Remove file.
