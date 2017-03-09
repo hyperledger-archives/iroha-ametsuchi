@@ -111,6 +111,23 @@ void File::set_path(const std::string &path) {
   path_ = path;
 }
 
+
+std::string File::get_name() {
+  if (fname_ == "") {
+    // parse name from path.
+    // name = everything after first slash in path
+    std::string name = "";
+    while (*path_.rbegin() != '/') {
+      name.push_back(*path_.rbegin());
+    }
+    std::reverse(name.begin(), name.end());
+    fname_ = name;
+  }
+
+  return fname_;
+}
+
+
 ////////////////
 /// ReadOnlyFile
 ReadOnlyFile::ReadOnlyFile(const std::string &path) : File::File(path) {

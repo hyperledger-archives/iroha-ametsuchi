@@ -24,7 +24,8 @@ namespace ametsuchi {
 namespace file {
 
 RWFileSafe::RWFileSafe(const std::string &path) : ReadWriteFile(nullptr) {
-  file_->
+  file_->set_path(path);
+  wal_->set_path(ENV->get_logs_directory() + file_->get_name() + ".log");
 }
 
 bool RWFileSafe::open() {

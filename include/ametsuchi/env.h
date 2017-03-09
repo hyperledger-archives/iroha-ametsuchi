@@ -166,7 +166,7 @@ class Env {
     console->debug("Directory {} created", path);
 
     // remove slashes in the end
-    while (*path.rend() == '/') {
+    while (*path.rbegin() == '/') {
       path.pop_back();
     }
 

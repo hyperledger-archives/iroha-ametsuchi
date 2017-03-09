@@ -69,6 +69,8 @@ class File {
 
   void set_path(const std::string &path);
 
+  std::string get_name();
+
   /**
    * Remove file.
    * @return true if successfully, false otherwise
@@ -106,7 +108,8 @@ class File {
 
   size_t size_;  // current size of file in bytes
 
-  std::string path_;  // path to current file
+  std::string path_;   // path to current file
+  std::string fname_;  // file name
   std::unique_ptr<FILE, decltype(&std::fclose)> file_;
 
  private:
