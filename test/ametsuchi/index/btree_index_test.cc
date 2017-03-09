@@ -28,7 +28,11 @@ namespace index {
 
 class BTreeIndexTest : public ::testing::Test {
  protected:
-  virtual void TearDown() { remove(dirname.c_str()); }
+  virtual void TearDown() {
+    remove((dirname + "/data.mdb").c_str());
+    remove((dirname + "/lock.mdb").c_str());
+    rmdir(dirname.c_str());
+  }
   const std::string dirname = "/tmp/test_dir";
 };
 
@@ -37,7 +41,7 @@ TEST_F(BTreeIndexTest, InsertTest) {
       struct stat st = {0};
 
       if (stat(dirname.c_str(), &st) == -1) {
-          mkdir(dirname.c_str(), 0664);
+          mkdir(dirname.c_str(), 0775);
       }
 
       BTreeIndex<int, int> btree(dirname);
