@@ -30,3 +30,8 @@ AddTest(fixed_table_test ametsuchi/table/fixed_table_test.cc)
 target_link_libraries(fixed_table_test
   PRIVATE ${LIBAMETSUCHI_NAME}
 )
+
+AddTest(btree_index_test ametsuchi/index/btree_index_test.cc)
+target_link_libraries(btree_index_test
+  PRIVATE ${LIBAMETSUCHI_NAME}
+)

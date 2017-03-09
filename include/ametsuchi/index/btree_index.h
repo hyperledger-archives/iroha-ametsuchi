@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef AMETSUCHI_BTREE_INDEX_H
 #define AMETSUCHI_BTREE_INDEX_H
 
@@ -38,9 +37,9 @@ class BTreeIndex {
  public:
   BTreeIndex(const std::string &fname);
 
-  void insert(K &&key, V &&val);
+  void insert(K key, V &&val);
 
-  V get(K &&keyid);
+  V get(K keyid);
 
   ~BTreeIndex();
 };
