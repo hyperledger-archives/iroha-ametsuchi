@@ -99,7 +99,7 @@ bool File::clear() {
 }
 
 
-bool File::exists() { return access(path_.c_str(), F_OK) != -1; }
+bool File::exists() const { return access(path_.c_str(), F_OK) != -1; }
 
 void File::set_path(const std::string &path) {
   if (is_opened()) {

@@ -81,7 +81,11 @@ class File {
    */
   bool clear();
 
-  bool exists();
+  /**
+   * Returns true if file exists. Works even if file is not opened.
+   * @return
+   */
+  bool exists() const;
 
   /**
    * Reads exactly \p size bytes from file at current cursor position.
@@ -90,6 +94,10 @@ class File {
    */
   ByteArray read(size_t size);
 
+  /**
+   * Get path to file.
+   * @return
+   */
   const std::string get_path() const;
 
  protected:
