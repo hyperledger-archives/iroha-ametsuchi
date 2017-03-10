@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <cassert>
 #include <memory>
 #include <string>
 #include <vector>

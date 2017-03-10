@@ -25,16 +25,17 @@
 namespace ametsuchi {
 namespace table {
 
-static const auto EMPTY = ByteArray{0};
+static const auto EMPTY = ByteArray{};
 
 enum Flag : file::flag_t {
+  INVALID = 0,
   REMOVED = 1,
   VALID   = 2
   // rest is reserved for future use
 };
 
 template<typename T>
-struct BaseRecord {
+struct PACKED_STRUCT BaseRecord {
   file::flag_t flag;
   T data;
 };
@@ -50,16 +51,16 @@ template<typename T>
 using Record = table::BaseRecord<T>;
 
 template <typename T>
-inline size_t size(const Record<T> &r) {
+inline constexpr size_t size(const Record<T> &r) {
   return size(r.flag) + size(r.data);
 }
 
 // Names of the following methods should be changed
 // as in serializer.hpp with the resolving #33
 template<typename T>
-inline Record<T> getRecord(const ByteArray &src) {
+inline Record<T> getRecord(const void* src) {
   NON_TRIVIAL_CHECK;
-  return *(Record<T>*)src.data();
+  return *(Record<T>*)src;
 }
 
 template<typename T>
