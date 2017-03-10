@@ -136,7 +136,7 @@ FixedTable<T>::BidirIterator::BidirIterator(FixedTable<T> &ft, file::offset_t of
 
 template <typename T>
 FixedTable<T>::BidirIterator::BidirIterator(const FixedTable<T>::BidirIterator &it)
-    : BidirIterator(it.ft, it.offset) {}
+    : BidirIterator(it.ft_, it.offset_) {}
 
 template <typename T>
 bool FixedTable<T>::BidirIterator::operator==(const FixedTable<T>::BidirIterator &it) {
@@ -181,7 +181,7 @@ typename FixedTable<T>::BidirIterator FixedTable<T>::BidirIterator::operator--(i
 
 template <typename T>
 T FixedTable<T>::BidirIterator::operator*() {
-  return ft_.get(offset_);
+  return ft_.get(ft_.idx(offset_));
 }
 
 }
