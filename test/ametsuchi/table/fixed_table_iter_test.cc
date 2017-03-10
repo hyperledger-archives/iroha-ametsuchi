@@ -33,7 +33,6 @@ constexpr auto fb = FB(A, 0x12345678, 18345e-3);
 
 TEST_F(FileTestHelper, IteratorIncrements) {
   FixedTable<ExampleFB> table(filename);
-  size_t num = 4;
   table.appendBatch(std::vector<ExampleFB>(num, fb));
   {
     size_t count = 0;
@@ -55,22 +54,25 @@ TEST_F(FileTestHelper, IteratorIncrements) {
 
 TEST_F(FileTestHelper, IteratorDecrement) {
   FixedTable<ExampleFB> table(filename);
-  size_t num = 4;
   table.appendBatch(std::vector<ExampleFB>(num, fb));
   {
     size_t count = 0;
-    for (auto i = table.end(); i > table.begin(); --i) {
+    auto i = table.end();
+    for (--i; i > table.begin(); --i) {
       count++;
       ASSERT_FBEQ(*i, fb);
     }
+    ASSERT_FBEQ(*i, fb);
     ASSERT_EQ(count, num);
   }
   {
-    auto count = 0;
-    for (auto i = table.end(); i > table.begin(); i--) {
+    size_t count = 0;
+    auto i = table.end();
+    for (i--; i > table.begin(); i--) {
       count++;
       ASSERT_FBEQ(*i, fb);
     }
+    ASSERT_FBEQ(*i, fb);
     ASSERT_EQ(count, num);
   }
 }
