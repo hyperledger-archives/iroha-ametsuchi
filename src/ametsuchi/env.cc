@@ -46,9 +46,7 @@ void Env::set_database_directory(std::string path) {
   database_dir = mkdirectory(path);
 }
 
-void Env::set_logs_directory(std::string path) {
-  logs_dir = mkdirectory(path);
-}
+void Env::set_logs_directory(std::string path) { logs_dir = mkdirectory(path); }
 
 void Env::set_memory_limit(uint64_t limit) {
   uint64_t available = get_available_memory();
@@ -59,8 +57,11 @@ void Env::set_memory_limit(uint64_t limit) {
 }
 
 Env& Env::get() {
-  static Env instance;
-  return instance;
+  static Env e;
+  mkdirectory(e.database_dir);
+  mkdirectory(e.logs_dir);
+  mkdirectory(e.index_dir);
+  return e;
 }
 
 

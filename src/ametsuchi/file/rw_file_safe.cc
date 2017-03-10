@@ -42,7 +42,6 @@ offset_t RWFileSafe::append(const ByteArray &data) {
   size_t old_fsize = size_;
   size_t size = data.size();
 
-  size_ += size;
   size_t written;
   if ((written = this->write(data)) != size) {
     console->critical("we write {} bytes, but {} written", size, written);
@@ -70,7 +69,6 @@ size_t RWFileSafe::write(const ByteArray &data) {
   byte_t *ptr = buf.data();
 
   serialize::put(ptr, position());
-  serialize::put(ptr, data.size());
   serialize::put(ptr, data);
 
   if (wal_->open()) {
@@ -126,7 +124,10 @@ void RWFileSafe::recover() {
   serialize::get(&position, ptr);
   serialize::get(&length, ptr);
 
-  ByteArray data(length);
+  // next get reads length, so we need to move ptr back
+  ptr -= sizeof(uint64_t);
+
+  ByteArray data;
   serialize::get(&data, ptr);
 
   if (data.size() < length) {

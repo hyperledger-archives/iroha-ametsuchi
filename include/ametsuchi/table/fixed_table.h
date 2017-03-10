@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <string>
+#include <ametsuchi/file/rw_file.h>
 
 namespace ametsuchi {
 namespace table {
@@ -73,7 +74,7 @@ class FixedTable {
     assert(offset % (sizeof(T) + sizeof(Flag)) == FILE_PREFIX);
     return (offset - FILE_PREFIX) / (sizeof(T) + sizeof(Flag));
   }
-  file::ReadWriteFile file;
+  file::RWFile file;
 };
 
 
@@ -96,23 +97,7 @@ class FixedTable<T>::BidirIterator {
   file::offset_t offset_;
 };
 
-template <typename T>
-void FixedTable<T>::append(const T &data) {
-  ByteArray buf;
-  serialize::putRecord(buf, Record{Flag::VALID, data});
-  file.append(buf);
 }
-
-// template <typename T>
-// void FixedTable<T>::append(const T &&data) {
-//   ByteArray buf;
-//   serialize::putRecord(buf, Record{Flag::VALID, data});
-//   file.append(buf);
-// }
-
-template <typename T>
-void FixedTable<T>::appendBatch(const std::vector<T> &data) {
-  std::for_each(data.begin(), data.end(), [this](const auto &elem) { this->append(elem); });
 }
 
 #include "fixed_table.inc"

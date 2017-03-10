@@ -34,7 +34,7 @@ class Env {
  public:
   Env()
       : memory_limit(get_available_memory()),
-        database_dir("/tmp"),
+        database_dir("/tmp/ametsuchi"),
         logs_dir(database_dir + "/logs"),
         index_dir(database_dir + "/index") {}
 
