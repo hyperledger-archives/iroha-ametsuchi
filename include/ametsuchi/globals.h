@@ -22,6 +22,7 @@
 #include <ametsuchi/exception.h>
 #include <cstdint>
 #include <cstdlib>
+#include <cassert>
 #include <memory>
 #include <string>
 #include <vector>
