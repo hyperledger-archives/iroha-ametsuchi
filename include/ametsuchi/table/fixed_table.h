@@ -34,7 +34,7 @@ namespace table {
 template <typename T>
 class FixedTable {
  public:
-  class ForwardIterator;
+  class BidirIterator;
 
   using Record = BaseRecord<T>;
 
@@ -58,6 +58,9 @@ class FixedTable {
 
   size_t recordNum();
 
+  BidirIterator begin();
+  BidirIterator end();
+
  private:
 
   void write(const std::vector<T>&);
@@ -73,102 +76,30 @@ class FixedTable {
   file::ReadWriteFile file;
 };
 
-// imp
-template <typename T>
-FixedTable<T>::FixedTable(const std::string &path) : file(path) {
-  file.open();
-}
 
 template <typename T>
-file::offset_t FixedTable<T>::append(const T &data) {
-  return appendBatch(std::vector<T>{data});
-}
+class FixedTable<T>::BidirIterator {
+ public:
+  BidirIterator(FixedTable<T> &field);
+  BidirIterator(FixedTable<T> &field, file::offset_t offset);
+  BidirIterator(const BidirIterator &it);
+  bool operator==(const BidirIterator &it);
+  bool operator<(const BidirIterator &it);
+  bool operator>(const BidirIterator &it);
+  T operator*();
+  BidirIterator &operator++();    // postfix++
+  BidirIterator operator++(int);  // ++prefix
+  BidirIterator &operator--();    // postfix--
+  BidirIterator operator--(int);  // --prefix
+ protected:
+  FixedTable<T> &ft_;
+  file::offset_t offset_;
+};
 
-template <typename T>
-file::offset_t FixedTable<T>::append(const T &&data) {
-  T t = std::move(data);
-  return append(t);
-}
-
-template <typename T>
-file::offset_t FixedTable<T>::appendBatch(const std::vector<T> &data) {
-  file::offset_t num = recordNum();
-  write(data);
-  return num;
-}
-
-template <typename T>
-T FixedTable<T>::get(file::offset_t index) {
-  seek(index);
-  ByteArray buf = file.read(serialize::size<Record>());
-  T t = serialize::getRecord<T>(buf.data()).data;
-  return t;
-}
-
-template <typename T>
-std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t index) {
-  seek(index);
-  constexpr size_t size = serialize::size<Record>();
-  ByteArray buf = file.read(size * num);
-  if (buf.size() != size * num) {
-    // read < requested
-    // (?) guess need to throw smth here
-    num = buf.size() / size;
-  }
-
-  std::vector<T> v(num);
-  auto ptr = reinterpret_cast<const Record*>(&*buf.begin());
-  std::transform(ptr, ptr + num, v.begin(), [](const Record &in) {
-    return serialize::getRecord<T>((const void*)&in).data;
-  });
-
-  return v;
-}
-
-template <typename T>
-void FixedTable<T>::replace(const T &data, file::offset_t index) {
-  remove(index);
-  seek(index);
-  write(std::vector<T>{data});
-}
-
-template <typename T>
-void FixedTable<T>::remove(file::offset_t index) {
-  setFlag(index, Flag::REMOVED);
-}
-
-template <typename T>
-file::flag_t FixedTable<T>::getFlag(file::offset_t index) {
-  seek(index);
-  ByteArray buf = file.read(sizeof(file::flag_t));
-  if (buf.size() == 0) return Flag::INVALID;
-  return *(file::flag_t *)buf.data();
-}
-
-template <typename T>
-void FixedTable<T>::setFlag(file::offset_t index, file::flag_t flag) {
-  seek(index);
-  file.write(ByteArray{flag});
-}
-
-template <typename T>
-size_t FixedTable<T>::recordNum() {
-  file.seek_to_end();
-  return idx(file.position());
-}
-
-template <typename T>
-void FixedTable<T>::write(const std::vector<T> &data) {
-  ByteArray buf;
-  for (const auto &elem : data) {
-    serialize::putRecord(buf, Record{Flag::VALID, elem});
-  }
-
-  auto written = file.write(buf);
-  assert(written == data.size() * sizeof(Record));
-}
 
 }
 }
+
+#include "fixed_table.inc"
 
 #endif  // AMETSUCHI_FIXED_TABLE_H
