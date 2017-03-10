@@ -24,6 +24,7 @@
 namespace ametsuchi {
 namespace table {
 
+
 class FileTest : public ::testing::Test {
  protected:
   virtual void TearDown() { remove(filename.c_str()); }
@@ -127,5 +128,6 @@ TEST_F(FileTest, RemoveTest) {
   table.remove(0);
   ASSERT_EQ(table.getFlag(0), Flag::REMOVED);
 }
+
 }
 }

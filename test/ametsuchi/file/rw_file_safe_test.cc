@@ -39,7 +39,35 @@ TEST(RW, Write) {
 
   auto s = file.write(data);
   ASSERT_EQ(s, size);
-  ASSERT_EQ(file.size(), s + sizeof(uint64_t));
+  ASSERT_EQ(file.size(), s);
+
+  ROFile r(path);
+  r.open();
+  ASSERT_EQ(data, r.read(size));
 }
+
+
+TEST(RW, Append) {
+  RWFileSafe file(path);
+  file.clear();
+
+  ASSERT_TRUE(file.open());
+
+  size_t size = 1000;
+  ByteArray data(size);
+  uint32_t seed = 0;
+  for (size_t i = 0; i < size; i++) {
+    data[i] = (byte_t)(rand_r(&seed) & 0xFF);
+  }
+
+  auto s = file.append(data);
+  ASSERT_EQ(s, 0);
+  ASSERT_EQ(file.size(), size);
+
+  ROFile r(path);
+  r.open();
+  ASSERT_EQ(data, r.read(size));
+}
+
 }
 }

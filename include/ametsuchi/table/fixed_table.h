@@ -29,6 +29,7 @@
 namespace ametsuchi {
 namespace table {
 
+/*
 template <typename T>
 class FixedTable {
  public:
@@ -129,6 +130,7 @@ template <typename T>
 void FixedTable<T>::setFlag(file::offset_t, file::flag_t) {
   // TODO: requires random writer
 }
+*/
 }
 }
 

@@ -34,7 +34,7 @@ TEST(ComparatorTest, ByteArrayValues) {
     b[i] = num;
   }
 
-  ByteArrayCmp cmp;
+  comparator::ByteArrayCmp cmp;
 
   ASSERT_EQ(cmp(a, b), 0);
 
@@ -50,7 +50,7 @@ TEST(ComparatorTest, ByteArrayValues) {
 }
 
 TEST(ComparatorTest, ByteArrayLengths) {
-  ByteArrayCmp cmp;
+  comparator::ByteArrayCmp cmp;
 
   ByteArray a(20, 0u);
   ByteArray b(10, 1u);

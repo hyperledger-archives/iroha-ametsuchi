@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <ametsuchi/file/rw_file_plain.h>
+#include <ametsuchi/file/rw_file.h>
 #include <ametsuchi/globals.h>
 #include <ametsuchi/serializer.h>
 
@@ -25,9 +25,9 @@ namespace ametsuchi {
 namespace file {
 
 
-TEST(FileTest, RWFilePlainTest) {
+TEST(FileTest, RWFileTest) {
   std::string filename = "/tmp/test1";
-  RWFilePlain f(filename);
+  RWFile f(filename);
   f.remove();
   auto opened = f.open();
 
@@ -90,13 +90,13 @@ TEST(FileTest, RWFilePlainTest) {
 TEST(FileTest, ReadOnlyFileTest) {
   std::string filename = "/tmp/test1";
 
-  RWFilePlain rwf(filename);
+  RWFile rwf(filename);
   rwf.remove();
   rwf.open();
   rwf.write(ByteArray({0xfe, 0xfa, 0xfe, 3, 4, 3, 4, 0xff, 0xff, 0xff}));
   rwf.close();
 
-  ReadOnlyFile f(filename);
+  ROFile f(filename);
 
   ASSERT_TRUE(f.can_read());
   ASSERT_FALSE(f.can_write());
@@ -124,10 +124,10 @@ TEST(FileTest, ReadOnlyFileTest) {
 }
 
 TEST(FileTest, HugeFileWriteRead) {
-  size_t size = 10000000;
+  size_t size = 100000;
 
   std::string filename = "/tmp/test1";
-  RWFilePlain writeFile(filename);
+  RWFile writeFile(filename);
   writeFile.remove();
 
   if (writeFile.open()) {
@@ -142,7 +142,7 @@ TEST(FileTest, HugeFileWriteRead) {
   }
   writeFile.close();
 
-  ReadOnlyFile readFile(filename);
+  ROFile readFile(filename);
   if (readFile.open()) {
     for (uint32_t i = 0; i < size; i++) {
       ByteArray memory = readFile.read(4);
