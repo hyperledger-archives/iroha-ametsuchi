@@ -19,6 +19,7 @@
 #define AMETSUCHI_FILE_H
 
 #include <ametsuchi/globals.h>
+#include <spdlog/spdlog.h>
 #include <sys/stat.h>   //
 #include <sys/types.h>  // for stat, access
 #include <unistd.h>     //
@@ -67,8 +68,6 @@ class File {
   bool can_read();
   bool can_write();
 
-  void set_path(const std::string &path);
-
   std::string get_name();
 
   /**
@@ -84,8 +83,8 @@ class File {
   bool clear();
 
   /**
-   * Returns true if file exists. Works even if file is not opened.
-   * @return
+   * No need for file being opened.
+   * @return true if file exists.
    */
   bool exists() const;
 
@@ -96,10 +95,6 @@ class File {
    */
   ByteArray read(size_t size);
 
-  /**
-   * Get path to file.
-   * @return
-   */
   const std::string get_path() const;
 
  protected:
@@ -108,8 +103,7 @@ class File {
 
   size_t size_;  // current size of file in bytes
 
-  std::string path_;   // path to current file
-  std::string fname_;  // file name
+  std::string path_;  // path to current file
   std::unique_ptr<FILE, decltype(&std::fclose)> file_;
 
  private:
@@ -119,13 +113,13 @@ class File {
 
 
 /**
- * ReadWriteFile is used to concurrently open as many files as you wish.
+ * ROFile is used to concurrently open for read as many files as you wish.
  *  - no locking
- *  - individual cursor for each reader
+ *  - individual cursor for each ROFile
  */
-class ReadOnlyFile : public File {
+class ROFile : public File {
  public:
-  explicit ReadOnlyFile(const std::string &path);
+  explicit ROFile(const std::string &path);
   bool open() override;
 };
 

@@ -21,7 +21,7 @@ namespace ametsuchi {
 namespace table {
 
 FieldTable::FieldTable(const std::string &p)
-    : file_size{0}, f_(new file::RWFileSafe(p)) {
+    : file_size(0), f_(new file::RWFileSafe(p)) {
   if (!f_->open()) throw exception::IOError("FieldTable::" + p);
 }
 
@@ -61,8 +61,6 @@ ByteArray FieldTable::get(const file::offset_t offset) {
       return EMPTY;  // byte array of size 0
     }
     case Flag::VALID: {
-      // read length
-      // deserialize length
       uint64_t length;
       serialize::get(&length, ptr);
 
@@ -92,6 +90,14 @@ file::offset_t FieldTable::update(const file::offset_t offset,
 }
 
 std::string FieldTable::path() { return f_->get_path(); }
+
+
+/**
+ * 1. ensure we have enough on-disk memory to perform compaction
+ */
+void FieldTable::compact() {
+
+}
 
 
 //////////////////////////

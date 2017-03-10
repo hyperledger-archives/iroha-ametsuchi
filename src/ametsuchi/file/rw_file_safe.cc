@@ -16,24 +16,24 @@
  */
 
 #include <ametsuchi/file/rw_file_safe.h>
-#include <ametsuchi/globals.h>
 #include <ametsuchi/serializer.h>
 #include <cassert>
 
 namespace ametsuchi {
 namespace file {
 
-RWFileSafe::RWFileSafe(const std::string &path) : ReadWriteFile(nullptr) {
-  file_->set_path(path);
-  wal_->set_path(ENV->get_logs_directory() + file_->get_name() + ".log");
-}
+static auto console = spdlog::stdout_color_mt("rw_file_safe");
+
+RWFileSafe::RWFileSafe(const std::string &path)
+    : RWFile(path),
+      wal_(new RWFile(Env::get().get_logs_directory() + get_name() + ".log")) {}
 
 bool RWFileSafe::open() {
   if (wal_->exists()) {
     // then crash happened and we need recovery
     recover();
   }
-  return file_->open();
+  return RWFile::open();
 }
 
 offset_t RWFileSafe::append(const ByteArray &data) {
@@ -54,36 +54,52 @@ offset_t RWFileSafe::append(const ByteArray &data) {
 
 /**
  * 1. Write to LOG:
+ *   //           header          \\
  *   | cursor position | data size | data             |
  *   | ulong           | ulong     | ubyte[data size] |
  * 2. Write data to FILE
- * 3. Remove file with LOG
+ * 3. Remove LOG file
  */
 size_t RWFileSafe::write(const ByteArray &data) {
   // ensure LOG does not exist
   assert(!wal_->exists());
 
   // write into log and then into file
-  ByteArray buf(2 * sizeof(uint64_t) + data.size());
+  constexpr auto header_size = 2 * sizeof(uint64_t);
+  ByteArray buf(header_size + data.size());
   byte_t *ptr = buf.data();
 
-  serialize::put(ptr, file_->position());
+  serialize::put(ptr, position());
   serialize::put(ptr, data.size());
   serialize::put(ptr, data);
 
   if (wal_->open()) {
-    wal_->write(buf);
+    size_t written = wal_->write(buf);
+    if (written != buf.size()) {
+      console->critical("writing to LOG {} bytes, but {} written", buf.size(),
+                        written);
+      throw exception::IOError("can not write to LOG");
+    }
   } else {
     throw exception::IOError("can not open LOG: " + wal_->get_path());
   }
 
-  file_->write(data);
+  size_t size = RWFile::write(data);
+  if (size != data.size()) {
+    recover();
+  }
 
+  // transaction completed
   wal_->remove();
+
+  return size;
 }
 
+
 void RWFileSafe::recover() {
-  assert(!file_->is_opened());
+  console->debug("Attempting to recover using LOG: {}", wal_->get_path());
+
+  assert(!this->is_opened());
   assert(!wal_->is_opened());
   assert(wal_->exists());
 
@@ -91,21 +107,41 @@ void RWFileSafe::recover() {
     throw exception::IOError("can not open LOG: " + wal_->get_path());
   }
 
-  // file size before write AND length of data
-  ByteArray buf = wal_->read(2 * sizeof(uint64_t));
-  const byte_t *ptr = buf.data();
+  size_t wal_size = wal_->size();
+
+  // read whole LOG into memory
+  ByteArray header = wal_->read(wal_size);
+  const byte_t *ptr = header.data();
+
+  // expected = position (8b) + size (8b)
+  constexpr auto header_size = 2 * sizeof(uint64_t);
+  if (header.size() < header_size) {
+    console->debug(
+        "write to log was interrupted, header.size()={}, should be {}",
+        header.size(), header_size);
+    wal_->remove();
+  }
 
   uint64_t position, length;
   serialize::get(&position, ptr);
   serialize::get(&length, ptr);
 
-  ByteArray data = wal_->read(length);
+  ByteArray data(length);
+  serialize::get(&data, ptr);
 
-  file_->seek(position);
-  file_->write(data);
+  if (data.size() < length) {
+    console->debug("write to log was interrupted, data.size()={}, should be {}",
+                   data.size(), length);
+    wal_->remove();
+  }
 
+  this->seek(position);
+  RWFile::write(data);
+
+  // transaction completed
   wal_->remove();
 }
+
 
 }  // namespace file
 }  // namespace ametsuchi

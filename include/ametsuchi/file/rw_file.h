@@ -33,12 +33,12 @@ namespace file {
  * ReadWriteFiles does not:
  *  - know how to write to file
  */
-class ReadWriteFile : public File {
+class RWFile : public File {
  public:
-  explicit ReadWriteFile(const std::string &path);
+  explicit RWFile(const std::string &path);
 
   /**
-   * Open file. If file does not exist, ::open will create it.
+   * Opens file. Creates file if not exist.
    * @return true if file is opened without errors
    */
   bool open() override;
@@ -46,22 +46,22 @@ class ReadWriteFile : public File {
   /**
    * Appends \p data to the end of file.
    * @param data
-   * @return offset, at which data is appended or empty byte array otherwise
+   * @return offset, at which data is appended or empty byte array
    */
-  virtual offset_t append(const ByteArray &data) = 0;
+  virtual offset_t append(const ByteArray &data);
 
   /**
    * Writes \p data at current position.
    * @param data
    * @return number of written bytes
    */
-  virtual size_t write(const ByteArray &data) = 0;
+  virtual size_t write(const ByteArray &data);
 
   /**
    * Virtual destructor. It is needed to make sure that derived classes call
    * correct destructor.
    */
-  virtual ~ReadWriteFile();
+  virtual ~RWFile();
 };
 
 }  // namespace file

@@ -20,13 +20,14 @@
 namespace ametsuchi {
 namespace file {
 
+static auto console = spdlog::stdout_color_mt("rw_file");
 
-ReadWriteFile::ReadWriteFile(const std::string &path) : File(path) {
+RWFile::RWFile(const std::string &path) : File(path) {
   read_ = true;
   write_ = true;
 }
 
-bool ReadWriteFile::open() {
+bool RWFile::open() {
   file_.reset(std::fopen(path_.c_str(), "r+b"));
   if (!file_.get()) {
     file_.reset(std::fopen(path_.c_str(), "w+b"));
@@ -35,5 +36,32 @@ bool ReadWriteFile::open() {
   bool opened = File::open();
   return !!file_ && opened;
 }
+
+
+offset_t RWFile::append(const ByteArray &data) {
+  seek_to_end();
+
+  size_t old_fsize = size_;
+  size_t size = data.size();
+
+  size_t written;
+  if ((written = write(data)) != size) {
+    console->critical("we write {} bytes, but {} written", size, written);
+    throw exception::IOError("RWFilePlain::append");
+  }
+
+  return old_fsize;  // offset at which data is written
+}
+
+
+size_t RWFile::write(const ByteArray &data) {
+  auto res = std::fwrite(data.data(), sizeof(ametsuchi::byte_t), data.size(),
+                         file_.get());
+  std::fflush(file_.get());
+  size_ += res;
+  return res;
+}
+
+RWFile::~RWFile() {}
 }
 }

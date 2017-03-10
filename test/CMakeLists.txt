@@ -26,6 +26,11 @@ target_link_libraries(file_test
   PRIVATE ${LIBAMETSUCHI_NAME}
 )
 
+AddTest(rw_file_safe_test ametsuchi/file/rw_file_safe_test.cc)
+target_link_libraries(rw_file_safe_test
+  PRIVATE ${LIBAMETSUCHI_NAME}
+  )
+
 AddTest(fixed_table_test ametsuchi/table/fixed_table_test.cc)
 target_link_libraries(fixed_table_test
   PRIVATE ${LIBAMETSUCHI_NAME}

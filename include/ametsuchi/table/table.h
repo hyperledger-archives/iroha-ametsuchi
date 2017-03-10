@@ -25,7 +25,7 @@
 namespace ametsuchi {
 namespace table {
 
-static const auto EMPTY = ByteArray{0};
+static const auto EMPTY = ByteArray(0);
 
 enum Flag : file::flag_t {
   REMOVED = 1,

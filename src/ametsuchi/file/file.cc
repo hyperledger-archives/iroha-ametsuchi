@@ -17,7 +17,8 @@
 
 #include <ametsuchi/exception.h>
 #include <ametsuchi/file/file.h>
-#include <spdlog/spdlog.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace ametsuchi {
 namespace file {
@@ -70,8 +71,11 @@ void File::seek_to_end() { std::fseek(file_.get(), 0, SEEK_END); }
 void File::seek_to_start() { rewind(file_.get()); }
 
 ByteArray File::read(size_t size) {
-  ByteArray buf(size, 0);
+  ByteArray buf(size);
   auto res = std::fread(&buf[0], sizeof(ametsuchi::byte_t), size, file_.get());
+  if (res != size) {
+    buf.resize(res);
+  }
   return buf;
 }
 
@@ -96,47 +100,28 @@ void File::seek(offset_t offset) {
 
 
 bool File::clear() {
-  auto deleted = remove();
-  auto opened = open();
-  return deleted && opened;
+  remove();
+  return open();
 }
 
 
 bool File::exists() const { return access(path_.c_str(), F_OK) != -1; }
 
-void File::set_path(const std::string &path) {
-  if (is_opened()) {
-    close();
-  }
-  path_ = path;
-}
-
 
 std::string File::get_name() {
-  if (fname_ == "") {
-    // parse name from path.
-    // name = everything after first slash in path
-    std::string name = "";
-    while (*path_.rbegin() != '/') {
-      name.push_back(*path_.rbegin());
-    }
-    std::reverse(name.begin(), name.end());
-    fname_ = name;
-  }
-
-  return fname_;
+  return path_.data() + path_.rfind("/") + /* skip / before name */ 1;
 }
 
 
 ////////////////
 /// ReadOnlyFile
-ReadOnlyFile::ReadOnlyFile(const std::string &path) : File::File(path) {
+ROFile::ROFile(const std::string &path) : File::File(path) {
   read_ = true;
   write_ = false;
 }
 
 
-bool ReadOnlyFile::open() {
+bool ROFile::open() {
   // to read statistics
   bool opened = File::open();
 

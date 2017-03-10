@@ -1,0 +1,5 @@
+namespace ametsuchi.metadata;
+
+table Metadata{
+  
+};

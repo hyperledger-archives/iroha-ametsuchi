@@ -31,7 +31,6 @@ namespace ametsuchi {
 using byte_t = uint8_t;
 using ByteArray = std::vector<byte_t>;
 
-std::shared_ptr<Env> ENV;
 }
 
 #endif  // AMETSUCHI_GLOBALS_H_

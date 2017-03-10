@@ -34,12 +34,11 @@ include(cmake/functions.cmake)
 set(AMETSUCHI_INCLUDE
   include/ametsuchi/file/file.h
   include/ametsuchi/file/rw_file.h
-  include/ametsuchi/file/rw_file_plain.h
   include/ametsuchi/file/rw_file_safe.h
 
   include/ametsuchi/table/table.h
   include/ametsuchi/table/field_table.h
-  include/ametsuchi/table/fixed_table.h
+  #include/ametsuchi/table/fixed_table.h
 
   include/ametsuchi/ametsuchi.h
   include/ametsuchi/cache.h
@@ -54,11 +53,13 @@ set(AMETSUCHI_INCLUDE
 set(AMETSUCHI_SRC
   src/ametsuchi/file/file.cc
   src/ametsuchi/file/rw_file.cc
-  src/ametsuchi/file/rw_file_plain.cc
   src/ametsuchi/file/rw_file_safe.cc
 
   src/ametsuchi/table/field_table.cc
-  src/ametsuchi/table/fixed_table.cc
+  #src/ametsuchi/table/fixed_table.cc
+  src/ametsuchi/env.cc
+
+  test/ametsuchi/file/rw_file_safe_test.cc
   )
 
 # Library.

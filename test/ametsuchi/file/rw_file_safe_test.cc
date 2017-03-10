@@ -1,5 +1,5 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2016 All Rights Reserved.
+ * Copyright Soramitsu Co., Ltd. 2017 All Rights Reserved.
  * http://soramitsu.co.jp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,29 +15,31 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_DB_H
-#define AMETSUCHI_DB_H
 
-#include <ametsuchi/env.h>
-#include <ametsuchi/globals.h>
-#include <ametsuchi/table/fixed_table.h>
-#include <string>
+#include <ametsuchi/file/rw_file_safe.h>
+#include <gtest/gtest.h>
 
 namespace ametsuchi {
+namespace file {
 
-/**
- * Interface to tx_store and world_state
- * @tparam T - flatbuffers, protobuf, any serializable structure
- */
-template <typename T>
-class Ametsuchi {
- public:
-  void open(std::shared_ptr<Env> env) {
-    // ENV is declared in "globals.h"
-    ENV = env;
+std::string path = "/tmp/test_rw1";
+
+TEST(RW, Write) {
+  RWFileSafe file(path);
+  file.clear();
+
+  ASSERT_TRUE(file.open());
+
+  size_t size = 1000;
+  ByteArray data(size);
+  uint32_t seed = 0;
+  for (size_t i = 0; i < size; i++) {
+    data[i] = (byte_t)(rand_r(&seed) & 0xFF);
   }
-  void close();
-};
-}
 
-#endif  // AMETSUCHI_DB_H
+  auto s = file.write(data);
+  ASSERT_EQ(s, size);
+  ASSERT_EQ(file.size(), s + sizeof(uint64_t));
+}
+}
+}

@@ -19,7 +19,6 @@
 #define AMETSUCHI_FIELD_TABLE_H
 
 #include <ametsuchi/file/rw_file_safe.h>
-#include <ametsuchi/globals.h>
 #include <ametsuchi/table/table.h>
 #include <memory>
 #include <string>
@@ -77,7 +76,8 @@ class FieldTable {
 
 
   /**
-   * After updates or removes
+   * Removes deleted records.
+   * Requires O(N) on-disk memory.
    */
   void compact();
 
@@ -100,7 +100,7 @@ class FieldTable {
   std::string path();
 
  private:
-  std::unique_ptr<file::ReadWriteFile> f_;
+  std::unique_ptr<file::RWFile> f_;
   file::offset_t file_size;
 };
 

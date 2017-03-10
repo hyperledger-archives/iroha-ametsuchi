@@ -18,7 +18,8 @@
 #ifndef AMETSUCHI_RW_FILE_SAFE_H
 #define AMETSUCHI_RW_FILE_SAFE_H
 
-#include <ametsuchi/file/rw_file_plain.h>
+#include <ametsuchi/file/rw_file.h>
+#include <sys/file.h>  // for flock
 #include <string>
 
 namespace ametsuchi {
@@ -27,11 +28,11 @@ namespace file {
 /**
  * RWFileSafe does:
  *  - read and write files
- *  - create system file locks
+ *  - create file locks
  *  - use write-ahead log
  *  - performs crash recovery
  */
-class RWFileSafe : public ReadWriteFile {
+class RWFileSafe : public RWFile {
  public:
   explicit RWFileSafe(const std::string &path);
 
@@ -40,7 +41,7 @@ class RWFileSafe : public ReadWriteFile {
   /**
    * Appends \p data to the end of file.
    * @param data
-   * @return offset, at which data is appended or empty byte array otherwise
+   * @return offset, at which data is appended or empty byte array
    */
   offset_t append(const ByteArray &data) override;
 
@@ -52,16 +53,14 @@ class RWFileSafe : public ReadWriteFile {
   size_t write(const ByteArray &data) override;
 
  private:
-  // file_ masks File::file_
-  // reason: we don't want to implement write() twice, in RWFilePlain and here
-  std::unique_ptr<RWFilePlain> file_;
-  std::unique_ptr<RWFilePlain> wal_;
+  std::unique_ptr<RWFile> wal_;
 
   /**
    * Recovery mechanism.
    * file_ and wal_ should not be opened and wal_ should exist.
    */
   void recover();
+
 };
 
 }  // namespace file
