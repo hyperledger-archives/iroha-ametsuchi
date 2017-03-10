@@ -45,7 +45,14 @@ inline void get(T *value, const ametsuchi::byte_t *&src);
 
 
 template <typename T>
-inline size_t size(const T &r) {
+inline constexpr size_t size() {
+  NON_TRIVIAL_CHECK;
+  return sizeof(T);
+}
+
+
+template <typename T>
+inline constexpr size_t size(const T &r) {
   NON_TRIVIAL_CHECK;
   return sizeof(T);
 }

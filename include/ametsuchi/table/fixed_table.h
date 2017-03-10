@@ -29,19 +29,21 @@
 namespace ametsuchi {
 namespace table {
 
+#define FILE_PREFIX 0
+
 template <typename T>
 class FixedTable {
  public:
-  class ForwardIterator;
+  class BidirIterator;
 
   using Record = BaseRecord<T>;
 
   FixedTable(const std::string &path);
 
-  void append(const T &data);
-  // void append(const T &&data);
+  file::offset_t append(const T &data);
+  file::offset_t append(const T &&data);
 
-  void appendBatch(const std::vector<T> &data);
+  file::offset_t appendBatch(const std::vector<T> &data);
 
   T get(file::offset_t index);
 
@@ -54,82 +56,49 @@ class FixedTable {
   file::flag_t getFlag(file::offset_t index);
   void setFlag(file::offset_t index, file::flag_t flags);
 
+  size_t recordNum();
+
+  BidirIterator begin();
+  BidirIterator end();
+
  private:
+
+  void write(const std::vector<T>&);
+
+  void seek(file::offset_t index) {
+    file.seek(index * (sizeof(T) + sizeof(Flag)));
+  }
+
+  inline size_t idx(file::offset_t offset) {
+    assert(offset % (sizeof(T) + sizeof(Flag)) == FILE_PREFIX);
+    return (offset - FILE_PREFIX) / (sizeof(T) + sizeof(Flag));
+  }
   file::ReadWriteFile file;
 };
 
-// imp
-template <typename T>
-FixedTable<T>::FixedTable(const std::string &path) : file(path) {
-  file.open();
-}
 
 template <typename T>
-void FixedTable<T>::append(const T &data) {
-  ByteArray buf;
-  serialize::putRecord(buf, Record{Flag::VALID, data});
-  file.append(buf);
+class FixedTable<T>::BidirIterator {
+ public:
+  BidirIterator(FixedTable<T> &field);
+  BidirIterator(FixedTable<T> &field, file::offset_t offset);
+  BidirIterator(const BidirIterator &it);
+  bool operator==(const BidirIterator &it);
+  bool operator<(const BidirIterator &it);
+  bool operator>(const BidirIterator &it);
+  T operator*();
+  BidirIterator &operator++();    // postfix++
+  BidirIterator operator++(int);  // ++prefix
+  BidirIterator &operator--();    // postfix--
+  BidirIterator operator--(int);  // --prefix
+ protected:
+  FixedTable<T> &ft_;
+  file::offset_t offset_;
+};
+
+}
 }
 
-// template <typename T>
-// void FixedTable<T>::append(const T &&data) {
-//   ByteArray buf;
-//   serialize::putRecord(buf, Record{Flag::VALID, data});
-//   file.append(buf);
-// }
-
-template <typename T>
-void FixedTable<T>::appendBatch(const std::vector<T> &data) {
-  std::for_each(data.begin(), data.end(), [this](const auto &elem) { this->append(elem); });
-}
-
-template <typename T>
-T FixedTable<T>::get(file::offset_t index) {
-  file.seek(index * sizeof(T));
-  ByteArray buf = file.read(sizeof(T) + sizeof(file::flag_t));
-  T t = serialize::getRecord<T>(buf).data;
-  return t;
-}
-
-template <typename T>
-std::vector<T> FixedTable<T>::getBatch(uint64_t num, file::offset_t index) {
-  file.seek(index * sizeof(T));
-  ByteArray buf = file.read((sizeof(T) + sizeof(file::flag_t)) * num);
-  std::vector<T> v;
-  for (auto i = buf.begin(); i != buf.end(); i += sizeof(T) + sizeof(file::flag_t)) {
-    // flags.push_back(*i);
-    const Record &r = *reinterpret_cast<Record*>(&*i);
-    v.push_back(r.data);
-  }
-  return v;
-}
-
-template <typename T>
-void FixedTable<T>::replace(const T &, file::offset_t) {
-  // TODO: requires random writer
-  // if record exists and new record length <= old record length, then it should
-  // be in-place replace.
-  // otherwise, append to the end of table + invalidate old record (set removed
-  // = true)
-}
-
-template <typename T>
-void FixedTable<T>::remove(file::offset_t) {
-  // TODO: requires random writer
-}
-
-template <typename T>
-file::flag_t FixedTable<T>::getFlag(file::offset_t index) {
-  file.seek(index * sizeof(T));
-  ByteArray buf = file.read(sizeof(T) + sizeof(file::flag_t));
-  return *(file::flag_t *)buf.data();
-}
-
-template <typename T>
-void FixedTable<T>::setFlag(file::offset_t, file::flag_t) {
-  // TODO: requires random writer
-}
-}
-}
+#include "fixed_table.inc"
 
 #endif  // AMETSUCHI_FIXED_TABLE_H

@@ -71,6 +71,7 @@ ByteArray File::read(size_t size) {
   char buf[size];
   auto res = std::fread(buf, sizeof(ametsuchi::byte_t), size, file_.get());
 
+  if (!res) ByteArray{};
   return ByteArray{buf, buf + res};
 }
 
