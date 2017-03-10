@@ -157,6 +157,24 @@ TEST(FileTest, HugeFileWriteRead) {
   readFile.close();
 }
 
+TEST(FileTest, FileSizeTest) {
+  std::string filename = "/tmp/test1";
+
+  ReadWriteFile f(filename);
+  f.remove();
+  auto opened = f.open();
+
+  ASSERT_TRUE(opened);
+
+  constexpr size_t size = 1024;
+  ByteArray data(size);
+
+  f.seek(0);
+  f.write(data);
+
+  ASSERT_EQ(f.size(), size);
+}
+
 /*
 TEST_F(FileTest, PositionTest) {
   Re
