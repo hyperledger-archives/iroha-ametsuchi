@@ -59,7 +59,7 @@ inline constexpr size_t size(const T &r) {
 
 
 template <>
-inline constexpr size_t size(const ByteArray &b) {
+inline size_t size(const ByteArray &b) {
   return b.size() * sizeof(byte_t);
 }
 
