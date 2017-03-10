@@ -120,7 +120,6 @@ offset_t ReadWriteFile::append(const ByteArray &data) {
   size_t old_fsize = size_;
   size_t size      = data.size();
 
-  size_ += size;
   size_t written;
   if ((written = write(data)) != size) {
     console->critical("we write " + std::to_string(size) + "bytes, but " +
@@ -136,6 +135,7 @@ size_t ReadWriteFile::write(const ByteArray &data) {
   auto res = std::fwrite(data.data(), sizeof(ametsuchi::byte_t), data.size(),
                          file_.get());
   std::fflush(file_.get());
+  size_ += res;
   return res;
 }
 
