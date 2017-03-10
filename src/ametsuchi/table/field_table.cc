@@ -21,7 +21,7 @@ namespace ametsuchi {
 namespace table {
 
 FieldTable::FieldTable(const std::string &p)
-    : file_size(0), f_(new file::RWFileSafe(p)) {
+    : file_size(0), f_(new file::RWFile(p)) {
   if (!f_->open()) throw exception::IOError("FieldTable::" + p);
 }
 

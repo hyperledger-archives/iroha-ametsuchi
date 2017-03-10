@@ -17,9 +17,9 @@
 
 #include <gtest/gtest.h>
 
+#include <ametsuchi/globals.h>
 #include <ametsuchi/table/fixed_table.h>
 #include <ametsuchi/table/table.h>
-#include <ametsuchi/globals.h>
 
 #include "lib.h"
 
@@ -63,7 +63,7 @@ TEST_F(FileTestHelper, IteratorDecrement) {
       ASSERT_FBEQ(*i, fb);
     }
     ASSERT_FBEQ(*i, fb);
-    ASSERT_EQ(count, num);
+    ASSERT_EQ(count + 1, num);
   }
   {
     size_t count = 0;
@@ -73,10 +73,8 @@ TEST_F(FileTestHelper, IteratorDecrement) {
       ASSERT_FBEQ(*i, fb);
     }
     ASSERT_FBEQ(*i, fb);
-    ASSERT_EQ(count, num);
+    ASSERT_EQ(count + 1, num);
   }
 }
-
-
 }
 }

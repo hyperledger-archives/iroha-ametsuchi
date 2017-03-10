@@ -24,9 +24,8 @@ namespace file {
 
 static auto console = spdlog::stdout_color_mt("rw_file_safe");
 
-RWFileSafe::RWFileSafe(const std::string &path)
-    : RWFile(path),
-      wal_(new RWFile(Env::get().get_logs_directory() + get_name() + ".log")) {}
+RWFileSafe::RWFileSafe(const std::string &path, const std::string &wal_path)
+    : RWFile(path), wal_(new RWFile(wal_path)) {}
 
 bool RWFileSafe::open() {
   if (wal_->exists()) {

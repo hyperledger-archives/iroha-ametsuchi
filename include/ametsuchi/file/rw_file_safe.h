@@ -34,7 +34,7 @@ namespace file {
  */
 class RWFileSafe : public RWFile {
  public:
-  explicit RWFileSafe(const std::string &path);
+  explicit RWFileSafe(const std::string &path, const std::string &wal_path);
 
   bool open() override;
 
