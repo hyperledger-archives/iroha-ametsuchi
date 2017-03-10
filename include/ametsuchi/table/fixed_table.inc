@@ -21,8 +21,6 @@ namespace table {
 
 template <typename T>
 using Record = typename FixedTable<T>::Record;
-template <typename T>
-using Iter = typename FixedTable<T>::BidirIterator;
 
 // Fixed table implementation
 template <typename T>
@@ -137,45 +135,45 @@ FixedTable<T>::BidirIterator::BidirIterator(FixedTable<T> &ft, file::offset_t of
     : ft_(ft), offset_(offset) {}
 
 template <typename T>
-FixedTable<T>::BidirIterator::BidirIterator(const Iter<T> &it)
+FixedTable<T>::BidirIterator::BidirIterator(const FixedTable<T>::BidirIterator &it)
     : BidirIterator(it.ft, it.offset) {}
 
 template <typename T>
-bool FixedTable<T>::BidirIterator::operator==(const Iter<T> &it) {
+bool FixedTable<T>::BidirIterator::operator==(const FixedTable<T>::BidirIterator &it) {
   return offset_ == it.offset_;
 }
 
 template <typename T>
-bool FixedTable<T>::BidirIterator::operator<(const Iter<T> &it) {
+bool FixedTable<T>::BidirIterator::operator<(const FixedTable<T>::BidirIterator &it) {
   return offset_ < it.offset_;
 }
 
 template <typename T>
-bool FixedTable<T>::BidirIterator::operator>(const Iter<T> &it) {
+bool FixedTable<T>::BidirIterator::operator>(const FixedTable<T>::BidirIterator &it) {
   return offset_ > it.offset_;
 }
 
 template <typename T>
-Iter<T> &FixedTable<T>::BidirIterator::operator++() {
+typename FixedTable<T>::BidirIterator &FixedTable<T>::BidirIterator::operator++() {
   offset_ += serialize::size<Record>();
   return *this;
 }
 
 template <typename T>
-Iter<T> FixedTable<T>::BidirIterator::operator++(int) {
+typename FixedTable<T>::BidirIterator FixedTable<T>::BidirIterator::operator++(int) {
   BidirIterator iter(*this);
   offset_ += serialize::size<Record>();
   return iter;
 }
 
 template <typename T>
-Iter<T> &FixedTable<T>::BidirIterator::operator--() {
+typename FixedTable<T>::BidirIterator &FixedTable<T>::BidirIterator::operator--() {
   offset_ -= serialize::size<Record>();
   return *this;
 }
 
 template <typename T>
-Iter<T> FixedTable<T>::BidirIterator::operator--(int) {
+typename FixedTable<T>::BidirIterator FixedTable<T>::BidirIterator::operator--(int) {
   BidirIterator iter(*this);
   offset_ -= serialize::size<Record>();
   return iter;

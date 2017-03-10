@@ -96,7 +96,6 @@ class FixedTable<T>::BidirIterator {
   file::offset_t offset_;
 };
 
-
 }
 }
 
