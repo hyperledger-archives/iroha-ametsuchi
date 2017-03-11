@@ -67,11 +67,6 @@ inline void putRecord(ByteArray &dst, T r);
 
 template <typename T>
 inline void putRecord(ByteArray &dst, Record<T> &r) {
-  putRecord(dst, std::forward<Record<T>>(r));
-}
-
-template <typename T>
-inline void putRecord(ByteArray &dst, Record<T> &&r) {
   NON_TRIVIAL_CHECK;
   size_t size = serialize::size(r.data);
   auto &bytes = reinterpret_cast<byte_t(&)[size]>(r.data);
@@ -79,13 +74,22 @@ inline void putRecord(ByteArray &dst, Record<T> &&r) {
   dst.insert(dst.end(), bytes, bytes + size);
 }
 
+template <typename T>
+inline void putRecord(ByteArray &dst, Record<T> &&r) {
+  Record<T> m = std::move(r);
+  putRecord(dst, m);
+}
+
 template <>
 inline void putRecord(ByteArray &dst, Record<ByteArray> &r) {
-  const auto size = serialize::size(r.data) + sizeof(file::flag_t);
-  dst.resize(size);
-  byte_t *ptr = dst.data();
-  serialize::put(ptr, r.flag);
-  serialize::put(ptr, r.data);
+  const auto size = serialize::size(r.data);
+  dst.push_back(r.flag);
+  auto bytes_left = sizeof(size);
+  for (byte_t *ptr = (byte_t *)&size; bytes_left-- != 0; ptr++) {
+    dst.push_back(*ptr);
+  }
+  auto bytes = (byte_t *)r.data.data();
+  dst.insert(dst.end(), bytes, bytes + size);
 }
 
 template <>
@@ -93,5 +97,5 @@ inline void putRecord(ByteArray &dst, Record<ByteArray> &&r) {
   Record<ByteArray> m = std::move(r);
   putRecord(dst, m);
 }
-}
-}
+}  // namespace serialize
+}  // namespace ametsuchi
