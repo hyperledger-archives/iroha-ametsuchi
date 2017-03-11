@@ -19,67 +19,60 @@
 
 #include <ametsuchi/table/field_table.h>
 
-namespace ametsuchi{
-namespace table{
+namespace ametsuchi {
+namespace table {
 
-class FieldTableTest : public ::testing::Test{
-protected:
-
-    virtual void TearDown() {
-        remove(filename.c_str());
-    }
-    const std::string filename = "/tmp/test_db";
+class FieldTableTest : public ::testing::Test {
+ protected:
+  virtual void TearDown() { remove(filename.c_str()); }
+  const std::string filename = "/tmp/test_db";
 };
 
 TEST_F(FieldTableTest, AppendTest) {
-    {
-        FieldTable ft(filename);
+  {
+    FieldTable ft(filename);
 
-        ByteArray wdata1 = {4, 3, 2, 1};
-        file::offset_t offset1 = ft.append(wdata1);
+    ByteArray wdata1 = {4, 3, 2, 1};
+    file::offset_t offset1 = ft.append(wdata1);
 
-        ByteArray wdata2 = {5, 6, 7, 8};
-        file::offset_t offset2 = ft.append(wdata2);
+    ByteArray wdata2 = {5, 6, 7, 8};
+    file::offset_t offset2 = ft.append(wdata2);
 
-        ByteArray rdata1 = ft.get(offset1);
-        ASSERT_EQ(wdata1, rdata1);
+    ByteArray rdata1 = ft.get(offset1);
+    ASSERT_EQ(wdata1, rdata1);
 
-        ByteArray rdata2 = ft.get(offset2);
-        ASSERT_EQ(wdata2, rdata2);
-
-    }
+    ByteArray rdata2 = ft.get(offset2);
+    ASSERT_EQ(wdata2, rdata2);
+  }
 }
 
 TEST_F(FieldTableTest, IteratorTest) {
-    {
-        FieldTable ft(filename);
+  {
+    FieldTable ft(filename);
 
-        ByteArray wdata1 = {4, 3, 2, 1};
-        file::offset_t offset1 = ft.append(wdata1);
+    ByteArray wdata1 = {4, 3, 2, 1};
+    file::offset_t offset1 = ft.append(wdata1);
 
-        ByteArray wdata2 = {5, 6, 7, 8};
-        file::offset_t offset2 = ft.append(wdata2);
+    ByteArray wdata2 = {5, 6, 7, 8};
+    file::offset_t offset2 = ft.append(wdata2);
 
-        ByteArray rdata1 = ft.get(offset1);
-        ASSERT_EQ(wdata1, rdata1);
+    ByteArray rdata1 = ft.get(offset1);
+    ASSERT_EQ(wdata1, rdata1);
 
-        ByteArray rdata2 = ft.get(offset2);
-        ASSERT_EQ(wdata2, rdata2);
+    ByteArray rdata2 = ft.get(offset2);
+    ASSERT_EQ(wdata2, rdata2);
 
-        int count = 0;
-        for (auto iter = ft.begin(); iter < ft.end(); iter++){
-            if (count == 0)
-                ASSERT_EQ(wdata1, *iter);
-            else if (count == 1) {
-                ASSERT_EQ(wdata2, *iter);
-                ASSERT_TRUE(++iter == ft.end());
-            }
-            count++;
-        }
-
-
+    int count = 0;
+    for (auto iter = ft.begin(); iter < ft.end(); iter++) {
+      if (count == 0)
+        ASSERT_EQ(wdata1, *iter);
+      else if (count == 1) {
+        ASSERT_EQ(wdata2, *iter);
+        ASSERT_TRUE(++iter == ft.end());
+      }
+      count++;
     }
+  }
 }
-
 }
 }

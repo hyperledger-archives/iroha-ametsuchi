@@ -31,11 +31,40 @@ include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
 
+set(AMETSUCHI_INCLUDE
+  include/ametsuchi/file/file.h
+  include/ametsuchi/file/rw_file.h
+  include/ametsuchi/file/rw_file_safe.h
+
+  include/ametsuchi/table/table.h
+  include/ametsuchi/table/field_table.h
+  include/ametsuchi/table/fixed_table.h
+
+  include/ametsuchi/ametsuchi.h
+  include/ametsuchi/cache.h
+  include/ametsuchi/comparator.h
+  include/ametsuchi/env.h
+  include/ametsuchi/exception.h
+  include/ametsuchi/globals.h
+  include/ametsuchi/serializer.h
+  include/ametsuchi/status.h
+  )
+
+set(AMETSUCHI_SRC
+  src/ametsuchi/file/file.cc
+  src/ametsuchi/file/rw_file.cc
+  src/ametsuchi/file/rw_file_safe.cc
+
+  src/ametsuchi/table/field_table.cc
+  src/ametsuchi/table/fixed_table.cc
+  src/ametsuchi/env.cc
+  )
+
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
 add_library(${LIBAMETSUCHI_NAME}
-  src/ametsuchi/file/file.cc
-  src/ametsuchi/table/field_table.cc
+  ${AMETSUCHI_INCLUDE}
+  ${AMETSUCHI_SRC}
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
   flatbuffers

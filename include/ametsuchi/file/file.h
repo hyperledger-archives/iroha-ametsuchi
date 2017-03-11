@@ -19,8 +19,9 @@
 #define AMETSUCHI_FILE_H
 
 #include <ametsuchi/globals.h>
+#include <spdlog/spdlog.h>
 #include <sys/stat.h>   //
-#include <sys/types.h>  // for stat
+#include <sys/types.h>  // for stat, access
 #include <unistd.h>     //
 #include <memory>
 #include <string>
@@ -39,13 +40,22 @@ inline bool is_valid(offset_t offset) {
   return offset != INVALID_OFFSET;
 }
 
+/**
+ * Abstraction over file operations:
+ *  - open
+ *  - read
+ *  - write
+ *  - close
+ *  - remove
+ *  - seek
+ */
 class File {
  public:
   explicit File(const std::string &path);
   virtual ~File() = 0;
 
   virtual bool open();
-  void         close();
+  void close();
 
   bool is_opened();
 
@@ -59,12 +69,30 @@ class File {
   void seek_to_start();
 
   offset_t position() const;
-  size_t   size() const;
+  size_t size() const;
 
   bool can_read();
   bool can_write();
 
+  std::string get_name();
+
+  /**
+   * Remove file.
+   * @return true if successfully, false otherwise
+   */
   bool remove();
+
+  /**
+   * Clears contents of file.
+   * @return true, if successfully, false otherwise
+   */
+  bool clear();
+
+  /**
+   * No need for file being opened.
+   * @return true if file exists.
+   */
+  bool exists() const;
 
   /**
    * Reads exactly \p size bytes from file at current cursor position.
@@ -84,8 +112,6 @@ class File {
   std::string path_;  // path to current file
   std::unique_ptr<FILE, decltype(&std::fclose)> file_;
 
-  struct stat statistics;  // https://linux.die.net/man/2/stat
-
  private:
   void seek_from_start(offset_t offset);
   void seek_from_current(offset_t offset);
@@ -93,39 +119,14 @@ class File {
 
 
 /**
- * ReadWriteFile is used to concurrently open as many files as you wish.
- * No locking, individual pointer.
+ * ROFile is used to concurrently open for read as many files as you wish.
+ *  - no locking
+ *  - individual cursor for each ROFile
  */
-class ReadOnlyFile : public File {
+class ROFile : public File {
  public:
-  explicit ReadOnlyFile(const std::string &path);
+  explicit ROFile(const std::string &path);
   bool open() override;
-};
-
-
-/**
- * ReadWriteFile is used to write to single file. Installs lock on this file.
- * Only one writer to file is possible.
- */
-class ReadWriteFile : public File {
-  // TODO(warchant): add file locking after open using flock or smth like this
- public:
-  explicit ReadWriteFile(const std::string &path);
-  bool open() override;
-
-  /**
-   * Appends \p data to the end of file.
-   * @param data
-   * @return offset, at which data is appended; -1 if not all data is appended
-   */
-  offset_t append(const ByteArray &data);
-
-  /**
-   * Writes \p data at current position.
-   * @param data
-   * @return number of written bytes
-   */
-  size_t write(const ByteArray &data);
 };
 
 

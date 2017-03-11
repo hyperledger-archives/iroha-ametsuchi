@@ -17,12 +17,13 @@
 
 #include <gtest/gtest.h>
 
+#include <ametsuchi/globals.h>
 #include <ametsuchi/table/fixed_table.h>
 #include <ametsuchi/table/table.h>
-#include <ametsuchi/globals.h>
 
 namespace ametsuchi {
 namespace table {
+
 
 class FileTest : public ::testing::Test {
  protected:
@@ -109,11 +110,11 @@ TEST_F(FileTest, AppendReplaceGetTest) {
   double d = 1234567e+89;
   auto idx = table.append(FB(A, i, d));
   auto fb1 = table.get(idx);
-  table.replace(FB(B, -i, -d), idx);
+  table.replace(FB(B, ~i, -d), idx);
   auto fb2 = table.get(idx);
 
   ASSERT_FBEQ_EMP(fb1, A, i, d);
-  i = -i; d = -d;
+  i = ~i; d = -d;
   ASSERT_FBEQ_EMP(fb2, B, i, d);
 }
 

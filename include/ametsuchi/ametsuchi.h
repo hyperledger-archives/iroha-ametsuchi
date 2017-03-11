@@ -18,9 +18,10 @@
 #ifndef AMETSUCHI_DB_H
 #define AMETSUCHI_DB_H
 
+#include <ametsuchi/env.h>
+#include <ametsuchi/globals.h>
+#include <ametsuchi/table/fixed_table.h>
 #include <string>
-#include "status.h"
-#include "tx_store.h"
 
 namespace ametsuchi {
 
@@ -31,13 +32,11 @@ namespace ametsuchi {
 template <typename T>
 class Ametsuchi {
  public:
-  Status open(const std::string& path);
-  Status close();
-
-  bool append(const T& tx);
-  T get(const ByteArray& tx_hash);
-
- private:
+  void open(std::shared_ptr<Env> env) {
+    // ENV is declared in "globals.h"
+    ENV = env;
+  }
+  void close();
 };
 }
 

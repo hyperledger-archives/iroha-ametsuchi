@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <string>
+#include <ametsuchi/file/rw_file.h>
 
 namespace ametsuchi {
 namespace table {
@@ -73,7 +74,7 @@ class FixedTable {
     assert(offset % (sizeof(T) + sizeof(Flag)) == FILE_PREFIX);
     return (offset - FILE_PREFIX) / (sizeof(T) + sizeof(Flag));
   }
-  file::ReadWriteFile file;
+  file::RWFile file;
 };
 
 

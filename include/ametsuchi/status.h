@@ -18,12 +18,34 @@
 #ifndef AMETSUCHI_STATUS_H
 #define AMETSUCHI_STATUS_H
 
-#include <string>
-#include <sstream>
+#include <ametsuchi/file/file.h>
 #include <iomanip>
+#include <sstream>
+#include <string>
 
 namespace ametsuchi {
 
+
+class Status {
+ public:
+  Status() : transaction_completed_(true), bytes_written_(0), offset_(0) {}
+
+  operator bool() { transaction_completed_; }
+
+  uint64_t written() { return bytes_written_; }
+
+  file::offset_t offset() { return offset_; }
+
+  friend class File;
+  friend class ROFile;
+  friend class RWFile;
+  friend class RWFileSafe;
+
+ private:
+  bool transaction_completed_;
+  uint64_t bytes_written_;
+  file::offset_t offset_;
+};
 
 /**
  * This function is used to dump any object into string. Consider it as

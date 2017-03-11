@@ -15,19 +15,23 @@
  * limitations under the License.
  */
 
-#pragma once
+#ifndef AMETSUCHI_GLOBALS_H_
+#define AMETSUCHI_GLOBALS_H_
 
+#include <ametsuchi/env.h>
+#include <ametsuchi/exception.h>
 #include <cstdint>
 #include <cstdlib>
 #include <cassert>
 #include <memory>
 #include <string>
 #include <vector>
-#include <ametsuchi/exception.h>
 
 namespace ametsuchi {
 
-using byte_t    = uint8_t;
+using byte_t = uint8_t;
 using ByteArray = std::vector<byte_t>;
 
 }
+
+#endif  // AMETSUCHI_GLOBALS_H_

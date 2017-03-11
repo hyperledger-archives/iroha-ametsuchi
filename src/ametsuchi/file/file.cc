@@ -17,8 +17,8 @@
 
 #include <ametsuchi/exception.h>
 #include <ametsuchi/file/file.h>
-#include <spdlog/spdlog.h>
-#include <cstdio>
+#include <sys/types.h>
+#include <unistd.h>
 
 namespace ametsuchi {
 namespace file {
@@ -33,13 +33,13 @@ File::File(const std::string &path)
 File::~File() {}
 
 bool File::open() {
+  struct stat statistics;  // https://linux.die.net/man/2/stat
   if (stat(path_.c_str(), &statistics) == -1) {
-    console->critical("can not get access to file " + path_);
+    console->debug("{} does not exist", path_);
     return false;
   }
-
   size_ = (size_t)(statistics.st_size);
-
+  console->debug("{} is opened, its size {}", path_, size_);
   return true;
 }
 
@@ -53,7 +53,10 @@ bool File::can_read() { return read_; }
 
 bool File::can_write() { return write_; }
 
-void File::close() { file_.reset(nullptr); }
+void File::close() {
+  file_.reset(nullptr);
+  size_ = 0;
+}
 
 void File::seek_from_current(offset_t offset) {
   std::fseek(file_.get(), offset, SEEK_CUR);
@@ -68,26 +71,57 @@ void File::seek_to_end() { std::fseek(file_.get(), 0, SEEK_END); }
 void File::seek_to_start() { rewind(file_.get()); }
 
 ByteArray File::read(size_t size) {
-  char buf[size];
-  auto res = std::fread(buf, sizeof(ametsuchi::byte_t), size, file_.get());
-
-  if (!res) ByteArray{};
-  return ByteArray{buf, buf + res};
+  ByteArray buf(size);
+  auto res = std::fread(&buf[0], sizeof(ametsuchi::byte_t), size, file_.get());
+  if (res != size) {
+    buf.resize(res);
+  }
+  return buf;
 }
 
-const std::string File::get_path() const {
-  return path_;
+const std::string File::get_path() const { return path_; }
+
+bool File::remove() {
+  close();
+  return 0 == unlink(path_.c_str());
 }
+
+
+void File::seek(offset_t offset) {
+  offset_t pos = position();
+  if (offset > pos) {
+    seek_from_current(offset - pos);
+    // } else if (offset < pos && pos - offset > offset) {
+    //   seek_from_current(pos - offset);
+  } else {
+    seek_from_start(offset);
+  }
+}
+
+
+bool File::clear() {
+  remove();
+  return open();
+}
+
+
+bool File::exists() const { return access(path_.c_str(), F_OK) != -1; }
+
+
+std::string File::get_name() {
+  return path_.data() + path_.rfind("/") + /* skip / before name */ 1;
+}
+
 
 ////////////////
 /// ReadOnlyFile
-ReadOnlyFile::ReadOnlyFile(const std::string &path) : File::File(path) {
-  read_  = true;
+ROFile::ROFile(const std::string &path) : File::File(path) {
+  read_ = true;
   write_ = false;
 }
 
 
-bool ReadOnlyFile::open() {
+bool ROFile::open() {
   // to read statistics
   bool opened = File::open();
 
@@ -95,67 +129,6 @@ bool ReadOnlyFile::open() {
   return !!file_ && opened;
 }
 
-
-/////////////////
-/// ReadWriteFile
-ReadWriteFile::ReadWriteFile(const std::string &path) : File::File(path) {
-  read_  = true;
-  write_ = true;
-}
-
-
-bool ReadWriteFile::open() {
-  file_.reset(std::fopen(path_.c_str(), "r+b"));
-  if (!file_.get()) {
-    file_.reset(std::fopen(path_.c_str(), "w+b"));
-  }
-  // to read statistics
-  bool opened = File::open();
-  return !!file_ && opened;
-}
-
-
-offset_t ReadWriteFile::append(const ByteArray &data) {
-  seek_to_end();
-
-  size_t old_fsize = size_;
-  size_t size      = data.size();
-
-  size_t written;
-  if ((written = write(data)) != size) {
-    console->critical("we write " + std::to_string(size) + "bytes, but " +
-                      std::to_string(written) + " written");
-    throw exception::IOError("ReadWriteFile::append");
-  }
-
-  return old_fsize;  // offset at which data is written
-}
-
-
-size_t ReadWriteFile::write(const ByteArray &data) {
-  auto res = std::fwrite(data.data(), sizeof(ametsuchi::byte_t), data.size(),
-                         file_.get());
-  std::fflush(file_.get());
-  size_ += res;
-  return res;
-}
-
-
-bool File::remove() {
-  close();
-  return 0 == unlink(path_.c_str());
-}
-
-void File::seek(offset_t offset) {
-  offset_t pos = position();
-  if (offset > pos) {
-    seek_from_current(offset - pos);
-  // } else if (offset < pos && pos - offset > offset) {
-  //   seek_from_current(pos - offset);
-  } else {
-    seek_from_start(offset);
-  }
-}
 
 }  // namespace file
 }  // namespace ametsuchi
