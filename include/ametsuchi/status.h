@@ -28,9 +28,7 @@ namespace ametsuchi {
 
 class Status {
  public:
-  Status() : transaction_completed_(true), bytes_written_(0), offset_(0) {}
-
-  operator bool() { transaction_completed_; }
+  operator bool() { return transaction_completed_; }
 
   uint64_t written() { return bytes_written_; }
 
@@ -42,6 +40,14 @@ class Status {
   friend class RWFileSafe;
 
  private:
+  /**
+   * Private constructor, so only File(s) can instantiate this object.
+   */
+  Status(bool tx_completed, uint64_t written, file::offset_t offset)
+      : transaction_completed_(tx_completed),
+        bytes_written_(written),
+        offset_(offset) {}
+
   bool transaction_completed_;
   uint64_t bytes_written_;
   file::offset_t offset_;

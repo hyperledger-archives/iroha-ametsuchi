@@ -30,16 +30,15 @@ static const auto EMPTY = ByteArray{};
 enum Flag : file::flag_t {
   INVALID = 0,
   REMOVED = 1,
-  VALID   = 2
+  VALID = 2
   // rest is reserved for future use
 };
 
-template<typename T>
+template <typename T>
 struct PACKED_STRUCT BaseRecord {
   file::flag_t flag;
   T data;
 };
-
 }
 
 /**
@@ -47,7 +46,7 @@ struct PACKED_STRUCT BaseRecord {
  */
 namespace serialize {
 
-template<typename T>
+template <typename T>
 using Record = table::BaseRecord<T>;
 
 template <typename T>
@@ -57,47 +56,46 @@ inline constexpr size_t size(const Record<T> &r) {
 
 // Names of the following methods should be changed
 // as in serializer.hpp with the resolving #33
-template<typename T>
-inline Record<T> getRecord(const void* src) {
+template <typename T>
+inline Record<T> getRecord(const void *src) {
   NON_TRIVIAL_CHECK;
-  return *(Record<T>*)src;
+  return *(Record<T> *)src;
 }
 
-template<typename T>
+template <typename T>
 inline void putRecord(ByteArray &dst, T r);
 
-template<typename T>
+template <typename T>
 inline void putRecord(ByteArray &dst, Record<T> &r) {
   NON_TRIVIAL_CHECK;
   size_t size = serialize::size(r.data);
-  auto& bytes = reinterpret_cast<byte_t(&)[size]>(r.data);
+  auto &bytes = reinterpret_cast<byte_t(&)[size]>(r.data);
   dst.push_back(r.flag);
   dst.insert(dst.end(), bytes, bytes + size);
 }
 
-template<typename T>
+template <typename T>
 inline void putRecord(ByteArray &dst, Record<T> &&r) {
   Record<T> m = std::move(r);
   putRecord(dst, m);
 }
 
-template<>
+template <>
 inline void putRecord(ByteArray &dst, Record<ByteArray> &r) {
   const auto size = serialize::size(r.data);
   dst.push_back(r.flag);
   auto bytes_left = sizeof(size);
-  for (byte_t *ptr = (byte_t*)&size; bytes_left-- != 0; ptr++) {
+  for (byte_t *ptr = (byte_t *)&size; bytes_left-- != 0; ptr++) {
     dst.push_back(*ptr);
   }
-  auto bytes = (byte_t*)r.data.data();
+  auto bytes = (byte_t *)r.data.data();
   dst.insert(dst.end(), bytes, bytes + size);
 }
 
-template<>
+template <>
 inline void putRecord(ByteArray &dst, Record<ByteArray> &&r) {
   Record<ByteArray> m = std::move(r);
   putRecord(dst, m);
 }
-
-}
-}
+}  // namespace serialize
+}  // namespace ametsuchi

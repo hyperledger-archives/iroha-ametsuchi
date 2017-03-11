@@ -30,11 +30,9 @@ class FieldTable {
  public:
   class ForwardIterator;
 
-  using Record = BaseRecord<ByteArray>;
+  explicit FieldTable(const std::string &path);
 
-  FieldTable(const std::string &path);
   ~FieldTable();
-
 
   /**
    * Appends value in the end in the following format:

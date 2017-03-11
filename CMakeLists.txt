@@ -56,7 +56,6 @@ set(AMETSUCHI_SRC
   src/ametsuchi/file/rw_file_safe.cc
 
   src/ametsuchi/table/field_table.cc
-  src/ametsuchi/table/fixed_table.cc
   src/ametsuchi/env.cc
   )
 

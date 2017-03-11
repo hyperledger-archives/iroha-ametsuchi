@@ -125,17 +125,18 @@ TEST_F(FileTest, GetFlagTest) {
 }
 
 TEST_F(FileTest, SetGetFlagsBatchTest) {
-  constexpr size_t num = 4096;
+  const size_t num = 4096;
   FixedTable<int> table(filename);
   file::offset_t idx = table.appendBatch(std::vector<int>(num, 0x12345678));
-  for (int i = 0; i < num; ++i) {
+  for (uint32_t i = 0; i < num; ++i) {
     ASSERT_EQ(table.getFlag(idx + i), Flag::VALID);
   }
 
-  for (int i = 0; i < num; i += 2) {
+  for (uint32_t i = 0; i < num; i += 2) {
     table.setFlag(i, Flag::REMOVED);
   }
-  for (int i = 0; i < num; ++i) {
+
+  for (uint32_t i = 0; i < num; ++i) {
     ASSERT_EQ(table.getFlag(idx + i), (i % 2 == 0 ? Flag::REMOVED : Flag::VALID));
   }
 }
