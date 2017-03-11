@@ -40,9 +40,9 @@ class BTreeIndexTest : public ::testing::Test {
 };
 
 const std::string dirname = "/tmp/test_dir";
+const int N = 500;
 
-
-TEST(BTreeIndexTest, SimpleInsertTest) {
+TEST(BTreeIndexTest, IntInsertTest) {
   {
     remove((dirname + "/data.mdb").c_str());
     remove((dirname + "/lock.mdb").c_str());
@@ -50,22 +50,22 @@ TEST(BTreeIndexTest, SimpleInsertTest) {
 
     struct stat st = {0};
 
+
     if (stat(dirname.c_str(), &st) == -1) {
       mkdir(dirname.c_str(), 0775);
     }
 
     BTreeIndex<int, int> btree(dirname);
-    std::vector<int> test_vals = {10, 20, 30, 40, 50};
-    for (int i = 0; i < test_vals.size(); i++) {
+    std::vector<int> test_vals;
+    for (int i = 0; i < N; i++) {
+      test_vals.push_back(i);
       btree.insert(i, std::move(test_vals[i]));
     }
 
-    test_vals = {10, 20, 30, 40, 50};
-    for (int i = 0; i < test_vals.size(); ++i) {
+    for (int i = 0; i < N; ++i) {
       int val = btree.get(i);
       ASSERT_EQ(val, test_vals[i]);
     }
-    printf("Simple insert test \n");
   }
 }
 
@@ -73,15 +73,14 @@ TEST(BTreeIndexTest, SimpleInsertTest) {
 TEST(BTreeIndexTest, IntGetTest) {
   {
     BTreeIndex<int, int> btree(dirname);
-
-    ASSERT_EQ(btree.get(0), 10);
-    ASSERT_EQ(btree.get(1), 20);
+    for (int i = 0; i < N; ++i) {
+      int val = btree.get(i);
+      ASSERT_EQ(val, i);
+    }
   }
 }
 
-
-
-TEST(BTreeIndexTest, ByteArrayTest) {
+TEST(BTreeIndexTest, ByteArrayInsertTest) {
   {
     remove((dirname + "/data.mdb").c_str());
     remove((dirname + "/lock.mdb").c_str());
@@ -103,13 +102,8 @@ TEST(BTreeIndexTest, ByteArrayTest) {
     a = 1;
     btree.insert(1, std::move(wdata2));
 
-    ASSERT_EQ(0, 0);
-
-
   }
 }
-
-
 
 TEST(BTreeIndexTest, ByteArrayGetTest) {
   {
@@ -129,6 +123,36 @@ TEST(BTreeIndexTest, ByteArrayGetTest) {
     ASSERT_EQ(btree.get(a), wdata1);
     a = 1;
     ASSERT_EQ(btree.get(a), wdata2);
+
+  }
+}
+
+TEST(BTreeIndexTest, BatchInsertTest) {
+  {
+    remove((dirname + "/data.mdb").c_str());
+    remove((dirname + "/lock.mdb").c_str());
+    rmdir(dirname.c_str());
+
+    struct stat st = {0};
+
+
+    if (stat(dirname.c_str(), &st) == -1) {
+      mkdir(dirname.c_str(), 0775);
+    }
+
+    BTreeIndex<int, int> btree(dirname);
+    std::vector<int> test_vals;
+    std::vector<int> test_keys;
+    for (int i = 0; i < N; i++) {
+      test_keys.push_back(i);
+      test_vals.push_back(i);
+    }
+    btree.insertBatch(test_keys, test_vals);
+
+    for (int i = 0; i < N; i++) {
+      int val = btree.get(i);
+      ASSERT_EQ(val, test_vals[i]);
+    }
 
   }
 }
