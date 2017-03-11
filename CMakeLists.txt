@@ -58,8 +58,6 @@ set(AMETSUCHI_SRC
   src/ametsuchi/table/field_table.cc
   src/ametsuchi/table/fixed_table.cc
   src/ametsuchi/env.cc
-
-  test/ametsuchi/file/rw_file_safe_test.cc
   )
 
 # Library.

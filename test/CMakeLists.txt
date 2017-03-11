@@ -3,11 +3,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin)
 AddTest(cache_test ametsuchi/cache_test.cc)
 
 AddTest(serialize_test ametsuchi/serialize_test.cc)
+target_link_libraries(serialize_test
+  PRIVATE spdlog
+  )
 
 AddTest(field_table_test ametsuchi/table/field_table_test.cc)
 target_link_libraries(field_table_test
-        PRIVATE ${LIBAMETSUCHI_NAME}
-        )
+  PRIVATE ${LIBAMETSUCHI_NAME}
+  )
 
 AddTest(comparator_test ametsuchi/comparator_test.cc)
 target_link_libraries(comparator_test

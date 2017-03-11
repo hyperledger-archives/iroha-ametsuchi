@@ -58,6 +58,7 @@ void Env::set_memory_limit(uint64_t limit) {
 
 Env& Env::get() {
   static Env e;
+  console->info("default database dir is {}", e.database_dir);
   mkdirectory(e.database_dir);
   mkdirectory(e.logs_dir);
   mkdirectory(e.index_dir);
