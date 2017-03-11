@@ -18,19 +18,21 @@
 #ifndef AMETSUCHI_FIXED_TABLE_H
 #define AMETSUCHI_FIXED_TABLE_H
 
-#include <ametsuchi/globals.h>
-#include <ametsuchi/table/table.h>
 #include <ametsuchi/file/file.h>
+#include <ametsuchi/globals.h>
 #include <ametsuchi/serializer.h>
+#include <ametsuchi/table/table.h>
 
+#include <ametsuchi/file/rw_file.h>
 #include <algorithm>
 #include <string>
-#include <ametsuchi/file/rw_file.h>
+#include <vector>
 
 namespace ametsuchi {
 namespace table {
 
 #define FILE_PREFIX 0
+// TODO(warchant): add doxygen documentation for interface!
 
 template <typename T>
 class FixedTable {
@@ -39,6 +41,7 @@ class FixedTable {
 
   using Record = BaseRecord<T>;
 
+  // TODO(warchant): pass RWFileSafe instead of path
   FixedTable(const std::string &path);
 
   file::offset_t append(const T &data);
@@ -63,8 +66,7 @@ class FixedTable {
   BidirIterator end();
 
  private:
-
-  void write(const std::vector<T>&);
+  void write(const std::vector<T> &);
 
   void seek(file::offset_t index) {
     file.seek(index * (sizeof(T) + sizeof(Flag)));
@@ -74,6 +76,7 @@ class FixedTable {
     assert(offset % (sizeof(T) + sizeof(Flag)) == FILE_PREFIX);
     return (offset - FILE_PREFIX) / (sizeof(T) + sizeof(Flag));
   }
+
   file::RWFile file;
 };
 
@@ -86,7 +89,9 @@ class FixedTable<T>::BidirIterator {
   BidirIterator(const BidirIterator &it);
   bool operator==(const BidirIterator &it);
   bool operator<(const BidirIterator &it);
+  bool operator<=(const BidirIterator &it);
   bool operator>(const BidirIterator &it);
+  bool operator>=(const BidirIterator &it);
   T operator*();
   BidirIterator &operator++();    // postfix++
   BidirIterator operator++(int);  // ++prefix

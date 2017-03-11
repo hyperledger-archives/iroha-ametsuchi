@@ -20,8 +20,9 @@
 namespace ametsuchi {
 namespace table {
 
+// TODO(warchant): pass RWFileSafe instead of path?
 FieldTable::FieldTable(const std::string &p)
-    : file_size(0), f_(new file::RWFile(p)) {
+    : f_(new file::RWFile(p)), file_size(0) {
   if (!f_->open()) throw exception::IOError("FieldTable::" + p);
 }
 
@@ -30,10 +31,16 @@ FieldTable::~FieldTable() {}
 
 
 file::offset_t FieldTable::append(const ByteArray &data) {
+  // TODO(warchant): return Status object
   // current size = offset to new record
-  size_t offset = f_->size();
-  ByteArray buf;
-  serialize::putRecord(buf, Record{Flag::VALID, data});
+  file::offset_t offset = f_->size();
+
+  constexpr auto header_size = sizeof(Flag) + sizeof(uint64_t);
+  ByteArray buf(header_size + data.size());
+  byte_t *ptr = buf.data();
+
+  serialize::put(ptr, Flag::VALID);
+  serialize::put(ptr, data);
 
   f_->append(buf);
 
@@ -42,21 +49,24 @@ file::offset_t FieldTable::append(const ByteArray &data) {
 
 
 ByteArray FieldTable::get(const file::offset_t offset) {
-  if (offset > f_->size()) return EMPTY;  // wrong offset
+  // TODO(warchant): return Status object
+  if (offset > (file::offset_t)f_->size()) return EMPTY;  // wrong offset
 
   f_->seek(offset);
 
-  Record r;
-  ByteArray header = f_->read(sizeof(file::flag_t) + sizeof(uint64_t));
+  constexpr auto header_size = sizeof(file::flag_t) + sizeof(uint64_t);
+  ByteArray header = f_->read(header_size);
 
-  if (header.size() != 9) {
+  if (header.size() != header_size) {
     return EMPTY;  // wrong offset or no data
   }
 
   const byte_t *ptr = header.data();
-  serialize::get(&r.flag, ptr);
 
-  switch (r.flag) {
+  Flag flag;
+  serialize::get(&flag, ptr);
+
+  switch (flag) {
     case Flag::REMOVED: {
       return EMPTY;  // byte array of size 0
     }
@@ -77,14 +87,18 @@ ByteArray FieldTable::get(const file::offset_t offset) {
 
 
 bool FieldTable::remove(const file::offset_t offset) {
-  if (offset > f_->size()) return false;
+  // TODO(warchant): return Status object
+  if (offset > (file::offset_t)f_->size()) return false;
   f_->seek(offset);
-  return sizeof(Record) == f_->write(ByteArray{Flag::REMOVED});
+  return sizeof(file::flag_t) == f_->write(ByteArray{Flag::REMOVED});
 }
 
 file::offset_t FieldTable::update(const file::offset_t offset,
                                   const ByteArray &new_value) {
-  if (offset > f_->size()) return false;
+  // TODO(warchant): return Status object
+  if (offset > (file::offset_t)f_->size()) {
+    throw exception::IOError("offset > filesize");
+  }
   remove(offset);
   return append(new_value);
 }
@@ -95,9 +109,7 @@ std::string FieldTable::path() { return f_->get_path(); }
 /**
  * 1. ensure we have enough on-disk memory to perform compaction
  */
-void FieldTable::compact() {
-
-}
+void FieldTable::compact() {}
 
 
 //////////////////////////
@@ -131,8 +143,6 @@ FieldTable::ForwardIterator::ForwardIterator(
 
 
 FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
-  // bad solution. better is to std::serialize(Record). But do we need to create
-  // Record object?
   offset_ += serialize::size(value_) + sizeof(file::flag_t) + sizeof(uint64_t);
   value_ = ft_.get(offset_);
   return *this;
@@ -141,8 +151,6 @@ FieldTable::ForwardIterator &FieldTable::ForwardIterator::operator++() {
 
 FieldTable::ForwardIterator FieldTable::ForwardIterator::operator++(int) {
   ForwardIterator iterator(*this);
-  // bad solution. better is to std::serialize(Record). But do we need to create
-  // Record object?
   offset_ += serialize::size(value_) + sizeof(file::flag_t) + sizeof(uint64_t);
   value_ = ft_.get(offset_);
   return iterator;
