@@ -2,6 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/hyperledger/iroha-ametsuchi/tree/master.svg?style=svg)](https://circleci.com/gh/hyperledger/iroha-ametsuchi/tree/master)
 
+[![Travis CI](https://travis-ci.org/hyperledger/iroha-ametsuchi.svg?branch=master)](https://travis-ci.org/hyperledger/iroha-ametsuchi)
+
 # iroha-ametsuchi
 Flatbuffer database for the Hyperledger Iroha project.
 

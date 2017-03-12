@@ -58,6 +58,7 @@ install:
     fi
 
 script:
+  - cd "${TRAVIS_BUILD_DIR}"
   - mkdir build; cd build
   - export CC=$COMPILERCC; export CXX=$COMPILERCXX
   - cmake .. && make && ctest
