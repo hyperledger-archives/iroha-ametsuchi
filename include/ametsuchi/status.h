@@ -24,35 +24,6 @@
 #include <string>
 
 namespace ametsuchi {
-
-
-class Status {
- public:
-  operator bool() { return transaction_completed_; }
-
-  uint64_t written() { return bytes_written_; }
-
-  file::offset_t offset() { return offset_; }
-
-  friend class File;
-  friend class ROFile;
-  friend class RWFile;
-  friend class RWFileSafe;
-
- private:
-  /**
-   * Private constructor, so only File(s) can instantiate this object.
-   */
-  Status(bool tx_completed, uint64_t written, file::offset_t offset)
-      : transaction_completed_(tx_completed),
-        bytes_written_(written),
-        offset_(offset) {}
-
-  bool transaction_completed_;
-  uint64_t bytes_written_;
-  file::offset_t offset_;
-};
-
 /**
  * This function is used to dump any object into string. Consider it as
  * implementation if toString() method.

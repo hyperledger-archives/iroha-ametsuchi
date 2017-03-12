@@ -36,10 +36,6 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/file/rw_file.h
   include/ametsuchi/file/rw_file_safe.h
 
-  include/ametsuchi/table/table.h
-  include/ametsuchi/table/field_table.h
-  include/ametsuchi/table/fixed_table.h
-
   include/ametsuchi/ametsuchi.h
   include/ametsuchi/cache.h
   include/ametsuchi/comparator.h
@@ -55,7 +51,6 @@ set(AMETSUCHI_SRC
   src/ametsuchi/file/rw_file.cc
   src/ametsuchi/file/rw_file_safe.cc
 
-  src/ametsuchi/table/field_table.cc
   src/ametsuchi/env.cc
   )
 
