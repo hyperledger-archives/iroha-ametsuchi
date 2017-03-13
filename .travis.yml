@@ -13,8 +13,8 @@ matrix:
           sources: ['ubuntu-toolchain-r-test']
           packages: ['gcc-5', 'g++-5', 'xsltproc', 'libgtest-dev']
       env:
-        - COMPILERCC=gcc-5
-        - COMPILERCXX=g++-5
+        - CC=gcc-5
+        - CXX=g++-5
 
     - os: linux
       dist: trusty
@@ -24,21 +24,21 @@ matrix:
           sources: ['llvm-toolchain-trusty-4.0']
           packages: ['clang-4.0', 'xsltproc', 'libgtest-dev']
       env:
-        - COMPILERCC=clang-4.0
-        - COMPILERCXX=clang++-4.0
+        - CC=clang-4.0
+        - CXX=clang++-4.0
 
 
     - os: osx
       compiler: gcc
       env:
-        - COMPILERCC=gcc
-        - COMPILERCXX=g++
+        - CC=gcc
+        - CXX=g++
 
     - os: osx
       compiler: clang
       env:
-        - COMPILERCC=clang
-        - COMPILERCXX=clang++
+        - CC=clang
+        - CXX=clang++
 
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
@@ -60,5 +60,5 @@ install:
 script:
   - cd "${TRAVIS_BUILD_DIR}"
   - mkdir build; cd build
-  - export CC=$COMPILERCC; export CXX=$COMPILERCXX
-  - cmake .. && make && ctest
+  - cmake .. && make
+  - ctest --verbose --output-on-failure
