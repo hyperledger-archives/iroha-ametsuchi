@@ -22,21 +22,18 @@ namespace tx_store {
 
 using file::offset_t;
 
-Index::Index(const std::string &path)
-  : file_(path) {
-  file_.open();
-  // Append zero if the file is new
-  if (!file_.size()){
-    append(0);
-  }
-}
+Index::Index(const std::string &path) : Index(path, 1024){}
 
 file::offset_t Index::get(std::size_t n) {
+
+
   file_.seek(n * sizeof(offset_t));
   return *reinterpret_cast<offset_t*>(file_.read(sizeof(offset_t)).data());
+
 }
 
-std::size_t Index::append(const file::offset_t offset) {
+std::size_t Index::append(file::offset_t offset) {
+
   auto ptr = reinterpret_cast<const byte_t*>(&offset);
   // TODO remove ByteArray intermediate object
   file_.append(ByteArray{ptr, ptr + sizeof(offset_t)});
@@ -45,6 +42,17 @@ std::size_t Index::append(const file::offset_t offset) {
 
 std::size_t Index::size() const {
   return file_.size() / sizeof(offset_t);
+}
+void Index::set_cache_size(std::size_t cache_size) {
+  cache.setMaxCacheSize(cache_size);
+}
+Index::Index(const std::string &path, const std::size_t inMemSize): file_(path), cache(inMemSize) {
+  file_.open();
+  inMemData.reserve(inMemSize);
+  // Append zero if the file is new
+  if (!file_.size()){
+    append(0);
+  }
 }
 
 }  // namespace tx_store

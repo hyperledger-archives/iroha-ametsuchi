@@ -21,6 +21,7 @@
 #include <string>
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/file/rw_file.h>
+#include <ametsuchi/cache.h>
 
 namespace ametsuchi {
 namespace tx_store {
@@ -37,6 +38,15 @@ class Index {
   Index(const std::string &path);
 
   /**
+   * **
+   * Open (create if not exists) index in given path
+   * @param path index file path
+   * @param inMemSize Max size of index to store in-memory
+   */
+  Index(const std::string &path, const std::size_t inMemSize);
+
+
+  /**
    * Get nth element
    * @param n requested element index
    * @return offset of element
@@ -48,7 +58,7 @@ class Index {
    * @param offset given offset to append
    * @return index of appended element (size() - 1 ?)
    */
-  std::size_t append(const file::offset_t offset);
+  std::size_t append(file::offset_t offset);
 
   /**
    * Size of the index
@@ -56,10 +66,18 @@ class Index {
    */
   std::size_t size() const;
 
+  /**
+   * Set size for in_mem cache
+   * @param cache_size
+   */
+  void set_cache_size(std::size_t cache_size);
+
   // TODO removal?
 
  private:
   file::RWFile file_;
+  Cache<std::size_t , file::offset_t > cache;
+  std::vector<file::offset_t> inMemData;
 };
 
 }  // namespace tx_store
