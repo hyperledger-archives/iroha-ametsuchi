@@ -44,7 +44,7 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
   const int N = 10000;
   ByteArray test_set[N];
   for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < i + 2; ++j) {
+    for (int j = 0; j < 500; ++j) {
       test_set[i].push_back(1);
     }
     array_.append(test_set[i]);
@@ -53,7 +53,8 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
 
   int i = 0;
   auto end = array_.end();
-  for (auto it = array_.begin();it < end; it++) {
+  auto begin = array_.begin();
+  for (auto it = begin;it < end; it++) {
     ASSERT_EQ(test_set[i], *it);
     i++;
   }
@@ -64,7 +65,7 @@ TEST_F(TXStoreIteratorTest, MultiGetTest) {
   const int N = 10000;
   ByteArray test_set[N];
   for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < i + 2; ++j) {
+    for (int j = 0; j < 500; ++j) {
       test_set[i].push_back(1);
     }
     array_.append(test_set[i]);

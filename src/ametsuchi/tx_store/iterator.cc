@@ -25,76 +25,67 @@ namespace tx_store {
 
 Array::RandomAccessIterator::RandomAccessIterator(Array &array)
     : array_(array), n_(0) {
-  value_ = array_.get(n_);
-
 }
 
 Array::RandomAccessIterator::RandomAccessIterator(Array &array,
                                                   std::size_t n)
     :array_(array), n_(n)  {
-  value_ = array_.get(n_);
+
 }
 
 Array::RandomAccessIterator::RandomAccessIterator(const RandomAccessIterator &it)
     :array_(it.array_), n_(it.n_), value_(it.value_) {}
 
 ByteArray& Array::RandomAccessIterator::operator*() {
+  value_ = array_.get(n_);
   return value_;
 }
 
 Array::RandomAccessIterator& Array::RandomAccessIterator::operator++() {
   RandomAccessIterator iterator(*this);
   n_ += 1;
-  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator++(int) {
   RandomAccessIterator iterator(*this);
   n_ += 1;
-  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator& Array::RandomAccessIterator::operator--() {
   RandomAccessIterator iterator(*this);
   n_ -= 1;
-  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator--(int) {
   RandomAccessIterator iterator(*this);
   n_ -= 1;
-  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator &Array::RandomAccessIterator::operator+=(const int& n) {
   RandomAccessIterator iterator(*this);
   n_ += n;
-  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator &Array::RandomAccessIterator::operator-=(const int &n) {
   RandomAccessIterator iterator(*this);
   n_ -= n;
-  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator-(const int &n) {
   RandomAccessIterator iterator(*this);
   n_ -= n;
-  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator+(const int &n) {
   RandomAccessIterator iterator(*this);
   n_ += n;
-  value_ = array_.get(n_);
   return iterator;
 }
 
