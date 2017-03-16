@@ -27,8 +27,8 @@ Array::Array(const std::string &path)
 }
 
 std::size_t Array::append(const ByteArray &data) {
-
-  return index_.append(file_.append(data));
+  file_.append(data);
+  return index_.append(file_.size()) - 1;
 }
 
 ByteArray Array::get(const std::size_t n) {

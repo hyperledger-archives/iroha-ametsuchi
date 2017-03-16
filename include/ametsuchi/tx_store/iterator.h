@@ -32,22 +32,22 @@ class Array::RandomAccessIterator {
   bool operator<(const Array::RandomAccessIterator &it);
   bool operator>(const Array::RandomAccessIterator &it);
   ByteArray &operator*();
-   RandomAccessIterator &operator++();
+  RandomAccessIterator &operator++();
   RandomAccessIterator operator++(int);
   RandomAccessIterator &operator--();
-  RandomAccessIterator operator--(int); 
-  RandomAccessIterator&operator+=(const int& n);
-  RandomAccessIterator& operator-=(const int& n);
-  RandomAccessIterator operator-(const int& n);
-  RandomAccessIterator operator+(const int& n);
+  RandomAccessIterator operator--(int);
+  RandomAccessIterator &operator+=(const int &n);
+  RandomAccessIterator &operator-=(const int &n);
+  RandomAccessIterator operator-(const int &n);
+  RandomAccessIterator operator+(const int &n);
 
- protected: 
-  Array &ft_; 
-  std::size_t offset_; 
+ protected:
+  Array &ft_;
+  std::size_t offset_;
   ByteArray value_;
 };
 
 }  // namespace tx_store
 }  // namespace ametsuchi
 
-#endif //AMETSUCHI_ITERATOR_H
+#endif  // AMETSUCHI_ITERATOR_H

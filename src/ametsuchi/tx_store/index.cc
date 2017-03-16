@@ -26,6 +26,9 @@ Index::Index(const std::string &path)
   : file_(path) {
   file_.open();
   // Append zero if the file is new
+  if (!file_.size()){
+    append(0);
+  }
 }
 
 file::offset_t Index::get(std::size_t n) {
