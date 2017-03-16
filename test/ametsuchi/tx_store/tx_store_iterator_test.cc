@@ -52,7 +52,8 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
 
 
   int i = 0;
-  for (auto it = array_.begin();it < array_.end(); it++) {
+  auto end = array_.end();
+  for (auto it = array_.begin();it < end; it++) {
     ASSERT_EQ(test_set[i], *it);
     i++;
   }
@@ -60,7 +61,7 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
 }
 
 TEST_F(TXStoreIteratorTest, MultiGetTest) {
-  const int N = 1000;
+  const int N = 10000;
   ByteArray test_set[N];
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < i + 2; ++j) {
