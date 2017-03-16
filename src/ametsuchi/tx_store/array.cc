@@ -34,7 +34,6 @@ std::size_t Array::append(const ByteArray &data) {
 ByteArray Array::get(const std::size_t n) {
   auto offset_ = index_.get(n);
   size_t size = index_.get(n+1) - offset_;
-  printf("Size is %d \n",size);
   file_.seek(offset_);
   return file_.read(size);
 }

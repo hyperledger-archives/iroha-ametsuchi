@@ -24,19 +24,19 @@ namespace tx_store {
 // Iterator
 
 Array::RandomAccessIterator::RandomAccessIterator(Array &array)
-    : ft_(array), offset_(0) {
-  value_ = ft_.get(ft_.index_.get(offset_));
+    : array_(array), n_(0) {
+  value_ = array_.get(n_);
 
 }
 
 Array::RandomAccessIterator::RandomAccessIterator(Array &array,
-                                                  std::size_t offset)
-    :ft_(array), offset_(offset)  {
-  value_ = ft_.get(ft_.index_.get(offset_));
+                                                  std::size_t n)
+    :array_(array), n_(n)  {
+  value_ = array_.get(n_);
 }
 
 Array::RandomAccessIterator::RandomAccessIterator(const RandomAccessIterator &it)
-    :ft_(it.ft_), offset_(it.offset_), value_(it.value_) {}
+    :array_(it.array_), n_(it.n_), value_(it.value_) {}
 
 ByteArray& Array::RandomAccessIterator::operator*() {
   return value_;
@@ -44,70 +44,70 @@ ByteArray& Array::RandomAccessIterator::operator*() {
 
 Array::RandomAccessIterator& Array::RandomAccessIterator::operator++() {
   RandomAccessIterator iterator(*this);
-  offset_ += 1;
-  value_ = ft_.get(ft_.index_.get(offset_));
+  n_ += 1;
+  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator++(int) {
   RandomAccessIterator iterator(*this);
-  offset_ += 1;
-  value_ = ft_.get(ft_.index_.get(offset_));
+  n_ += 1;
+  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator& Array::RandomAccessIterator::operator--() {
   RandomAccessIterator iterator(*this);
-  offset_ -= 1;
-  value_ = ft_.get(ft_.index_.get(offset_));
+  n_ -= 1;
+  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator--(int) {
   RandomAccessIterator iterator(*this);
-  offset_ -= 1;
-  value_ = ft_.get(ft_.index_.get(offset_));
+  n_ -= 1;
+  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator &Array::RandomAccessIterator::operator+=(const int& n) {
   RandomAccessIterator iterator(*this);
-  offset_ += n;
-  value_ = ft_.get(ft_.index_.get(offset_));
+  n_ += n;
+  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator &Array::RandomAccessIterator::operator-=(const int &n) {
   RandomAccessIterator iterator(*this);
-  offset_ -= n;
-  value_ = ft_.get(ft_.index_.get(offset_));
+  n_ -= n;
+  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator-(const int &n) {
   RandomAccessIterator iterator(*this);
-  offset_ -= n;
-  value_ = ft_.get(ft_.index_.get(offset_));
+  n_ -= n;
+  value_ = array_.get(n_);
   return iterator;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator+(const int &n) {
   RandomAccessIterator iterator(*this);
-  offset_ += n;
-  value_ = ft_.get(ft_.index_.get(offset_));
+  n_ += n;
+  value_ = array_.get(n_);
   return iterator;
 }
 
 bool Array::RandomAccessIterator::operator<(const Array::RandomAccessIterator &it) {
-  return offset_ < it.offset_;
+  return n_ < it.n_;
 }
 
 bool Array::RandomAccessIterator::operator==(const Array::RandomAccessIterator &it) {
-  return offset_ == it.offset_;
+  return n_ == it.n_;
 }
 
 bool Array::RandomAccessIterator::operator>(const Array::RandomAccessIterator &it) {
-  return offset_ > it.offset_;
+  return n_ > it.n_;
 }
 
 Array::RandomAccessIterator Array::begin() {
@@ -115,7 +115,7 @@ Array::RandomAccessIterator Array::begin() {
 }
 
 Array::RandomAccessIterator Array::end() {
-  return RandomAccessIterator(*this, file_.size());
+  return RandomAccessIterator(*this, index_.size() - 2);
 }
 
 

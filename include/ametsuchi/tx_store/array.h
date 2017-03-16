@@ -54,7 +54,7 @@ class Array {
    * @param offset offset of ByteArray
    * @return requested ByteArray
    */
-  ByteArray get(const std::size_t offset);
+  ByteArray get(const std::size_t n);
 
   RandomAccessIterator begin();
 

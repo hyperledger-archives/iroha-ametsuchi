@@ -41,10 +41,10 @@ class TXStoreIteratorTest : public ::testing::Test {
 };
 
 TEST_F(TXStoreIteratorTest, ArrayIterator) {
-  const int N = 10;
+  const int N = 5;
   ByteArray test_set[N];
   for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < i + 2; ++j) {
+    for (byte_t j = 0; j < i + 2; ++j) {
       test_set[i].push_back(j);
     }
     array_.append(test_set[i]);
@@ -54,7 +54,6 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
   int i = 0;
   for (auto it = array_.begin();it < array_.end(); it++) {
     ASSERT_EQ(test_set[i], *it);
-    printf(" i %d  is norm \n", i);
     i++;
   }
 

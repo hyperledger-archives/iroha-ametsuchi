@@ -42,7 +42,6 @@ TEST_F(TXStoreTest, ArrayIndex) {
   ByteArray a1 = {1, 2, 3}, a2 = {2, 3, 4};
   auto i1 = array_.append(a1);
   auto i2 = array_.append(a2);
-  printf("Append ok %d %d \n", i1, i2);
   ByteArray at1 = array_.get(i1),
     at2 = array_.get(i2);
 

@@ -42,8 +42,8 @@ class Array::RandomAccessIterator {
   RandomAccessIterator operator+(const int &n);
 
  protected:
-  Array &ft_;
-  std::size_t offset_;
+  Array &array_;
+  std::size_t n_;
   ByteArray value_;
 };
 
