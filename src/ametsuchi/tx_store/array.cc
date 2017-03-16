@@ -16,22 +16,30 @@
  */
 
 #include <ametsuchi/tx_store/array.h>
+#include <ametsuchi/serializer.h>
 
 namespace ametsuchi {
 namespace tx_store {
 
 Array::Array(const std::string &path)
-  : file_(path){ }
+  : file_(path){
+  file_.open();
+}
 
 file::offset_t Array::append(const ByteArray &data) {
-  return file_.append(data);
+  ByteArray buffer(serialize::size(data));
+  auto buffer_ptr = buffer.data();
+  serialize::put(buffer_ptr, data);
+  return file_.append(buffer);
 }
 
 ByteArray Array::get(const file::offset_t offset) {
   file_.seek(offset);
-  auto size = *reinterpret_cast<size_t*>(file_.read(sizeof(size_t)).data());
+  size_t size;
+  auto buffer = file_.read(serialize::size(size));
+  const byte_t *buffer_ptr = buffer.data();
+  serialize::get(&size, buffer_ptr);
   return file_.read(size);
-
 }
 
 }  // namespace tx_store

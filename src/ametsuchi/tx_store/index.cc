@@ -23,10 +23,13 @@ namespace tx_store {
 using file::offset_t;
 
 Index::Index(const std::string &path)
-  : file_(path) { }
+  : file_(path) {
+  file_.open();
+}
 
 file::offset_t Index::get(std::size_t n) {
-  return *reinterpret_cast<offset_t*>(file_.read(n * sizeof(offset_t)).data());
+  file_.seek(n * sizeof(offset_t));
+  return *reinterpret_cast<offset_t*>(file_.read(sizeof(offset_t)).data());
 }
 
 std::size_t Index::append(const file::offset_t offset) {
