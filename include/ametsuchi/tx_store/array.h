@@ -64,6 +64,7 @@ class Array {
   // TODO separate write/read logic?
   file::RWFile file_;
   Index index_;
+//  Cache<std::size_t, ByteArray> cache_;
 
 };
 

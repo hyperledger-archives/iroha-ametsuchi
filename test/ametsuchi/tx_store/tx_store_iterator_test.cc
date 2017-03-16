@@ -41,7 +41,7 @@ class TXStoreIteratorTest : public ::testing::Test {
 };
 
 TEST_F(TXStoreIteratorTest, ArrayIterator) {
-  const int N = 10000;
+  const int N = 100000;
   ByteArray test_set[N];
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < 500; ++j) {
@@ -52,17 +52,15 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
 
 
   int i = 0;
-  auto end = array_.end();
-  auto begin = array_.begin();
-  for (auto it = begin;it < end; it++) {
-    ASSERT_EQ(test_set[i], *it);
+  for (auto j : array_) {
+    ASSERT_EQ(test_set[i], j);
     i++;
   }
 
 }
 
 TEST_F(TXStoreIteratorTest, MultiGetTest) {
-  const int N = 10000;
+  const int N = 100000;
   ByteArray test_set[N];
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < 500; ++j) {
@@ -80,7 +78,7 @@ TEST_F(TXStoreIteratorTest, MultiGetTest) {
 
 
 TEST_F(TXStoreIteratorTest, BackIterator) {
-  const int N = 5;
+  /*const int N = 5;
   ByteArray test_set[N];
   for (int i = 0; i < N; ++i) {
     for (byte_t j = 0; j < i + 2; ++j) {
@@ -90,10 +88,10 @@ TEST_F(TXStoreIteratorTest, BackIterator) {
   }
 
   int i = N-1;
-  for (auto it = array_.end();it > array_.begin(); it--) {
+  for (auto it = array_.end() - 1; it >= array_.begin(); it--) {
     ASSERT_EQ(test_set[i], *it);
     i-=1;
-  }
+  }*/
 
 }
 

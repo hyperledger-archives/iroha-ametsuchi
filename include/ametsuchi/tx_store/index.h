@@ -76,8 +76,9 @@ class Index {
 
  private:
   file::RWFile file_;
-  Cache<std::size_t , file::offset_t > cache;
+//  Cache<std::size_t , file::offset_t> cache_;
   std::vector<file::offset_t> inMemData;
+  std::size_t size_;
 };
 
 }  // namespace tx_store
