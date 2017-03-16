@@ -19,3 +19,6 @@ target_link_libraries(rw_file_safe_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(tx_store_test ametsuchi/tx_store/tx_store_test.cc)
 target_link_libraries(tx_store_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+AddTest(tx_store_iterator_test ametsuchi/tx_store/tx_store_iterator_test.cc)
+target_link_libraries(tx_store_iterator_test PRIVATE ${LIBAMETSUCHI_NAME})

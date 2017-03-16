@@ -21,6 +21,7 @@
 #include <string>
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/file/rw_file.h>
+#include <ametsuchi/tx_store/index.h>
 
 namespace ametsuchi {
 namespace tx_store {
@@ -30,6 +31,11 @@ namespace tx_store {
  */
 class Array {
  public:
+
+  class RandomAccessIterator;
+
+
+
   /**
    * Open (create if not exists) array in given path
    * @param path array file path
@@ -41,18 +47,24 @@ class Array {
    * @param data ByteArray to append
    * @return offset of appended ByteArray
    */
-  file::offset_t append(const ByteArray &data);
+  std::size_t append(const ByteArray &data);
 
   /**
    * Get ByteArray by offset
    * @param offset offset of ByteArray
    * @return requested ByteArray
    */
-  ByteArray get(const file::offset_t offset);
+  ByteArray get(const std::size_t offset);
+
+  RandomAccessIterator begin();
+
+  RandomAccessIterator end();
 
  private:
   // TODO separate write/read logic?
   file::RWFile file_;
+  Index index_;
+
 };
 
 }  // namespace tx_store

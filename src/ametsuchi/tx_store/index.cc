@@ -25,6 +25,7 @@ using file::offset_t;
 Index::Index(const std::string &path)
   : file_(path) {
   file_.open();
+  // Append zero if the file is new
 }
 
 file::offset_t Index::get(std::size_t n) {

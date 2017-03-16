@@ -18,13 +18,15 @@
 #include <gtest/gtest.h>
 #include <ametsuchi/tx_store/array.h>
 #include <ametsuchi/tx_store/index.h>
+#include <ametsuchi/tx_store/iterator.h>
+
 
 namespace ametsuchi {
 namespace tx_store {
 
-class TXStoreTest : public ::testing::Test {
+class TXStoreIteratorTest : public ::testing::Test {
  protected:
-  TXStoreTest() : array_(array_path) {}
+  TXStoreIteratorTest() : array_(array_path), index_(index_path) {}
 
   virtual void TearDown() {
     remove(array_path.c_str());
@@ -32,22 +34,30 @@ class TXStoreTest : public ::testing::Test {
   }
 
   const std::string array_path = "/tmp/array",
-    index_path = array_path+"_index";
+      index_path = "/tmp/array_index";
 
   Array array_;
-
+  Index index_;
 };
 
-TEST_F(TXStoreTest, ArrayIndex) {
-  ByteArray a1 = {1, 2, 3}, a2 = {2, 3, 4};
-  auto i1 = array_.append(a1);
-  auto i2 = array_.append(a2);
-  printf("Append ok %d %d \n", i1, i2);
-  ByteArray at1 = array_.get(i1),
-    at2 = array_.get(i2);
+TEST_F(TXStoreIteratorTest, ArrayIterator) {
+  const int N = 10;
+  ByteArray test_set[N];
+  for (int i = 0; i < N; ++i) {
+    for (int j = 0; j < i + 2; ++j) {
+      test_set[i].push_back(j);
+    }
+    array_.append(test_set[i]);
+  }
 
-  ASSERT_EQ(a1, at1);
-  ASSERT_EQ(a2, at2);
+
+  int i = 0;
+  for (auto it = array_.begin();it < array_.end(); it++) {
+    ASSERT_EQ(test_set[i], *it);
+    printf(" i %d  is norm \n", i);
+    i++;
+  }
+
 }
 
 }  // namespace tx_store

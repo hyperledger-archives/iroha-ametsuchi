@@ -22,23 +22,20 @@ namespace ametsuchi {
 namespace tx_store {
 
 Array::Array(const std::string &path)
-  : file_(path){
+  : file_(path), index_(path+"_index"){
   file_.open();
 }
 
-file::offset_t Array::append(const ByteArray &data) {
-  ByteArray buffer(serialize::size(data));
-  auto buffer_ptr = buffer.data();
-  serialize::put(buffer_ptr, data);
-  return file_.append(buffer);
+std::size_t Array::append(const ByteArray &data) {
+
+  return index_.append(file_.append(data));
 }
 
-ByteArray Array::get(const file::offset_t offset) {
-  file_.seek(offset);
-  size_t size;
-  auto buffer = file_.read(serialize::size(size));
-  const byte_t *buffer_ptr = buffer.data();
-  serialize::get(&size, buffer_ptr);
+ByteArray Array::get(const std::size_t n) {
+  auto offset_ = index_.get(n);
+  size_t size = index_.get(n+1) - offset_;
+  printf("Size is %d \n",size);
+  file_.seek(offset_);
   return file_.read(size);
 }
 

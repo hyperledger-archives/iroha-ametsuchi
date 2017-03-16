@@ -47,6 +47,7 @@ set(AMETSUCHI_INCLUDE
 
   include/ametsuchi/tx_store/array.h
   include/ametsuchi/tx_store/index.h
+  include/ametsuchi/tx_store/iterator.h
   )
 
 set(AMETSUCHI_SRC
@@ -58,6 +59,7 @@ set(AMETSUCHI_SRC
 
   src/ametsuchi/tx_store/array.cc
   src/ametsuchi/tx_store/index.cc
+  src/ametsuchi/tx_store/iterator.cc
   )
 
 # Library.
