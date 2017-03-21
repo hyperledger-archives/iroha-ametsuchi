@@ -22,45 +22,37 @@ namespace tx_store {
 
 using file::offset_t;
 
-Index::Index(const std::string &path) : Index(path, 100000){}
+Index::Index(const std::string &path) : Index(path, 1024){}
 
 file::offset_t Index::get(std::size_t n) {
-//  auto offset = cache_.get(n);
-//  if (offset) {
-//    return *offset;
-//  }
-  return inMemData.at(n);
+
+
   file_.seek(n * sizeof(offset_t));
   return *reinterpret_cast<offset_t*>(file_.read(sizeof(offset_t)).data());
 
 }
 
 std::size_t Index::append(file::offset_t offset) {
-//  auto ptr = reinterpret_cast<const byte_t*>(&offset);
+
+  auto ptr = reinterpret_cast<const byte_t*>(&offset);
   // TODO remove ByteArray intermediate object
-//  file_.append(ByteArray{ptr, ptr + sizeof(offset_t)});
-//  cache_.put(size() - 1, std::move(offset));
-  ++size_;
-  inMemData.push_back(offset);
-  return size_ - 1;
+  file_.append(ByteArray{ptr, ptr + sizeof(offset_t)});
+  return size() - 1;
 }
 
 std::size_t Index::size() const {
-  return size_;
+  return file_.size() / sizeof(offset_t);
 }
-
 void Index::set_cache_size(std::size_t cache_size) {
-//  cache_.setMaxCacheSize(cache_size);
+  cache.setMaxCacheSize(cache_size);
 }
-
-Index::Index(const std::string &path, const std::size_t inMemSize): file_(path)/*, cache_(inMemSize)*/ {
+Index::Index(const std::string &path, const std::size_t inMemSize): file_(path), cache(inMemSize) {
   file_.open();
   inMemData.reserve(inMemSize);
   // Append zero if the file is new
   if (!file_.size()){
     append(0);
   }
-  size_ = 0;
 }
 
 }  // namespace tx_store

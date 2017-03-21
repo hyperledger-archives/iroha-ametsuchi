@@ -29,10 +29,8 @@ class Array::RandomAccessIterator {
   RandomAccessIterator(Array &array, std::size_t offset);
   RandomAccessIterator(const RandomAccessIterator &it);
   bool operator==(const Array::RandomAccessIterator &it);
-  bool operator!=(const Array::RandomAccessIterator &it);
   bool operator<(const Array::RandomAccessIterator &it);
   bool operator>(const Array::RandomAccessIterator &it);
-  bool operator>=(const Array::RandomAccessIterator &it);
   ByteArray &operator*();
   RandomAccessIterator &operator++();
   RandomAccessIterator operator++(int);

@@ -22,23 +22,16 @@ namespace ametsuchi {
 namespace tx_store {
 
 Array::Array(const std::string &path)
-  : file_(path), index_(path+"_index")/*, cache_(100000)*/{
+  : file_(path), index_(path+"_index"){
   file_.open();
 }
 
 std::size_t Array::append(const ByteArray &data) {
   file_.append(data);
-  auto n = index_.append(file_.size()) - 1;
-  auto cache_data = data;
-//  cache_.put(n, std::move(cache_data));
-  return n;
+  return index_.append(file_.size()) - 1;
 }
 
 ByteArray Array::get(const std::size_t n) {
-//  auto data = cache_.get(n);
-  /*if (data) {
-    return *data;
-  }*/
   auto offset_ = index_.get(n);
   size_t size = index_.get(n+1) - offset_;
   file_.seek(offset_);
