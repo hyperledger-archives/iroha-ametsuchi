@@ -48,6 +48,7 @@ class Array {
    * @return offset of appended ByteArray
    */
   std::size_t append(const ByteArray &data);
+  std::size_t crash_append(const ByteArray &data);
 
   /**
    * Get ByteArray by offset

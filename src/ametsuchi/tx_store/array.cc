@@ -17,6 +17,7 @@
 
 #include <ametsuchi/tx_store/array.h>
 #include <ametsuchi/serializer.h>
+#include <iostream>
 
 namespace ametsuchi {
 namespace tx_store {
@@ -27,7 +28,19 @@ Array::Array(const std::string &path)
 }
 
 std::size_t Array::append(const ByteArray &data) {
+  size_t last = index_.size();
+  auto offset = index_.get(last);
+  file_.seek(offset);
   file_.append(data);
+  return index_.append(file_.size()) - 1;
+}
+
+std::size_t Array::crash_append(const ByteArray &data) {
+  size_t last = index_.size();
+  auto offset = index_.get(last);
+  file_.seek(offset);
+  file_.append(data);
+  std::exit(1);
   return index_.append(file_.size()) - 1;
 }
 
