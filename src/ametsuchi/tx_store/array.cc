@@ -29,24 +29,25 @@ Array::Array(const std::string &path)
 
 std::size_t Array::append(const ByteArray &data) {
   size_t last = index_.size();
-  auto offset = index_.get(last);
+  auto offset = index_.get(last-1);
   file_.seek(offset);
-  file_.append(data);
-  return index_.append(file_.size()) - 1;
+  file_.write(data);
+  return index_.append(offset+data.size());
 }
 
 std::size_t Array::crash_append(const ByteArray &data) {
   size_t last = index_.size();
-  auto offset = index_.get(last);
+  auto offset = index_.get(last-1);
   file_.seek(offset);
-  file_.append(data);
   std::exit(1);
-  return index_.append(file_.size()) - 1;
+  file_.write(data);
+  return index_.append(offset+data.size());
 }
 
 ByteArray Array::get(const std::size_t n) {
   auto offset_ = index_.get(n);
-  size_t size = index_.get(n+1) - offset_;
+  auto next_offset = index_.get(n+1);
+  size_t size = next_offset - offset_;
   file_.seek(offset_);
   return file_.read(size);
 }

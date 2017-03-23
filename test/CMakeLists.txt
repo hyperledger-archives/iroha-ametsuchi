@@ -22,3 +22,6 @@ target_link_libraries(tx_store_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(tx_store_iterator_test ametsuchi/tx_store/tx_store_iterator_test.cc)
 target_link_libraries(tx_store_iterator_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+AddTest(tx_store_recovery_test ametsuchi/tx_store/tx_store_recovery_test.cc)
+target_link_libraries(tx_store_recovery_test PRIVATE ${LIBAMETSUCHI_NAME})

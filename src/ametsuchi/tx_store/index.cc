@@ -16,6 +16,7 @@
  */
 
 #include <ametsuchi/tx_store/index.h>
+#include <iostream>
 
 namespace ametsuchi {
 namespace tx_store {
@@ -25,7 +26,6 @@ using file::offset_t;
 Index::Index(const std::string &path) : Index(path, 1024){}
 
 file::offset_t Index::get(std::size_t n) {
-
 
   file_.seek(n * sizeof(offset_t));
   return *reinterpret_cast<offset_t*>(file_.read(sizeof(offset_t)).data());
