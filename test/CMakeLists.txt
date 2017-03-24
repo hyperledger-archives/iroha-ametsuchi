@@ -22,3 +22,6 @@ target_link_libraries(buffer_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(buffer_iter_test ametsuchi/buffer_iter_test.cc)
 target_link_libraries(buffer_iter_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+AddTest(merkle_test ametsuchi/index/merkle_test.cc)
+target_link_libraries(merkle_test PRIVATE ${LIBAMETSUCHI_NAME})
