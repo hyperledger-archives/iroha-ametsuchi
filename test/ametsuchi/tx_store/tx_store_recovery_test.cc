@@ -22,7 +22,7 @@ namespace ametsuchi {
 namespace tx_store {
 
 class TXStoreRecoveryTest : public ::testing::Test {
-protected:
+ protected:
   TXStoreRecoveryTest() {}
 
   virtual void TearDown() {
@@ -34,7 +34,6 @@ protected:
 };
 
 TEST_F(TXStoreRecoveryTest, CommitRollbackTest) {
-//  const std::string array_path = "/tmp/array";
   Array array_(array_path);
   ByteArray set1 = {0x1, 0x2};
   ByteArray set2 = {0x3, 0x4};
@@ -48,6 +47,7 @@ TEST_F(TXStoreRecoveryTest, CommitRollbackTest) {
   array_.append(set2);
   ASSERT_ANY_THROW(array_.get(1));
   array_.append(set3);
+  ASSERT_FALSE(array_.is_committed());
 
   array_.rollback();
 
@@ -56,33 +56,29 @@ TEST_F(TXStoreRecoveryTest, CommitRollbackTest) {
   array_.commit();
   ASSERT_EQ(array_.get(1), set2);
   ASSERT_EQ(array_.get(2), set3);
-
-//  remove(array_path.c_str());
-//  remove((array_path + "_index").c_str());
+  ASSERT_TRUE(array_.is_committed());
 }
 
 TEST_F(TXStoreRecoveryTest, BatchAppendTest) {
-  const std::string array_path = "/tmp/array";
   Array array_(array_path);
   ByteArray set1 = {0x1, 0x2};
   ByteArray set2 = {0x3, 0x4};
   ByteArray set3 = {0x5};
 
-  array_.batch_append(std::vector<ByteArray >{set1, set2, set3});
+  array_.batch_append(std::vector<ByteArray>{set1, set2, set3});
 
   ASSERT_NE(array_.get(0), set1);
   ASSERT_NE(array_.get(1), set2);
+  ASSERT_FALSE(array_.is_committed());
 
   array_.rollback();
 
-  array_.batch_append(std::vector<ByteArray >{set2, set3});
+  array_.batch_append(std::vector<ByteArray>{set2, set3});
   array_.commit();
 
   ASSERT_EQ(array_.get(0), set2);
   ASSERT_EQ(array_.get(1), set3);
-
-//  remove(array_path.c_str());
-//  remove((array_path + "_index").c_str());
+  ASSERT_TRUE(array_.is_committed());
 }
 
 

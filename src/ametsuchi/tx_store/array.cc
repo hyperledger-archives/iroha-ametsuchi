@@ -15,31 +15,36 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/tx_store/array.h>
 #include <ametsuchi/serializer.h>
+#include <ametsuchi/tx_store/array.h>
 #include <iostream>
 
 namespace ametsuchi {
 namespace tx_store {
 
 Array::Array(const std::string &path)
-  : file_(path), index_(path+"_index"), uncommitted_(), uncommitted_size_(0){
+    : file_(path),
+      index_(path + "_index"),
+      uncommitted_(),
+      uncommitted_size_(0) {
   file_.open();
 }
 
 std::size_t Array::append(const ByteArray &data) {
   size_t last = index_.size();
-  auto offset = index_.get(last-1) + uncommitted_size_;
+  auto offset = index_.get(last - 1) + uncommitted_size_;
   file_.seek(offset);
   file_.write(data);
-  uncommitted_.push_back(offset+data.size());
+  uncommitted_.push_back(offset + data.size());
   uncommitted_size_ += data.size();
-//  return index_.append(offset+data.size());
-  return index_.size() - 1 + uncommitted_.size(); // to return the same value as it was before (commented above)
+  //  return index_.append(offset+data.size());
+  return index_.size() - 1 + uncommitted_.size();  // to return the same value
+                                                   // as it was before
+                                                   // (commented above)
 }
 
 std::size_t Array::batch_append(const std::vector<ByteArray> &batch_data) {
-  if (batch_data.size() == 0){
+  if (batch_data.size() == 0) {
     return index_.size() - 1 + uncommitted_.size();
   }
 
@@ -48,7 +53,7 @@ std::size_t Array::batch_append(const std::vector<ByteArray> &batch_data) {
   size_t first_offset = append(*first);
 
   // append remaining byte arrays
-  for (auto it = ++first; it < batch_data.end(); ++it){
+  for (auto it = ++first; it < batch_data.end(); ++it) {
     append(*it);
   }
 
@@ -57,28 +62,24 @@ std::size_t Array::batch_append(const std::vector<ByteArray> &batch_data) {
 
 ByteArray Array::get(const std::size_t n) {
   auto offset_ = index_.get(n);
-  auto next_offset = index_.get(n+1);
+  auto next_offset = index_.get(n + 1);
   size_t size = next_offset - offset_;
   file_.seek(offset_);
   return file_.read(size);
 }
 
-void Array::commit() { // TODO: not safe since crash could happen between clear and uncommitted_size = 0
-  for (auto offset: uncommitted_){
-    index_.append(offset);
-  }
+void Array::commit() {
+  index_.batch_append(uncommitted_);
   uncommitted_.clear();
   uncommitted_size_ = 0;
 }
 
-void Array::rollback() { // TODO: not safe since crash could happen between clear and uncommitted_size = 0
+void Array::rollback() {
   uncommitted_.clear();
   uncommitted_size_ = 0;
 }
 
-bool Array::is_committed() {
-  return uncommitted_.size() == 0;
-}
+bool Array::is_committed() { return uncommitted_.size() == 0; }
 
 }  // namespace tx_store
 }  // namespace ametsuchi

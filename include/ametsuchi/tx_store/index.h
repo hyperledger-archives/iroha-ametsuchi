@@ -18,10 +18,10 @@
 #ifndef AMETSUCHI_INDEX_H
 #define AMETSUCHI_INDEX_H
 
-#include <string>
+#include <ametsuchi/cache.h>
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/file/rw_file.h>
-#include <ametsuchi/cache.h>
+#include <string>
 
 namespace ametsuchi {
 namespace tx_store {
@@ -61,6 +61,13 @@ class Index {
   std::size_t append(file::offset_t offset);
 
   /**
+   * Appends batch of offsets atomically
+   * @param offsets
+   * @return index of the first appended element
+   */
+  std::size_t batch_append(std::vector<file::offset_t> offsets);
+
+  /**
    * Size of the index
    * @return number of elements in the index
    */
@@ -76,11 +83,11 @@ class Index {
 
  private:
   file::RWFile file_;
-  Cache<std::size_t , file::offset_t > cache;
+  Cache<std::size_t, file::offset_t> cache;
   std::vector<file::offset_t> inMemData;
 };
 
 }  // namespace tx_store
 }  // namespace ametsuchi
 
-#endif //AMETSUCHI_INDEX_H
+#endif  // AMETSUCHI_INDEX_H
