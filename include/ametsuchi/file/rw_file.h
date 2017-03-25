@@ -50,6 +50,8 @@ class RWFile : public File {
    */
   virtual offset_t append(const ByteArray &data);
 
+  virtual offset_t append(const byte_t* ptr, size_t n);
+
   /**
    * Writes \p data at current position.
    * @param data

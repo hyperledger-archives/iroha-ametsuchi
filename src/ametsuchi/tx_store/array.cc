@@ -52,7 +52,7 @@ std::size_t Array::batch_append(const std::vector<ByteArray> &batch_data) {
   auto first = batch_data.begin();
   size_t first_offset = append(*first);
 
-  // append remaining byte arrays
+  // append remaining byte arrays (without committing)
   for (auto it = ++first; it < batch_data.end(); ++it) {
     append(*it);
   }

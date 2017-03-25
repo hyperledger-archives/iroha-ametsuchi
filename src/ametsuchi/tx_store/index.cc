@@ -32,18 +32,14 @@ file::offset_t Index::get(std::size_t n) {
 
 std::size_t Index::append(file::offset_t offset) {
   auto ptr = reinterpret_cast<const byte_t *>(&offset);
-  // TODO remove ByteArray intermediate object
-  file_.append(ByteArray{ptr, ptr + sizeof(offset_t)});
+  file_.append(ptr, sizeof(offset));
   return size() - 1;
 }
 
 std::size_t Index::batch_append(std::vector<file::offset_t> offsets) {
   auto ptr = reinterpret_cast<const byte_t *>(offsets.data());
   size_t start = size(); // offset to the beginning of the batch
-  file_.append(ByteArray{
-      ptr, ptr + sizeof(offset_t) * offsets.size()});  // range of bytes of
-                                                       // first to the last
-                                                       // offset offsets
+  file_.append(ptr, sizeof(offset_t) * offsets.size());
   return start;
 }
 
