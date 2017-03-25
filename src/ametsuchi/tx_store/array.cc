@@ -23,25 +23,37 @@ namespace ametsuchi {
 namespace tx_store {
 
 Array::Array(const std::string &path)
-  : file_(path), index_(path+"_index"){
+  : file_(path), index_(path+"_index"), uncommitted_(), uncommitted_size_(0){
   file_.open();
 }
 
 std::size_t Array::append(const ByteArray &data) {
   size_t last = index_.size();
-  auto offset = index_.get(last-1);
+  auto offset = index_.get(last-1) + uncommitted_size_;
   file_.seek(offset);
   file_.write(data);
-  return index_.append(offset+data.size());
+  uncommitted_.push_back(offset+data.size());
+  uncommitted_size_ += data.size();
+//  return index_.append(offset+data.size());
+  return index_.size() - 1 + uncommitted_.size(); // to return the same value as it was before (commented above)
 }
 
-std::size_t Array::crash_append(const ByteArray &data) {
-  size_t last = index_.size();
-  auto offset = index_.get(last-1);
-  file_.seek(offset);
-  std::exit(1);
-  file_.write(data);
-  return index_.append(offset+data.size());
+std::size_t Array::batch_append(const std::vector<ByteArray> &batch_data) {
+  if (batch_data.size() == 0){
+    return index_.size() - 1 + uncommitted_.size();
+  }
+
+  // define first offset to return the beginning of the batch
+  auto it = batch_data.begin();
+  size_t first_offset = append(*it);
+  ++it;
+
+  // append remaining byte arrays
+  for (auto it = batch_data.begin(); it < batch_data.end(); ++it){
+    append(*it);
+  }
+
+  return first_offset;
 }
 
 ByteArray Array::get(const std::size_t n) {
@@ -50,6 +62,19 @@ ByteArray Array::get(const std::size_t n) {
   size_t size = next_offset - offset_;
   file_.seek(offset_);
   return file_.read(size);
+}
+
+void Array::commit() {
+  for (auto offset: uncommitted_){
+    index_.append(offset);
+  }
+  uncommitted_.clear();
+  uncommitted_size_ = 0;
+}
+
+void Array::rollback() {
+  uncommitted_.clear();
+  uncommitted_size_ = 0;
 }
 
 }  // namespace tx_store

@@ -43,12 +43,18 @@ class Array {
   Array(const std::string &path);
 
   /**
-   * Append new ByteArray to array
+   * Append new ByteArray to array without commit
    * @param data ByteArray to append
    * @return offset of appended ByteArray
    */
   std::size_t append(const ByteArray &data);
-  std::size_t crash_append(const ByteArray &data);
+
+  /**
+   * Append of the batch of data without commit
+   * @param batch_data
+   * @return offset of the begginning of the batch (i.e. to the first ByteArray from batch)
+   */
+  std::size_t batch_append(const std::vector<ByteArray > &batch_data);
 
   /**
    * Get ByteArray by offset
@@ -56,6 +62,16 @@ class Array {
    * @return requested ByteArray
    */
   ByteArray get(const std::size_t n);
+
+  /**
+   * Commit submitted changes, before commit written data is not accessible
+   */
+  void commit();
+
+  /**
+   * Undo uncommited changes
+   */
+  void rollback();
 
   RandomAccessIterator begin();
 
@@ -65,7 +81,8 @@ class Array {
   // TODO separate write/read logic?
   file::RWFile file_;
   Index index_;
-
+  std::vector<file::offset_t> uncommitted_; // vector of uncommitted changes
+  std::size_t uncommitted_size_; // size (in bytes) of uncommited changes (don't confuse with uncommited_.size() )
 };
 
 }  // namespace tx_store
