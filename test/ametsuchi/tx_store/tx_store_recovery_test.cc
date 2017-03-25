@@ -78,8 +78,8 @@ TEST_F(TXStoreRecoveryTest, BatchAppendTest) {
   array_.batch_append(std::vector<ByteArray >{set2, set3});
   array_.commit();
 
-  ASSERT_EQ(array_.get(1), set2);
-  ASSERT_EQ(array_.get(2), set3);
+  ASSERT_EQ(array_.get(0), set2);
+  ASSERT_EQ(array_.get(1), set3);
 
 //  remove(array_path.c_str());
 //  remove((array_path + "_index").c_str());

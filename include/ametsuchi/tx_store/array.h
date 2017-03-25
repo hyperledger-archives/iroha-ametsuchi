@@ -73,6 +73,12 @@ class Array {
    */
   void rollback();
 
+  /**
+   * True if there are no uncommitted changes and false otherwise
+   * @return
+   */
+  bool is_committed();
+
   RandomAccessIterator begin();
 
   RandomAccessIterator end();

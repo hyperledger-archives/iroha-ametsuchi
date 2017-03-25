@@ -44,12 +44,11 @@ std::size_t Array::batch_append(const std::vector<ByteArray> &batch_data) {
   }
 
   // define first offset to return the beginning of the batch
-  auto it = batch_data.begin();
-  size_t first_offset = append(*it);
-  ++it;
+  auto first = batch_data.begin();
+  size_t first_offset = append(*first);
 
   // append remaining byte arrays
-  for (auto it = batch_data.begin(); it < batch_data.end(); ++it){
+  for (auto it = ++first; it < batch_data.end(); ++it){
     append(*it);
   }
 
@@ -64,7 +63,7 @@ ByteArray Array::get(const std::size_t n) {
   return file_.read(size);
 }
 
-void Array::commit() {
+void Array::commit() { // TODO: not safe since crash could happen between clear and uncommitted_size = 0
   for (auto offset: uncommitted_){
     index_.append(offset);
   }
@@ -72,9 +71,13 @@ void Array::commit() {
   uncommitted_size_ = 0;
 }
 
-void Array::rollback() {
+void Array::rollback() { // TODO: not safe since crash could happen between clear and uncommitted_size = 0
   uncommitted_.clear();
   uncommitted_size_ = 0;
+}
+
+bool Array::is_committed() {
+  return uncommitted_.size() == 0;
 }
 
 }  // namespace tx_store
