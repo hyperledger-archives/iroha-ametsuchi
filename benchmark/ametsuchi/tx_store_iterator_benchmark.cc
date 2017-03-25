@@ -37,6 +37,7 @@ static void AppendFunction(benchmark::State& state) {
     for (int i = 0; i < N; ++i) {
       array_.append(test_set);
     }
+    array_.commit();
   }
   remove(array_path.c_str());
   remove((array_path+"_index").c_str());
@@ -58,6 +59,7 @@ static void GetFunction(benchmark::State& state) {
   for (int i = 0; i < N; ++i) {
     array_.append(test_set);
   }
+  array_.commit();
 
   while(state.KeepRunning()){
     for (int i = 0; i < N; ++i){
