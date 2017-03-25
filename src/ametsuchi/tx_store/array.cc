@@ -38,7 +38,7 @@ std::size_t Array::append(const ByteArray &data) {
   uncommitted_.push_back(offset + data.size());
   uncommitted_size_ += data.size();
   //  return index_.append(offset+data.size());
-  return index_.size() - 1 + uncommitted_.size();  // to return the same value
+  return index_.size() - 2 + uncommitted_.size();  // to return the same value
                                                    // as it was before
                                                    // (commented above)
 }

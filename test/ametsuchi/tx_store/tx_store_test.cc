@@ -42,6 +42,8 @@ TEST_F(TXStoreTest, ArrayIndex) {
   ByteArray a1 = {1, 2, 3}, a2 = {2, 3, 4};
   auto i1 = array_.append(a1);
   auto i2 = array_.append(a2);
+  array_.commit();
+
   ByteArray at1 = array_.get(i1),
     at2 = array_.get(i2);
 

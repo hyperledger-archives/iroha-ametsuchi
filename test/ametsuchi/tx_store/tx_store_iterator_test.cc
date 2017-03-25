@@ -48,7 +48,7 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
     }
     array_.append(test_set[i]);
   }
-
+  array_.commit();
 
   int i = 0;
   auto end = array_.end();
@@ -68,6 +68,7 @@ TEST_F(TXStoreIteratorTest, MultiGetTest) {
     }
     array_.append(test_set[i]);
   }
+  array_.commit();
 
   for (int i = 0; i < N; ++i) {
     ASSERT_EQ(array_.get(i), test_set[i]);
@@ -84,6 +85,7 @@ TEST_F(TXStoreIteratorTest, BackIterator) {
     }
     array_.append(test_set[i]);
   }
+  array_.commit();
 
   int i = N - 1;
   for (auto it = array_.end(); it > array_.begin(); it--) {
