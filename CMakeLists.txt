@@ -44,6 +44,10 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/globals.h
   include/ametsuchi/serializer.h
   include/ametsuchi/status.h
+
+  include/ametsuchi/tx_store/array.h
+  include/ametsuchi/tx_store/index.h
+  include/ametsuchi/tx_store/iterator.h
   )
 
 set(AMETSUCHI_SRC
@@ -52,6 +56,10 @@ set(AMETSUCHI_SRC
   src/ametsuchi/file/rw_file_safe.cc
 
   src/ametsuchi/env.cc
+
+  src/ametsuchi/tx_store/array.cc
+  src/ametsuchi/tx_store/index.cc
+  src/ametsuchi/tx_store/iterator.cc
   )
 
 # Library.

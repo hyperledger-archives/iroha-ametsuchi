@@ -87,6 +87,12 @@ class Cache {
    */
   void setMRU();
 
+  /**
+   * Set cache max size
+   * @param new_size
+   */
+  void setMaxCacheSize(uint64_t new_size);
+
  private:
   using Entry = typename std::pair<K, V>;
   using Iter = typename std::list<Entry>::iterator;
@@ -106,6 +112,7 @@ class Cache {
   uint64_t max_cache_size;
   uint64_t current_size;
   bool isMRU;
+
 };
 
 /// IMPLEMENTATION
@@ -205,5 +212,13 @@ template <typename K, typename V>
 void Cache<K, V>::setMRU() {
   isMRU = true;
 }
+
+template <typename K, typename V>
+void Cache<K, V>::setMaxCacheSize(uint64_t new_size) {
+  max_cache_size = new_size;
+  iters_map.reserve(new_size);
+}
+
+
 
 }  // namespace ametsuchi

@@ -53,6 +53,21 @@ offset_t RWFile::append(const ByteArray &data) {
   return old_fsize;  // offset at which data is written
 }
 
+offset_t RWFile::append(const byte_t *ptr, size_t n) {
+  seek_to_end();
+
+  size_t old_fsize = size_;
+  size_t size = n;
+
+  size_t written;
+  if ((written = std::fwrite(ptr, sizeof(byte_t), n, file_.get())) != size) {
+    console->critical("we write {} bytes, but {} written", size, written);
+    throw exception::IOError("RWFilePlain::append");
+  }
+  std::fflush(file_.get());
+  size_ += written;
+  return old_fsize;  // offset at which data is written
+}
 
 size_t RWFile::write(const ByteArray &data) {
   auto res = std::fwrite(data.data(), sizeof(ametsuchi::byte_t), data.size(),

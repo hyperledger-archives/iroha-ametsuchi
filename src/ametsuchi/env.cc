@@ -17,23 +17,25 @@
 
 #include <ametsuchi/env.h>
 #include <spdlog/spdlog.h>
-#include <sys/statvfs.h>
-#include <sys/sysinfo.h>
+//#include <sys/statvfs.h>
+//#include <sys/sysinfo.h>
 
 namespace ametsuchi {
 
 static auto console = spdlog::stdout_color_mt("env");
 
 uint64_t Env::get_available_memory() {
+  // TODO cross-platform solution
   // detect amount of memory
   // http://stackoverflow.com/questions/63166/how-to-determine-cpu-and-memory-consumption-from-inside-a-process
-  struct sysinfo memInfo;
-  sysinfo(&memInfo);
+//  struct sysinfo memInfo;
+//  sysinfo(&memInfo);
   // to avoid overflow on right hand side
-  uint64_t mem = memInfo.totalram;
-  mem += memInfo.totalswap;
-  mem *= memInfo.mem_unit;
-  return mem;
+//  uint64_t mem = memInfo.totalram;
+//  mem += memInfo.totalswap;
+//  mem *= memInfo.mem_unit;
+//  return mem;
+  return 0;
 }
 
 std::string Env::get_database_directory() { return this->database_dir; }
@@ -86,16 +88,18 @@ std::string Env::mkdirectory(std::string path) {
 }
 
 uint64_t Env::get_available_disk_space(const std::string& path) {
-  struct statvfs buf;
+  // TODO cross-platform solution
+  /*struct statvfs buf;
   auto status = statvfs(path.c_str(), &buf);
   if (-1 == status) {
     console->critical("statvfs returned code {} for {}", errno, path);
     throw exception::IOError("statvfs");
-  }
+  }*/
 
-  uint64_t disk_free = buf.f_bfree;
+  /*uint64_t disk_free = buf.f_bfree;
   disk_free *= buf.f_blocks;
 
-  return disk_free;  // bytes
+  return disk_free;  // bytes*/
+  return 0;
 }
 }
