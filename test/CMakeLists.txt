@@ -16,3 +16,6 @@ target_link_libraries(file_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(rw_file_safe_test ametsuchi/file/rw_file_safe_test.cc)
 target_link_libraries(rw_file_safe_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+AddTest(module_sqlite module/sqlite_test.cc)
+target_link_libraries(module_sqlite PRIVATE sqlite)
