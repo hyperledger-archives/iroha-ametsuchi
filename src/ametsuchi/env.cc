@@ -18,23 +18,25 @@
 #include <ametsuchi/env.h>
 #include <spdlog/spdlog.h>
 #include <sys/statvfs.h>
-#include <sys/sysinfo.h>
+// #include <sys/sysinfo.h>
 
 namespace ametsuchi {
 
 static auto console = spdlog::stdout_color_mt("env");
 
-uint64_t Env::get_available_memory() {
-  // detect amount of memory
-  // http://stackoverflow.com/questions/63166/how-to-determine-cpu-and-memory-consumption-from-inside-a-process
-  struct sysinfo memInfo;
-  sysinfo(&memInfo);
-  // to avoid overflow on right hand side
-  uint64_t mem = memInfo.totalram;
-  mem += memInfo.totalswap;
-  mem *= memInfo.mem_unit;
-  return mem;
-}
+/* sys/sysinfo.h unavailable in macOS */
+// uint64_t Env::get_available_memory() {
+//   // detect amount of memory
+//   //
+//   http://stackoverflow.com/questions/63166/how-to-determine-cpu-and-memory-consumption-from-inside-a-process
+//   struct sysinfo memInfo;
+//   sysinfo(&memInfo);
+//   // to avoid overflow on right hand side
+//   uint64_t mem = memInfo.totalram;
+//   mem += memInfo.totalswap;
+//   mem *= memInfo.mem_unit;
+//   return mem;
+// }
 
 std::string Env::get_database_directory() { return this->database_dir; }
 
