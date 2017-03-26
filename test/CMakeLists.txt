@@ -19,3 +19,6 @@ target_link_libraries(rw_file_safe_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(module_sqlite module/sqlite_test.cc)
 target_link_libraries(module_sqlite PRIVATE sqlite)
+
+AddTest(wsv_test ametsuchi/wsv_test.cc)
+target_link_libraries(wsv_test PRIVATE ${LIBAMETSUCHI_NAME} sqlite)

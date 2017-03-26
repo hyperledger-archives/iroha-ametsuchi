@@ -26,6 +26,8 @@ message(STATUS "-DDOCS=${DOCS}")
 include_directories(
   # Library headers.
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  # Generated FlatBuffers schema.
+  "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
@@ -44,6 +46,7 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/globals.h
   include/ametsuchi/serializer.h
   include/ametsuchi/status.h
+  include/ametsuchi/wsv.h
   )
 
 set(AMETSUCHI_SRC
@@ -52,6 +55,7 @@ set(AMETSUCHI_SRC
   src/ametsuchi/file/rw_file_safe.cc
 
   src/ametsuchi/env.cc
+  src/ametsuchi/wsv.cc
   )
 
 # Library.
