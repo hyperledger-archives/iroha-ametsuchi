@@ -26,13 +26,13 @@ table Create {
 
 // users are able to store custom data in their accounts
 table Store {
-    accPubKey: PublicKey        (required, key);
+    accPubKey: PublicKey        (required);
     data:      [KeyValueObject] (required);
 }
 
 
 table Transfer {
-    currency: Asset     (required); 
+    currency: Asset     (required);
     sender:   PublicKey (required);
     receiver: PublicKey (required);
 }
@@ -89,13 +89,13 @@ table SetAccountsUseKeys {
 
 
 union Command {
-    Add, 
-    Remove, 
-    Transfer, 
-    Execute, 
+    Add,
+    Remove,
+    Transfer,
+    Execute,
     Create,
     Store,
-    
+
     SetPeerTrust,
     ChangePeerTrust,
     SetPeerActive,
