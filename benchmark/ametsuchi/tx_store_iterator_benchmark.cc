@@ -25,15 +25,15 @@ static void AppendFunction(benchmark::State& state) {
   using ametsuchi::tx_store::Array;
 
   const std::string array_path = "/tmp/array";
-  ByteArray test_set;
-  for (int j = 0; j < 500; ++j) {
+  const uint size = 500;
+  ByteArray test_set(size);
+  for (int j = 0; j < size; ++j) {
     test_set.push_back(1);
   }
   const int N = state.range(0);
 
   while (state.KeepRunning()) {
     Array array_(array_path);
-
     for (int i = 0; i < N; ++i) {
       array_.append(test_set);
     }
@@ -50,8 +50,10 @@ static void GetFunction(benchmark::State& state) {
   const std::string array_path = "/tmp/array";
 
   const int N = state.range(0);
-  ByteArray test_set;
-  for (int j = 0; j < 500; ++j) {
+  const uint size = 500;
+
+  ByteArray test_set(size);
+  for (int j = 0; j < size; ++j) {
     test_set.push_back(1);
   }
 
