@@ -27,7 +27,10 @@ Array::Array(const std::string &path)
       index_(path + "_index"),
       uncommitted_(),
       uncommitted_size_(0) {
-  file_.open();
+  if (!file_.open())
+  {
+    //TODO: handle exception
+  }
 }
 
 std::size_t Array::append(const ByteArray &data) {

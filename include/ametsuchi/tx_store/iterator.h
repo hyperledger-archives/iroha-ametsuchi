@@ -32,12 +32,12 @@ class Array::RandomAccessIterator {
   bool operator<(const Array::RandomAccessIterator &it);
   bool operator>(const Array::RandomAccessIterator &it);
   ByteArray &operator*();
-  RandomAccessIterator &operator++();
+  RandomAccessIterator operator++();
   RandomAccessIterator operator++(int);
-  RandomAccessIterator &operator--();
+  RandomAccessIterator operator--();
   RandomAccessIterator operator--(int);
-  RandomAccessIterator &operator+=(const int &n);
-  RandomAccessIterator &operator-=(const int &n);
+  RandomAccessIterator operator+=(const int &n);
+  RandomAccessIterator operator-=(const int &n);
   RandomAccessIterator operator-(const int &n);
   RandomAccessIterator operator+(const int &n);
 

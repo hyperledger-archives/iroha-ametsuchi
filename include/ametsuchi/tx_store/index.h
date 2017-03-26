@@ -79,7 +79,6 @@ class Index {
    */
   void set_cache_size(std::size_t cache_size);
 
-  // TODO removal?
 
  private:
   file::RWFile file_;

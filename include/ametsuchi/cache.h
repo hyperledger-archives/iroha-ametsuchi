@@ -215,8 +215,11 @@ void Cache<K, V>::setMRU() {
 
 template <typename K, typename V>
 void Cache<K, V>::setMaxCacheSize(uint64_t new_size) {
-  max_cache_size = new_size;
-  iters_map.reserve(new_size);
+  if (max_cache_size > new_size)
+  {
+    max_cache_size = new_size;
+    iters_map.reserve(new_size);
+  }
 }
 
 
