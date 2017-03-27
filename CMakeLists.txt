@@ -6,8 +6,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
+set(SCHEMA_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
+set(SCHEMA_FILES account.fbs asset.fbs commands.fbs key.fbs main.fbs primitives.fbs transaction.fbs)
 
-option(SCHEMA "Compile given schema (fbs file) using flatc" OFF)
+option(SCHEMA "Compile FlatBuffers schema" ON)
 option(BENCHMARKING "Build benchmarks" OFF)
 option(TESTING "Build tests" ON)
 option(DOCS "Generate API documentation" OFF)
@@ -18,6 +20,7 @@ if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 message(STATUS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+message(STATUS "-DSCHEMA=${SCHEMA}")
 message(STATUS "-DTESTING=${TESTING}")
 message(STATUS "-DBENCHMARKING=${BENCHMARKING}")
 message(STATUS "-DDOCS=${DOCS}")
@@ -92,20 +95,20 @@ endif(DOCS)
 
 
 # set variable AMETSUCHI_COMPILE_SCHEMA to the path of fbs file
-if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
-  message(STATUS "Compiling ${AMETSUCHI_COMPILE_SCHEMA} schema.")
-  message(STATUS "Output will be: ${PROJECT_SOURCE_DIR}/include/ametsuchi/api_generated.h")
+if (${SCHEMA})
+  message(STATUS "Compiling FlatBuffers schema.")
+  message(STATUS "Output directory: ${SCHEMA_DIR}")
 
   add_custom_command(
-    OUTPUT  api_generated.h
-    COMMAND ${flatc_EXECUTABLE} --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
-    COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
+    OUTPUT  transaction_generated.h
+    COMMAND flatc --cpp --scoped-enums -o "${SCHEMA_DIR}/ametsuchi" ${SCHEMA_FILES}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/schema # includes will be in this directory
+    COMMENT "Compiling FlatBuffers schema"
   )
 
   add_custom_target(compileSchema
-    DEPENDS api_generated.h
-    COMMENT "Generating header file to include/ametsuchi/api_generated.h")
+    DEPENDS transaction_generated.h
+    COMMENT "Generating header files")
 
   add_dependencies(${LIBAMETSUCHI_NAME} compileSchema)
 endif()
