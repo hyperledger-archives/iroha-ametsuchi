@@ -34,33 +34,36 @@ Array::Array(const std::string &path)
 }
 
 std::size_t Array::append(const ByteArray &data) {
+  /*
   size_t last = index_.size();
   auto offset = index_.get(last - 1) + uncommitted_size_;
   file_.seek(offset);
   file_.write(data);
-  uncommitted_.push_back(offset + data.size());
-  uncommitted_size_ += data.size();
-  //  return index_.append(offset+data.size());
-  return index_.size() - 2 + uncommitted_.size();  // to return the same value
-                                                   // as it was before
-                                                   // (commented above)
+  */
+
+  //auto offset = index_.get_last();
+  auto ptr = reinterpret_cast<byte_t *>(data.size());
+  std::copy(ptr, ptr+sizeof(std::size_t), std::back_inserter(uncommitted_));
+
+  //uncommitted_.push_back(ptr);
+  std::move(data.begin(), data.end(), std::back_inserter(uncommitted_));
+  uncommitted_size_ += data.size()+sizeof(std::size_t);
+  return index_.append(uncommitted_size_);
+
 }
 
-std::size_t Array::batch_append(const std::vector<ByteArray> &batch_data) {
+std::size_t Array::append_batch(const std::vector<ByteArray> &batch_data) {
   if (batch_data.size() == 0) {
     return index_.size() - 1 + uncommitted_.size();
   }
-
-  // define first offset to return the beginning of the batch
-  auto first = batch_data.begin();
-  size_t first_offset = append(*first);
-
+  std::size_t last;
+  std::for_each(batch_data.begin(), batch_data.end(), [](const auto & e){
+    uncommitted_.push_back(std::move(e));
+    uncommitted_size_ += e.size();
+    last = index_.append(e.size());
+  });
   // append remaining byte arrays (without committing)
-  for (auto it = ++first; it < batch_data.end(); ++it) {
-    append(*it);
-  }
-
-  return first_offset;
+  return last;
 }
 
 ByteArray Array::get(const std::size_t n) {
@@ -72,17 +75,26 @@ ByteArray Array::get(const std::size_t n) {
 }
 
 void Array::commit() {
-  index_.batch_append(uncommitted_);
+  file_.append(uncommitted_.data(), uncommitted_size_);
+
+  uncommitted_
+  // index
+  index.commit();
+  //index_.append_batch(uncommitted_);
   uncommitted_.clear();
   uncommitted_size_ = 0;
 }
 
 void Array::rollback() {
+  index_.rollback();
   uncommitted_.clear();
   uncommitted_size_ = 0;
 }
 
-bool Array::is_committed() { return uncommitted_.size() == 0; }
+bool Array::is_committed() const
+{
+  return uncommitted_.size() == 0;
+}
 
 }  // namespace tx_store
 }  // namespace ametsuchi

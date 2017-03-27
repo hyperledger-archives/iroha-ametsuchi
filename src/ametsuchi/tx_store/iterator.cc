@@ -42,51 +42,43 @@ ByteArray& Array::RandomAccessIterator::operator*() {
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator++() {
-  RandomAccessIterator iterator(*this);
   n_ += 1;
-  return iterator;
+  return *this;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator++(int) {
-  RandomAccessIterator iterator(*this);
   n_ += 1;
-  return iterator;
+  return *this;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator--() {
-  RandomAccessIterator iterator(*this);
   n_ -= 1;
-  return iterator;
+  return *this;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator--(int) {
-  RandomAccessIterator iterator(*this);
   n_ -= 1;
-  return iterator;
+  return *this;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator+=(const int& n) {
-  RandomAccessIterator iterator(*this);
   n_ += n;
-  return iterator;
+  return *this;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator-=(const int &n) {
-  RandomAccessIterator iterator(*this);
   n_ -= n;
-  return iterator;
+  return *this;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator-(const int &n) {
-  RandomAccessIterator iterator(*this);
   n_ -= n;
-  return iterator;
+  return *this;
 }
 
 Array::RandomAccessIterator Array::RandomAccessIterator::operator+(const int &n) {
-  RandomAccessIterator iterator(*this);
   n_ += n;
-  return iterator;
+  return *this;
 }
 
 bool Array::RandomAccessIterator::operator<(const Array::RandomAccessIterator &it) {

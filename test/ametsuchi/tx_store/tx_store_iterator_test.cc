@@ -41,13 +41,8 @@ class TXStoreIteratorTest : public ::testing::Test {
 
 TEST_F(TXStoreIteratorTest, ArrayIterator) {
   const int N = 10000;
-  ByteArray test_set[N];
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < 500; ++j) {
-      test_set[i].push_back(1);
-    }
-    array_.append(test_set[i]);
-  }
+  std::vector<ByteArray> test_set(N, ByteArray(500, 1));
+  array_.append_batch(test_set);
   array_.commit();
 
   int i = 0;
@@ -61,13 +56,8 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
 
 TEST_F(TXStoreIteratorTest, MultiGetTest) {
   const int N = 10000;
-  ByteArray test_set[N];
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < 500; ++j) {
-      test_set[i].push_back(1);
-    }
-    array_.append(test_set[i]);
-  }
+  std::vector<ByteArray> test_set(N, ByteArray(500, 1));
+  array_.append_batch(test_set);
   array_.commit();
 
   for (int i = 0; i < N; ++i) {

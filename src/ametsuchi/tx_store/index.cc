@@ -30,13 +30,29 @@ file::offset_t Index::get(std::size_t n) {
   return *reinterpret_cast<offset_t *>(file_.read(sizeof(offset_t)).data());
 }
 
+file::offset_t Index::get_last() {
+  return last_;
+}
+
 std::size_t Index::append(file::offset_t offset) {
+
+  file::offset_t new_offset = last_ + offset;
+  uncommitted_.push_back(new_offset);
+  return last_index_ + uncommitted_.size();
+
+  /*
   auto ptr = reinterpret_cast<const byte_t *>(&offset);
   file_.append(ptr, sizeof(offset));
   return size() - 1;
+   */
 }
 
-std::size_t Index::batch_append(std::vector<file::offset_t> offsets) {
+std::size_t Index::append_batch(std::vector<file::offset_t> &offsets) {
+
+  file::offset_t new_offset = last_ + uncommitted_size_;
+
+
+
   auto ptr = reinterpret_cast<const byte_t *>(offsets.data());
   size_t start = size(); // offset to the beginning of the batch
   file_.append(ptr, sizeof(offset_t) * offsets.size());
@@ -56,6 +72,8 @@ Index::Index(const std::string &path, const std::size_t inMemSize)
     append(0);
   }
 }
+
+
 
 }  // namespace tx_store
 }  // namespace ametsuchi

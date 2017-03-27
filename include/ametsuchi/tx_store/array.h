@@ -34,8 +34,6 @@ class Array {
 
   class RandomAccessIterator;
 
-
-
   /**
    * Open (create if not exists) array in given path
    * @param path array file path
@@ -54,7 +52,7 @@ class Array {
    * @param batch_data
    * @return offset of the begginning of the batch (i.e. to the first ByteArray from batch)
    */
-  std::size_t batch_append(const std::vector<ByteArray > &batch_data);
+  std::size_t append_batch(const std::vector<ByteArray > &batch_data);
 
   /**
    * Get ByteArray by offset
@@ -74,10 +72,9 @@ class Array {
   void rollback();
 
   /**
-   * True if there are no uncommitted changes and false otherwise
-   * @return
+   * @return true if there are no uncommitted changes and false otherwise
    */
-  bool is_committed();
+  bool is_committed() const;
 
   RandomAccessIterator begin();
 
@@ -87,7 +84,8 @@ class Array {
   // TODO separate write/read logic?
   file::RWFile file_;
   Index index_;
-  std::vector<file::offset_t> uncommitted_; // vector of uncommitted changes
+  //std::vector<ByteArray> uncommitted_; // vector of uncommitted changes
+  ByteArray uncommitted_;
   std::size_t uncommitted_size_; // size (in bytes) of uncommited changes (don't confuse with uncommited_.size() )
 };
 

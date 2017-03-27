@@ -65,7 +65,7 @@ TEST_F(TXStoreRecoveryTest, BatchAppendTest) {
   ByteArray set2 = {0x3, 0x4};
   ByteArray set3 = {0x5};
 
-  array_.batch_append(std::vector<ByteArray>{set1, set2, set3});
+  array_.append_batch(std::vector<ByteArray>{set1, set2, set3});
 
   ASSERT_NE(array_.get(0), set1);
   ASSERT_NE(array_.get(1), set2);
@@ -73,7 +73,7 @@ TEST_F(TXStoreRecoveryTest, BatchAppendTest) {
 
   array_.rollback();
 
-  array_.batch_append(std::vector<ByteArray>{set2, set3});
+  array_.append_batch(std::vector<ByteArray>{set2, set3});
   array_.commit();
 
   ASSERT_EQ(array_.get(0), set2);
