@@ -18,6 +18,8 @@ Flatbuffer database for the Hyperledger Iroha project.
 
 ## Build
 
+Download [FlatBuffers](https://github.com/google/flatbuffers), build it and place the `flatc` executable into your PATH.
+
 Run from the project root:
 
 ```sh
