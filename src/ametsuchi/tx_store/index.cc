@@ -35,8 +35,8 @@ std::size_t Index::append(file::offset_t offset) {
 
   file::offset_t new_offset = last_ + offset;
   uncommitted_.push_back(new_offset);
-  return last_index_ + uncommitted_.size();
-
+  // Return the number of transaction
+  return last_index_ + uncommitted_.size() - 1;
 }
 
 std::size_t Index::size() const { return file_.size() / sizeof(offset_t); }
@@ -54,16 +54,15 @@ Index::Index(const std::string &path, const std::size_t inMemSize)
   }
 
   if (!file_.size()) {
+
+    // Append inital index
     last_ = 0;
     last_index_ = 0;
-    // Append inital index
-    append(0);
-    commit();
+    file_.append(reinterpret_cast<byte_t *>(&last_), sizeof(file::offset_t));
   }
 }
 void Index::commit() {
 
-  auto ptr = reinterpret_cast<byte_t *>(uncommitted_.data());
   file_.append(reinterpret_cast<byte_t*>(uncommitted_.data()),
                uncommitted_.size()*sizeof(file::offset_t));
 

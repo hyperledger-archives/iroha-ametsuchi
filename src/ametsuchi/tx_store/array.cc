@@ -58,7 +58,7 @@ std::size_t Array::append_batch(const std::vector<ByteArray> &batch_data) {
   first_offset = append(*iter);
   ++iter;
 
-  for (iter; iter < batch_data.end(); ++iter) {
+  for (;iter < batch_data.end(); ++iter) {
     append(*iter);
   }
   return first_offset;

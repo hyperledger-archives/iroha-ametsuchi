@@ -90,12 +90,13 @@ class Index {
 
  private:
   file::RWFile file_;
-  std::vector<file::offset_t> uncommitted_;
+
 
   file::offset_t last_; // last value in index
   std::size_t last_index_; // index of the last element
 
   Cache<std::size_t, file::offset_t> cache;
+  std::vector<file::offset_t> uncommitted_;
 };
 
 }  // namespace tx_store
