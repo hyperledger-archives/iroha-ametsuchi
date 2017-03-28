@@ -26,12 +26,9 @@ using file::offset_t;
 Index::Index(const std::string &path) : Index(path, 1024) {}
 
 file::offset_t Index::get(std::size_t n) {
+
   file_.seek(n * sizeof(offset_t));
   return *reinterpret_cast<offset_t *>(file_.read(sizeof(offset_t)).data());
-}
-
-file::offset_t Index::get_last() {
-  return last_;
 }
 
 std::size_t Index::append(file::offset_t offset) {
@@ -40,40 +37,52 @@ std::size_t Index::append(file::offset_t offset) {
   uncommitted_.push_back(new_offset);
   return last_index_ + uncommitted_.size();
 
-  /*
-  auto ptr = reinterpret_cast<const byte_t *>(&offset);
-  file_.append(ptr, sizeof(offset));
-  return size() - 1;
-   */
-}
-
-std::size_t Index::append_batch(std::vector<file::offset_t> &offsets) {
-
-  file::offset_t new_offset = last_ + uncommitted_size_;
-
-
-
-  auto ptr = reinterpret_cast<const byte_t *>(offsets.data());
-  size_t start = size(); // offset to the beginning of the batch
-  file_.append(ptr, sizeof(offset_t) * offsets.size());
-  return start;
 }
 
 std::size_t Index::size() const { return file_.size() / sizeof(offset_t); }
+
 void Index::set_cache_size(std::size_t cache_size) {
   cache.setMaxCacheSize(cache_size);
 }
 Index::Index(const std::string &path, const std::size_t inMemSize)
-    : file_(path), cache(inMemSize) {
-  file_.open();
-  inMemData.reserve(inMemSize);
-  // Append zero if the file is new
+    : file_(path), cache(inMemSize), uncommitted_() {
+
+  if (!file_.open())
+  {
+    //TODO: handle exception
+
+  }
+
   if (!file_.size()) {
+    last_ = 0;
+    last_index_ = 0;
+    // Append inital index
     append(0);
+    commit();
   }
 }
+void Index::commit() {
+
+  auto ptr = reinterpret_cast<byte_t *>(uncommitted_.data());
+  file_.append(reinterpret_cast<byte_t*>(uncommitted_.data()),
+               uncommitted_.size()*sizeof(file::offset_t));
+
+  last_ = uncommitted_.back();
+  last_index_ += uncommitted_.size();
+
+  uncommitted_.clear();
+
+}
+
+void Index::rollback() {
+  uncommitted_.clear();
 
 
+}
+
+bool Index::is_committed() const {
+  return uncommitted_.size() == 0;
+}
 
 }  // namespace tx_store
 }  // namespace ametsuchi

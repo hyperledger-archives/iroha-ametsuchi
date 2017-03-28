@@ -80,13 +80,13 @@ class Array {
 
   RandomAccessIterator end();
 
+
+
  private:
-  // TODO separate write/read logic?
   file::RWFile file_;
   Index index_;
-  //std::vector<ByteArray> uncommitted_; // vector of uncommitted changes
   ByteArray uncommitted_;
-  std::size_t uncommitted_size_; // size (in bytes) of uncommited changes (don't confuse with uncommited_.size() )
+  std::size_t commit_size;
 };
 
 }  // namespace tx_store

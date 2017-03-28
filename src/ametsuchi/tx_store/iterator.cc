@@ -15,20 +15,18 @@
  * limitations under the License.
  */
 #include <ametsuchi/tx_store/iterator.h>
+#include <iostream>
 
 namespace ametsuchi {
 namespace tx_store {
 
-
-///////
-// Iterator
 
 Array::RandomAccessIterator::RandomAccessIterator(Array &array)
     : array_(array), n_(0) {
 }
 
 Array::RandomAccessIterator::RandomAccessIterator(Array &array,
-                                                  std::size_t n)
+                                                  int64_t n)
     :array_(array), n_(n)  {
 
 }
@@ -92,20 +90,26 @@ bool Array::RandomAccessIterator::operator==(const Array::RandomAccessIterator &
 bool Array::RandomAccessIterator::operator>(const Array::RandomAccessIterator &it) {
   return n_ > it.n_;
 }
+bool Array::RandomAccessIterator::operator!=(const Array::RandomAccessIterator &it) {
+  return n_ != it.n_;
+}
+Array::RandomAccessIterator Array::RandomAccessIterator::operator=(const Array::RandomAccessIterator &it) {
+  return *this;
+}
+bool Array::RandomAccessIterator::operator<=(const Array::RandomAccessIterator &it) {
+  return  n_ <= it.n_;
+}
+bool Array::RandomAccessIterator::operator>=(const Array::RandomAccessIterator &it) {
+  return n_ >= it.n_;
+}
 
 Array::RandomAccessIterator Array::begin() {
   return RandomAccessIterator(*this);
 }
 
 Array::RandomAccessIterator Array::end() {
-  return RandomAccessIterator(*this, index_.size() - 2);
+  return RandomAccessIterator(*this, index_.size() - 1);
 }
-
-
-
-
 
 }  // namespace tx_store
 }  // namespace ametsuchi
-
-

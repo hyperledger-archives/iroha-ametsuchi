@@ -54,26 +54,11 @@ class Index {
   file::offset_t get(std::size_t n);
 
   /**
-   * Get last element in file
-   * @param n requested element index
-   * @return offset of element
-   */
-  file::offset_t get_last();
-
-  /**
    * Append new offset to index
    * @param offset given offset to append
    * @return index of appended element (size() - 1 ?)
    */
   std::size_t append(file::offset_t offset);
-
-  /**
-   * Appends batch of offsets atomically
-   * @param offsets
-   * @return index of the first appended element
-   */
-  std::size_t append_batch(std::vector<file::offset_t> &offsets);
-
 
   /**
   * Commit submitted changes, before commit written data is not accessible
@@ -90,7 +75,6 @@ class Index {
    */
   bool is_committed() const;
 
-
   /**
    * Size of the index
    * @return number of elements in the index
@@ -106,14 +90,12 @@ class Index {
 
  private:
   file::RWFile file_;
-  std::vector<file::offset_t> uncommitted_; // vector of uncommitted changes
-  file::offset_t uncommitted_size_; // size (in bytes) of uncommited changes (don't confuse with uncommited_.size() )
+  std::vector<file::offset_t> uncommitted_;
 
-  file::offset_t last_;
-  std::size_t last_index_;
+  file::offset_t last_; // last value in index
+  std::size_t last_index_; // index of the last element
 
   Cache<std::size_t, file::offset_t> cache;
-  std::vector<file::offset_t> inMemData;
 };
 
 }  // namespace tx_store

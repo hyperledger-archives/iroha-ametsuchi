@@ -26,7 +26,7 @@ namespace tx_store {
 
 class TXStoreIteratorTest : public ::testing::Test {
  protected:
-  TXStoreIteratorTest() : array_(array_path), index_(index_path) {}
+  TXStoreIteratorTest() : array_(array_path) {}
 
   virtual void TearDown() {
     remove(array_path.c_str());
@@ -36,11 +36,11 @@ class TXStoreIteratorTest : public ::testing::Test {
   const std::string array_path = "/tmp/array", index_path = "/tmp/array_index";
 
   Array array_;
-  Index index_;
+
 };
 
 TEST_F(TXStoreIteratorTest, ArrayIterator) {
-  const int N = 10000;
+  const int N = 2;
   std::vector<ByteArray> test_set(N, ByteArray(500, 1));
   array_.append_batch(test_set);
   array_.commit();
@@ -52,7 +52,10 @@ TEST_F(TXStoreIteratorTest, ArrayIterator) {
     ASSERT_EQ(test_set[i], *it);
     i++;
   }
+
 }
+
+
 
 TEST_F(TXStoreIteratorTest, MultiGetTest) {
   const int N = 10000;
@@ -64,6 +67,7 @@ TEST_F(TXStoreIteratorTest, MultiGetTest) {
     ASSERT_EQ(array_.get(i), test_set[i]);
   }
 }
+
 
 
 TEST_F(TXStoreIteratorTest, BackIterator) {
@@ -78,11 +82,45 @@ TEST_F(TXStoreIteratorTest, BackIterator) {
   array_.commit();
 
   int i = N - 1;
-  for (auto it = array_.end(); it > array_.begin(); it--) {
+  for (auto it = array_.end()-1; it >= array_.begin(); it--) {
     ASSERT_EQ(test_set[i], *it);
     i -= 1;
   }
 }
+
+
+
+
+TEST_F(TXStoreIteratorTest, MultiTransactions) {
+  const int N = 2;
+  std::vector<ByteArray> test_set(N, ByteArray(500, 1));
+  array_.append_batch(test_set);
+  array_.commit();
+
+  int i = 0;
+  auto end = array_.end();
+  auto begin = array_.begin();
+  for (auto it = begin; it < end; it++) {
+    ASSERT_EQ(test_set[i], *it);
+    i++;
+  }
+
+  std::vector<ByteArray> test_set2(N, ByteArray(500, 2));
+  array_.append_batch(test_set2);
+  array_.commit();
+
+  auto end2 = array_.end()-1;
+  i = N - 1;
+  for(auto it = end2;it < end2-2;it--)
+  {
+    ASSERT_EQ(test_set[i], *it);
+    i--;
+  }
+
+}
+
+
+
 
 }  // namespace tx_store
 }  // namespace ametsuchi

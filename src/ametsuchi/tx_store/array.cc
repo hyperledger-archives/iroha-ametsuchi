@@ -26,29 +26,25 @@ Array::Array(const std::string &path)
     : file_(path),
       index_(path + "_index"),
       uncommitted_(),
-      uncommitted_size_(0) {
+      commit_size(0) {
+
   if (!file_.open())
   {
     //TODO: handle exception
+
   }
 }
 
 std::size_t Array::append(const ByteArray &data) {
-  /*
-  size_t last = index_.size();
-  auto offset = index_.get(last - 1) + uncommitted_size_;
-  file_.seek(offset);
-  file_.write(data);
-  */
 
-  //auto offset = index_.get_last();
-  auto ptr = reinterpret_cast<byte_t *>(data.size());
-  std::copy(ptr, ptr+sizeof(std::size_t), std::back_inserter(uncommitted_));
+  auto size = data.size();
+  auto ptr = reinterpret_cast<byte_t *>(&size);
 
-  //uncommitted_.push_back(ptr);
-  std::move(data.begin(), data.end(), std::back_inserter(uncommitted_));
-  uncommitted_size_ += data.size()+sizeof(std::size_t);
-  return index_.append(uncommitted_size_);
+  std::copy(ptr, ptr+sizeof(std::size_t), std::back_inserter(uncommitted_)); // the same as push back in the loop
+  std::copy(data.begin(), data.end(), std::back_inserter(uncommitted_));
+  commit_size += data.size()+sizeof(std::size_t);
+  // Update index offset
+  return index_.append(commit_size);
 
 }
 
@@ -56,18 +52,20 @@ std::size_t Array::append_batch(const std::vector<ByteArray> &batch_data) {
   if (batch_data.size() == 0) {
     return index_.size() - 1 + uncommitted_.size();
   }
-  std::size_t last;
-  std::for_each(batch_data.begin(), batch_data.end(), [](const auto & e){
-    uncommitted_.push_back(std::move(e));
-    uncommitted_size_ += e.size();
-    last = index_.append(e.size());
-  });
-  // append remaining byte arrays (without committing)
-  return last;
+  std::size_t first_offset;
+  // gets offset to the first byte array from batch
+  auto iter = batch_data.begin();
+  first_offset = append(*iter);
+  ++iter;
+
+  for (iter; iter < batch_data.end(); ++iter) {
+    append(*iter);
+  }
+  return first_offset;
 }
 
 ByteArray Array::get(const std::size_t n) {
-  auto offset_ = index_.get(n);
+  auto offset_ = index_.get(n) + sizeof(std::size_t);
   auto next_offset = index_.get(n + 1);
   size_t size = next_offset - offset_;
   file_.seek(offset_);
@@ -75,26 +73,24 @@ ByteArray Array::get(const std::size_t n) {
 }
 
 void Array::commit() {
-  file_.append(uncommitted_.data(), uncommitted_size_);
+  file_.append(uncommitted_.data(), commit_size);
+  index_.commit();
 
-  uncommitted_
-  // index
-  index.commit();
-  //index_.append_batch(uncommitted_);
   uncommitted_.clear();
-  uncommitted_size_ = 0;
+  commit_size = 0;
 }
 
 void Array::rollback() {
   index_.rollback();
   uncommitted_.clear();
-  uncommitted_size_ = 0;
+  commit_size = 0;
 }
 
 bool Array::is_committed() const
 {
-  return uncommitted_.size() == 0;
+  return index_.is_committed() && uncommitted_.size() == 0;
 }
+
 
 }  // namespace tx_store
 }  // namespace ametsuchi

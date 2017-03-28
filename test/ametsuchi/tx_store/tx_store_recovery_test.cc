@@ -40,7 +40,6 @@ TEST_F(TXStoreRecoveryTest, CommitRollbackTest) {
   ByteArray set3 = {0x5};
 
   array_.append(set1);
-  ASSERT_EQ(array_.get(0), ByteArray{});
   array_.commit();
   ASSERT_EQ(array_.get(0), set1);
 
@@ -67,8 +66,8 @@ TEST_F(TXStoreRecoveryTest, BatchAppendTest) {
 
   array_.append_batch(std::vector<ByteArray>{set1, set2, set3});
 
-  ASSERT_NE(array_.get(0), set1);
-  ASSERT_NE(array_.get(1), set2);
+  ASSERT_ANY_THROW(array_.get(0));
+  ASSERT_ANY_THROW(array_.get(1));
   ASSERT_FALSE(array_.is_committed());
 
   array_.rollback();
@@ -81,44 +80,6 @@ TEST_F(TXStoreRecoveryTest, BatchAppendTest) {
   ASSERT_TRUE(array_.is_committed());
 }
 
-
-TEST(TXStoreRecoveryTest1, CrashTestCreate) {
-  const std::string array_path = "/tmp/array";
-  Array array_(array_path);
-  ByteArray set1 = {0x1, 0x2};
-  ByteArray set2 = {0x3, 0x5};
-  std::cout << std::endl << "appended to " << array_.append(set1) << std::endl;
-  array_.commit();
-  std::cout << std::endl << "appended to " << array_.append(set2) << std::endl;
-  array_.get(0);
-}
-
-TEST(TXStoreRecoveryTest1, CrashTestRead) {
-  const std::string array_path = "/tmp/array";
-  Array array_(array_path);
-  ByteArray set1 = {0x1, 0x2};
-  ByteArray set2 = {};
-  ByteArray res1 = array_.get(0);
-  std::cout << std::endl << "appended to " << array_.append(set2) << std::endl;
-  array_.commit();
-  ByteArray res2 = array_.get(1);
-  ASSERT_EQ(set1, res1);
-  ASSERT_EQ(set2, res2);
-}
-
-
-TEST(TXStoreRecoveryTest1, RecoveryRead) {
-  const std::string array_path = "/tmp/array";
-  Array array_(array_path);
-  ByteArray set1 = {0x1, 0x2};
-  ByteArray set2 = {};
-  ByteArray res1 = array_.get(0);
-  ByteArray res2 = array_.get(1);
-  ASSERT_EQ(set1, res1);
-  ASSERT_EQ(set2, res2);
-  remove(array_path.c_str());
-  remove((array_path + "_index").c_str());
-}
 
 }  // tx_store
 }  // ametsuchi

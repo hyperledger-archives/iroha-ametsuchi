@@ -26,11 +26,15 @@ namespace tx_store {
 class Array::RandomAccessIterator {
  public:
   RandomAccessIterator(Array &array);
-  RandomAccessIterator(Array &array, std::size_t offset);
+  RandomAccessIterator(Array &array, int64_t offset);
   RandomAccessIterator(const RandomAccessIterator &it);
   bool operator==(const Array::RandomAccessIterator &it);
+  bool operator!=(const Array::RandomAccessIterator &it);
+  RandomAccessIterator operator=(const Array::RandomAccessIterator &it);
   bool operator<(const Array::RandomAccessIterator &it);
+  bool operator<=(const Array::RandomAccessIterator &it);
   bool operator>(const Array::RandomAccessIterator &it);
+  bool operator>=(const Array::RandomAccessIterator &it);
   ByteArray &operator*();
   RandomAccessIterator operator++();
   RandomAccessIterator operator++(int);
@@ -43,7 +47,7 @@ class Array::RandomAccessIterator {
 
  protected:
   Array &array_;
-  std::size_t n_;
+  int64_t n_;
   ByteArray value_;
 };
 
