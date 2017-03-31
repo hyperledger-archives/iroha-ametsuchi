@@ -93,6 +93,8 @@ class NarrowMerkleTree {
    * Drops provided erase Tx's hash that has identify after num.
    * But num is maximum number that is lower than num and remain hash.
    * return value is num after above calculate.
+   *
+   * !!!!CAUTION!!!!! num must be greater than num that is previous called.
    * (for example : drop(5) and capacity() = 2
    * hash[ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
    * merkle tree :
@@ -117,14 +119,16 @@ class NarrowMerkleTree {
   /**
    * Calculate height of tree for `node`
    */
-  static inline size_t height(size_t n) {
-    size_t num = popcount(n) > 1 ? 1 : 0;
-    while (n > 0) {
-      n >>= 1;
+  size_t height(size_t n) {
+    size_t num = 0;
+    size_t cap = 1;
+    while( n >= cap ){
+      cap *= capacity();
       num++;
     }
     return num;
   }
+
 
   /**
    * Comparing common nodes on the path except
@@ -139,7 +143,7 @@ class NarrowMerkleTree {
     return floor(log2(node + 1)) - floor(log2(x));
   }
 
-  inline size_t capacity() const { return data[0].capacity(); }
+  inline size_t capacity() const { return capacity_; }
 
   /**
    * Enforce copying because vector can be changed
@@ -156,7 +160,7 @@ class NarrowMerkleTree {
    * that can be reseted w/o recalculation
    * fxd: moved to data[0].capacity()
    */
-  // size_t capacity;
+  size_t capacity_;
   /**
    * TXs' hashes added so far
    */
@@ -169,6 +173,11 @@ class NarrowMerkleTree {
    * e.g ( hash( T(), a ) = hash( T(), a ) = a )
    */
   HashFn hash;
+
+  /**
+   * previous called drop's argument
+   */
+  size_t previous_drop_number;
 
   /**
    * Extends data by the default capacity
@@ -186,21 +195,22 @@ class NarrowMerkleTree {
 
 template <typename T>
 NarrowMerkleTree<T>::NarrowMerkleTree(HashFn c, size_t capacity)
-    : txs(0), hash(c) {
-  if (capacity == 0) throw "capacity can't assign empty.";
-  grow(capacity);
+    : capacity_(capacity), txs(0), hash(c), previous_drop_number(0) {
+  if (capacity_ == 0) throw "capacity can't assign empty.";
+  grow(capacity_);
 }
 
 template <typename T>
 void NarrowMerkleTree<T>::add(T t) {
   txs++;
-  data[0].push(t);
+  // Cumulative sum of Hash
+  data[0].push( hash( get_root(), t ) );
   bool extend_tx = true;
   if (txs != 1 && height(txs) > height(txs - 1) && height(txs) > data.size() ) {
     grow();
   }
 
-  // layer_idx is:
+  // layer_idx is:(cap = 2)
   //        0
   //    0       1
   //  0   1   2
@@ -211,11 +221,7 @@ void NarrowMerkleTree<T>::add(T t) {
       ++child, ++parent, layer_idx /= capacity() ) {
     // child extend and right most node
     if( extend_tx && layer_idx % capacity() == capacity()-1 ) {
-      T t_hash = T();
-      for( size_t cur = child->size()-capacity(); cur < child->size(); cur++ ){
-        t_hash = hash( t_hash, (*child)[cur] );
-      }
-      parent->push( t_hash );
+      parent->push( child->back() );
     } else
       extend_tx = false;
   }
@@ -223,6 +229,7 @@ void NarrowMerkleTree<T>::add(T t) {
 
 template <typename T>
 size_t NarrowMerkleTree<T>::drop(size_t ind) {
+  if( previous_drop_number >= ind ) return ind;
   size_t id_tx = txs;
   size_t cap = 1, xcap = capacity();
   size_t ret = ind; bool upd_flag = false;
@@ -238,27 +245,16 @@ size_t NarrowMerkleTree<T>::drop(size_t ind) {
     cap *= xcap;
   }
   txs = ret;
+  previous_drop_number = ret;
   return ret;
 }
 
 template <typename T>
 T NarrowMerkleTree<T>::get_root() const {
-  T root_hash = T();
-  size_t id_tx = txs;
-  size_t cap = 1, xcap = capacity();
-  // leaf -> root
   for( auto layer = data.begin(); layer != data.end(); ++layer ) {
-    size_t num = ( id_tx % ( cap * xcap ) )/cap;
-    if( layer->size() < num ) throw "Don't Excpect Error";
-    T tmp_hash = T();
-    for( size_t cur = layer->size()-num; cur < layer->size(); cur+=cap) {
-      tmp_hash = hash( tmp_hash, (*layer)[cur] );
-    }
-    root_hash = hash( tmp_hash, root_hash );
-    id_tx -= num * cap;
-    cap *= xcap;
+    if( layer->size() ) return layer->back();
   }
-  return root_hash;
+  return T();
 }
 
 
