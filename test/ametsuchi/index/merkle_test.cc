@@ -51,9 +51,41 @@ TEST(Merkle, Addition) {
 TEST(Merkle, Dropping) {
   NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; });
   for (auto i = 0; i < size; ++i) tree.add(i);
-  tree.drop(2);
-  ASSERT_LE(tree.size(), size);
-  ASSERT_GE(tree.size(), 0);
+  tree.drop(8);
+  /*
+   * data[3]:(0+1 + 2+3  +  4+5 + 6+7)
+   * data[2]:(0+1 + 2+3)   (4+5 + 6+7)
+   * data[1]:                    (6+7) (8+9)
+   * data[0]:                           8 9
+   *   ||
+   *   v
+   * data[3]:(0+1 + 2+3  +  4+5 + 6+7)
+   * data[2]:(0+1 + 2+3)   (4+5 + 6+7)
+   * data[1]:                    (6+7)
+   * data[0]:
+   */
+  ASSERT_EQ(tree.size(), 8);
+  ASSERT_EQ(tree.get_root(), 7*8/2 );
+
+  for(auto i=8;i<size;i++) tree.add(i);
+  ASSERT_EQ(tree.size(), size);
+  ASSERT_EQ(tree.get_root(),9*10/2);
+  tree.drop(6);
+  /*
+   * data[3]:
+   * data[2]:(0+1 + 2+3)
+   * data[1]:
+   * data[0]:
+   */
+  ASSERT_EQ(tree.size(),4);
+  ASSERT_EQ(tree.get_root(), 3*4/2);
+
+  for(auto i=4;i<size;i++) tree.add(i);
+  ASSERT_EQ(tree.size(), size);
+  ASSERT_EQ(tree.get_root(),9*10/2);
+  tree.drop(0);
+  ASSERT_EQ(tree.size(), 0);
+
 }
 
 TEST(Merkle, Statics) {

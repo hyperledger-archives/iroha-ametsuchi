@@ -59,7 +59,31 @@ void CircularStack<T>::push(const T &t) {
 
 template <typename T>
 void CircularStack<T>::pop(size_t n) {
-  sz = size() < n ? 0 : size() - n;
+  n = std::min( sz, n );
+  sz = sz - n;
+  i_end = (i_end + capacity() - n) % capacity();
+}
+
+template <typename T>
+T &CircularStack<T>::front() {
+  if (size()==0) throw Exception("Buffer accessing out of size");
+  return v[diff(i_end, size())];
+}
+template <typename T>
+T CircularStack<T>::front() const {
+  if (size()==0) throw Exception("Buffer accessing out of size");
+  return v[diff(i_end, size())];
+}
+
+template <typename T>
+T &CircularStack<T>::back() {
+  if (size()==0) throw Exception("Buffer accessing out of size");
+  return v[diff(i_end, 1)];
+}
+template <typename T>
+T CircularStack<T>::back() const {
+  if (size()==0) throw Exception("Buffer accessing out of size");
+  return v[diff(i_end, 1)];
 }
 
 template <typename T>

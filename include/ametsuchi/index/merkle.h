@@ -24,6 +24,7 @@
 #include <cmath>
 #include <vector>
 #include <bitset>
+#include <iostream>
 
 namespace ametsuchi {
 namespace index {
@@ -79,19 +80,39 @@ class NarrowMerkleTree {
   using HashFn = std::function<T(const T &, const T &)>;
   // TODO: use linear buffer layout
   using Storage = std::vector<buffer::CircularStack<T>>;
-  NarrowMerkleTree(HashFn, size_t capacity = 0);
+  NarrowMerkleTree(HashFn, size_t capacity = 2);
 
   /**
    * Perform appending to the tree, recalculating
    * root and dropping outdated hashes
+   * O( log_capacity( txs ) * capacity )
    */
   void add(T);
 
   /**
-   * Drops provided num of TX's hashes and
-   * floating parent blocks
+   * Drops provided erase Tx's hash that has identify after num.
+   * But num is maximum number that is lower than num and remain hash.
+   * return value is num after above calculate.
+   * (for example : drop(5) and capacity() = 2
+   * hash[ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
+   * merkle tree :
+   * 3: (0,1, 2,3,  4,5, 6,7)
+   * 2: (0,1, 2,3) (4,5, 6,7)
+   * 1:            (4,5)(6,7)
+   * 0:                   (7)(8)
+   * num = 5 -> 4
+   * -> hash[ 0, 1, 2, 3 ]
+   * return 4 )
+   * O( log_capacity( txs ) )
    */
-  void drop(size_t);
+  size_t drop(size_t);
+
+  /**
+   * get Merkle Tree Infomation ( Use sarch broken point algorithm )
+   */
+   const Storage& merkle() const {
+    return data;
+  }
 
   /**
    * Calculate height of tree for `node`
@@ -118,7 +139,7 @@ class NarrowMerkleTree {
     return floor(log2(node + 1)) - floor(log2(x));
   }
 
-  inline size_t capacity() { return data[0].capacity(); }
+  inline size_t capacity() const { return data[0].capacity(); }
 
   /**
    * Enforce copying because vector can be changed
@@ -142,6 +163,10 @@ class NarrowMerkleTree {
   size_t txs;
   /**
    * Function for parent vertices calculation
+   * It need to exist associative law.
+   * e.g ( hash( hash( a, b ), c ) = hash ( a, hash( b, c ) ) ).
+   * It need to exist only identity element.
+   * e.g ( hash( T(), a ) = hash( T(), a ) = a )
    */
   HashFn hash;
 
@@ -155,79 +180,87 @@ class NarrowMerkleTree {
    * save one more element for rollback and one more
    * for internal usage (see `add`)
    */
-  void grow(size_t capacity) { data.emplace_back(capacity + 2); }
+  void grow(size_t capacity) { data.emplace_back(capacity); }
 };
 
 
 template <typename T>
 NarrowMerkleTree<T>::NarrowMerkleTree(HashFn c, size_t capacity)
     : txs(0), hash(c) {
-  if (capacity != 0) throw "Rollbacking is not supported yet";
+  if (capacity == 0) throw "capacity can't assign empty.";
   grow(capacity);
 }
 
-// TODO: test handling capacity() > 0
 template <typename T>
 void NarrowMerkleTree<T>::add(T t) {
   txs++;
   data[0].push(t);
-  bool new_root = false;
-  if (txs != 1 && height(txs) > height(txs - 1)) {
+  bool extend_tx = true;
+  if (txs != 1 && height(txs) > height(txs - 1) && height(txs) > data.size() ) {
     grow();
-    new_root = true;
   }
-  
+
   // layer_idx is:
   //        0
   //    0       1
   //  0   1   2
-  // 0 1 2 3 4 5 
-  size_t layer_idx = txs - 1;
-  bool need_expand = layer_idx % 2 == 0;
-  // This loop traverse up to the tree
-  for (auto prev = data.begin(), cur = prev + 1; cur != data.end();
-       ++prev, ++cur, layer_idx /= 2) {
-    // 0-th elems are actually outdated and can be removed
-    // without any violation, that's why in grow capacity+2
-    // but in that case easily to write, prob should be changed
-    //
-    // Traverse from left to right at the tree. prev means child
-    // node, and cur its parent
-    for (auto p = prev->begin(), c = cur->begin(); p != prev->end();
-         p += 2, ++c) {
-      bool is_lchild = layer_idx % 2 == 0;
-      if (!is_lchild) need_expand = false;
-      bool is_root = cur == data.end() - 1;
-      T t1 = p[0];
-      T t2 = is_lchild ? T() : p[1];
-      if ((is_root && new_root) || need_expand) {
-        cur->push(hash(t1, t2));
-      } else {
-        // there's probably an issue in index for capacity() > 0
-        cur->begin()[(capacity() - layer_idx/2) % capacity()] = std::move(hash(t1, t2));
+  // 0 1 2 3 4 5
+  size_t layer_idx = txs-1;
+  // This loop traverse up to the tree and update hash
+  for( auto child = data.begin(), parent = child+1; parent != data.end();
+      ++child, ++parent, layer_idx /= capacity() ) {
+    // child extend and right most node
+    if( extend_tx && layer_idx % capacity() == capacity()-1 ) {
+      T t_hash = T();
+      for( size_t cur = child->size()-capacity(); cur < child->size(); cur++ ){
+        t_hash = hash( t_hash, (*child)[cur] );
       }
-    }
+      parent->push( t_hash );
+    } else
+      extend_tx = false;
   }
 }
 
-// TODO: recount drop number
-// now doesn't work if calling w/o filled data
 template <typename T>
-void NarrowMerkleTree<T>::drop(size_t num) {
-  auto &t = txs;
-  std::for_each(data.begin(), data.end(), [num, &t](auto &i) {
-    auto n = std::min(i.size() - 1, num);
-    t -= n;
-    i.pop(n);
-  });
+size_t NarrowMerkleTree<T>::drop(size_t ind) {
+  size_t id_tx = txs;
+  size_t cap = 1, xcap = capacity();
+  size_t ret = ind; bool upd_flag = false;
+  for( auto layer = data.begin(); layer != data.end(); ++layer ) {
+    size_t num = ( id_tx % ( cap * xcap ) )/cap;
+    size_t rm_num = std::min( layer->size(), (id_tx - ind + cap - 1)/cap );
+    layer->pop( rm_num );
+    if( !upd_flag && layer->size() ) {
+      ret = id_tx - rm_num * cap;
+      upd_flag = true;
+    }
+    id_tx -= num * cap;
+    cap *= xcap;
+  }
+  txs = ret;
+  return ret;
 }
 
 template <typename T>
 T NarrowMerkleTree<T>::get_root() const {
-  const buffer::CircularStack<T> &cs = data.back();
-  if (cs.size() == 0) throw Exception("Root is empty");
-  return cs[0];
+  T root_hash = T();
+  size_t id_tx = txs;
+  size_t cap = 1, xcap = capacity();
+  // leaf -> root
+  for( auto layer = data.begin(); layer != data.end(); ++layer ) {
+    size_t num = ( id_tx % ( cap * xcap ) )/cap;
+    if( layer->size() < num ) throw "Don't Excpect Error";
+    T tmp_hash = T();
+    for( size_t cur = layer->size()-num; cur < layer->size(); cur+=cap) {
+      tmp_hash = hash( tmp_hash, (*layer)[cur] );
+    }
+    root_hash = hash( tmp_hash, root_hash );
+    id_tx -= num * cap;
+    cap *= xcap;
+  }
+  return root_hash;
 }
+
 
 template <typename T>
 size_t NarrowMerkleTree<T>::size() const {
