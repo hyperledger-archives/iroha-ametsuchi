@@ -85,6 +85,9 @@ TEST(Merkle, Dropping) {
   ASSERT_EQ(tree.size(), size);
   ASSERT_EQ(tree.get_root(),9*10/2);
 
+  tree.drop(0);
+  ASSERT_EQ(tree.size(),0);
+
 
 }
 
@@ -161,6 +164,9 @@ TEST(Merkle, ExtendDropping) {
   for(auto i=8;i<size;i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
   ASSERT_EQ(tree.get_root(),9*10/2);
+
+  tree.drop(0);
+  ASSERT_EQ(tree.size(),0);
 
 }
 

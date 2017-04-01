@@ -205,7 +205,6 @@ void NarrowMerkleTree<T>::add(T t) {
   txs++;
   // Cumulative sum of Hash
   data[0].push( hash( get_root(), t ) );
-  bool extend_tx = true;
   if (txs != 1 && height(txs) > height(txs - 1) && height(txs) > data.size() ) {
     grow();
   }
@@ -220,15 +219,22 @@ void NarrowMerkleTree<T>::add(T t) {
   for( auto child = data.begin(), parent = child+1; parent != data.end();
       ++child, ++parent, layer_idx /= capacity() ) {
     // child extend and right most node
-    if( extend_tx && layer_idx % capacity() == capacity()-1 ) {
+    if( layer_idx % capacity() == capacity()-1 ) {
       parent->push( child->back() );
     } else
-      extend_tx = false;
+      break;
   }
 }
 
 template <typename T>
 size_t NarrowMerkleTree<T>::drop(size_t ind) {
+  if( ind == 0 ) {
+    data.clear();
+    previous_drop_number = 0;
+    txs = 0;
+    data.emplace_back( capacity() );
+    return 0;
+  }
   if( previous_drop_number >= ind ) return ind;
   size_t id_tx = txs;
   size_t cap = 1, xcap = capacity();
