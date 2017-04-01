@@ -332,6 +332,34 @@ inline flatbuffers::Offset<Response> CreateResponseDirect(
       signature);
 }
 
+inline const iroha::Transaction *GetTransaction(const void *buf) {
+  return flatbuffers::GetRoot<iroha::Transaction>(buf);
+}
+
+inline const char *TransactionIdentifier() {
+  return "IROH";
+}
+
+inline bool TransactionBufferHasIdentifier(const void *buf) {
+  return flatbuffers::BufferHasIdentifier(
+      buf, TransactionIdentifier());
+}
+
+inline bool VerifyTransactionBuffer(
+    flatbuffers::Verifier &verifier) {
+  return verifier.VerifyBuffer<iroha::Transaction>(TransactionIdentifier());
+}
+
+inline const char *TransactionExtension() {
+  return "iroha";
+}
+
+inline void FinishTransactionBuffer(
+    flatbuffers::FlatBufferBuilder &fbb,
+    flatbuffers::Offset<iroha::Transaction> root) {
+  fbb.Finish(root, TransactionIdentifier());
+}
+
 }  // namespace iroha
 
 #endif  // FLATBUFFERS_GENERATED_MAIN_IROHA_H_

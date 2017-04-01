@@ -8,7 +8,6 @@ namespace iroha;
 // we union only those objects.
 // they share the same commands
 union Object { Peer, Account, Chaincode }
-union AnyAsset { Asset, Currency }
 
 table Add {
     object: Object (required);
@@ -36,21 +35,23 @@ table Transfer {
 //////////////////////////////////////////
 /// Commands for Asset
 
+union AnyAsset {Asset, Currency}
+
 // logically means asset summation
 table AddAsset {
     accPubKey: PublicKey (required);
-    asset:     [Asset]   (required);
+    asset:     [AnyAsset]   (required);
 }
 
 // logically means asset negation
 table RemoveAsset {
     accPubKey: PublicKey (required);
-    asset:     [Asset]   (required);
+    asset:     [AnyAsset]   (required);
 }
 
 // needed to implement correct permission model:
 // user may have permission to add asset, but not to create and vice versa.
-table CreateAsset {
+table CmdCreateAsset {
     asset_name:  string (required);
     domain_name: string (required);
     ledger_name: string (required);
@@ -116,7 +117,7 @@ table SetAccountsUseKeys {
 union Command {
     AddAsset,
     RemoveAsset,
-    CreateAsset,
+    CmdCreateAsset,
     Transfer,
 
     Add,

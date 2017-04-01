@@ -33,10 +33,21 @@ std::size_t Array::append(const ByteArray &data) {
   auto size = data.size();
   auto ptr = reinterpret_cast<byte_t *>(&size);
 
+
+  /*
+  for(int i=0; i< sizeof(size_t); i++){
+    uncommitted_.push_back(ptr[i]);
+  }
+  for(auto&& it: data){
+    uncommitted_.push_back(it);
+  }
+   */
+
   std::copy(
       ptr, ptr + sizeof(std::size_t),
       std::back_inserter(uncommitted_));  // the same as push back in the loop
   std::copy(data.begin(), data.end(), std::back_inserter(uncommitted_));
+
   commit_size += data.size() + sizeof(std::size_t);
   // Update index offset
   return index_.append(commit_size);
@@ -84,6 +95,8 @@ void Array::rollback() {
 bool Array::is_committed() const {
   return index_.is_committed() && uncommitted_.size() == 0;
 }
+
+size_t Array::size() { return file_.size() + uncommitted_.size(); }
 
 
 }  // namespace tx_store

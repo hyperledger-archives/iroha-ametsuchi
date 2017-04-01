@@ -43,8 +43,8 @@ struct Transaction FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const iroha::RemoveAsset *command_as_RemoveAsset() const {
     return (command_type() == iroha::Command::RemoveAsset)? static_cast<const iroha::RemoveAsset *>(command()) : nullptr;
   }
-  const iroha::CreateAsset *command_as_CreateAsset() const {
-    return (command_type() == iroha::Command::CreateAsset)? static_cast<const iroha::CreateAsset *>(command()) : nullptr;
+  const iroha::CmdCreateAsset *command_as_CmdCreateAsset() const {
+    return (command_type() == iroha::Command::CmdCreateAsset)? static_cast<const iroha::CmdCreateAsset *>(command()) : nullptr;
   }
   const iroha::Transfer *command_as_Transfer() const {
     return (command_type() == iroha::Command::Transfer)? static_cast<const iroha::Transfer *>(command()) : nullptr;
@@ -108,8 +108,8 @@ template<> inline const iroha::RemoveAsset *Transaction::command_as<iroha::Remov
   return command_as_RemoveAsset();
 }
 
-template<> inline const iroha::CreateAsset *Transaction::command_as<iroha::CreateAsset>() const {
-  return command_as_CreateAsset();
+template<> inline const iroha::CmdCreateAsset *Transaction::command_as<iroha::CmdCreateAsset>() const {
+  return command_as_CmdCreateAsset();
 }
 
 template<> inline const iroha::Transfer *Transaction::command_as<iroha::Transfer>() const {
@@ -278,6 +278,21 @@ inline flatbuffers::Offset<Attachment> CreateAttachmentDirect(
       _fbb,
       mime ? _fbb.CreateString(mime) : 0,
       data ? _fbb.CreateVector<uint8_t>(*data) : 0);
+}
+
+inline const iroha::Transaction *GetTransaction(const void *buf) {
+  return flatbuffers::GetRoot<iroha::Transaction>(buf);
+}
+
+inline bool VerifyTransactionBuffer(
+    flatbuffers::Verifier &verifier) {
+  return verifier.VerifyBuffer<iroha::Transaction>(nullptr);
+}
+
+inline void FinishTransactionBuffer(
+    flatbuffers::FlatBufferBuilder &fbb,
+    flatbuffers::Offset<iroha::Transaction> root) {
+  fbb.Finish(root);
 }
 
 }  // namespace iroha

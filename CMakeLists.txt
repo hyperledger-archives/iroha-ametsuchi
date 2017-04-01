@@ -48,7 +48,6 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/tx_store/array.h
   include/ametsuchi/tx_store/index.h
   include/ametsuchi/tx_store/iterator.h
-  include/ametsuchi/tx_store/tx_store.h
   )
 
 set(AMETSUCHI_SRC
@@ -57,11 +56,12 @@ set(AMETSUCHI_SRC
   src/ametsuchi/file/rw_file_safe.cc
 
   src/ametsuchi/env.cc
+  src/ametsuchi/ametsuchi.cc
+
 
   src/ametsuchi/tx_store/array.cc
   src/ametsuchi/tx_store/index.cc
   src/ametsuchi/tx_store/iterator.cc
-  src/ametsuchi/tx_store/tx_store.cc
   )
 
 # Library.
@@ -73,6 +73,8 @@ add_library(${LIBAMETSUCHI_NAME}
 target_link_libraries(${LIBAMETSUCHI_NAME}
   flatbuffers
   spdlog
+  sqlite3
+  LMDB
 #  keccak
   )
 StrictMode(${LIBAMETSUCHI_NAME})

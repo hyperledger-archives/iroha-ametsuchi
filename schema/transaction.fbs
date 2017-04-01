@@ -17,3 +17,5 @@ table Attachment {
   mime: string;
   data: [ubyte];
 }
+
+root_type Transaction;

@@ -20,23 +20,45 @@
 
 #include <ametsuchi/env.h>
 #include <ametsuchi/globals.h>
-#include <ametsuchi/table/fixed_table.h>
+#include <ametsuchi/tx_store/array.h>
+#include <lmdb.h>
 #include <string>
+#include <vector>
 
 namespace ametsuchi {
 
-/**
- * Interface to tx_store and world_state
- * @tparam T - flatbuffers, protobuf, any serializable structure
- */
-template <typename T>
 class Ametsuchi {
  public:
-  void open(std::shared_ptr<Env> env) {
-    // ENV is declared in "globals.h"
-    ENV = env;
-  }
-  void close();
+  explicit Ametsuchi(const std::string &db_folder);
+
+  void append(const ByteArray &tx);
+  void append(const std::vector<ByteArray> &batch);
+  void commit();
+  void rollback();
+
+  std::vector<ByteArray> getAddTxByCreator(const std::string &pubKey);
+
+ private:
+  std::string path_;
+
+  std::unique_ptr<tx_store::Array> tx_;
+
+  void open_append_tx();
+  void abort_append_tx();
+
+  void create_tx_index();
+  void append_index(const ByteArray &blob);
+
+  MDB_env *env;
+  MDB_stat mst;
+
+  MDB_txn *append_tx;    // pointer to db transaction
+  MDB_dbi dbi_index1;    // "Add" transactions by creator key
+  MDB_dbi dbi_index2;    // "Transfer" transactions by sender key
+  MDB_dbi dbi_index3;    // "Transfer" transactions by receiver key
+  MDB_cursor *cursor_1;  // append cursor for index1
+  MDB_cursor *cursor_2;  // append cursor for index2
+  MDB_cursor *cursor_3;  // append cursor for index3
 };
 }
 

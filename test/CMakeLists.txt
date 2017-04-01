@@ -8,8 +8,11 @@ target_link_libraries(serialize_test PRIVATE spdlog)
 AddTest(comparator_test ametsuchi/comparator_test.cc)
 target_link_libraries(comparator_test PRIVATE spdlog)
 
-#AddTest(module_keccak module/keccak_test.cc)
-#target_link_libraries(module_keccak PRIVATE keccak)
+AddTest(module_keccak module/keccak_test.cc)
+target_link_libraries(module_keccak PRIVATE keccak)
+
+AddTest(module_lmdb module/lmdb_test.cc)
+target_link_libraries(module_lmdb PRIVATE LMDB spdlog)
 
 AddTest(file_test ametsuchi/file/file_test.cc)
 target_link_libraries(file_test PRIVATE ${LIBAMETSUCHI_NAME})
@@ -28,4 +31,6 @@ target_link_libraries(tx_store_iterator_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(tx_store_recovery_test ametsuchi/tx_store/tx_store_recovery_test.cc)
 target_link_libraries(tx_store_recovery_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+
 

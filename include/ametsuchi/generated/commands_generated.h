@@ -25,7 +25,7 @@ struct AddAsset;
 
 struct RemoveAsset;
 
-struct CreateAsset;
+struct CmdCreateAsset;
 
 struct Execute;
 
@@ -85,6 +85,8 @@ template<> struct ObjectTraits<iroha::Chaincode> {
 bool VerifyObject(flatbuffers::Verifier &verifier, const void *obj, Object type);
 bool VerifyObjectVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
 
+//////////////////////////////////////////
+/// Commands for Asset
 enum class AnyAsset : uint8_t {
   NONE = 0,
   Asset = 1,
@@ -128,7 +130,7 @@ enum class Command : uint8_t {
   NONE = 0,
   AddAsset = 1,
   RemoveAsset = 2,
-  CreateAsset = 3,
+  CmdCreateAsset = 3,
   Transfer = 4,
   Add = 5,
   Remove = 6,
@@ -147,7 +149,7 @@ inline const char **EnumNamesCommand() {
     "NONE",
     "AddAsset",
     "RemoveAsset",
-    "CreateAsset",
+    "CmdCreateAsset",
     "Transfer",
     "Add",
     "Remove",
@@ -179,8 +181,8 @@ template<> struct CommandTraits<RemoveAsset> {
   static const Command enum_value = Command::RemoveAsset;
 };
 
-template<> struct CommandTraits<CreateAsset> {
-  static const Command enum_value = Command::CreateAsset;
+template<> struct CommandTraits<CmdCreateAsset> {
+  static const Command enum_value = Command::CmdCreateAsset;
 };
 
 template<> struct CommandTraits<Transfer> {
@@ -501,26 +503,30 @@ inline flatbuffers::Offset<Transfer> CreateTransfer(
   return builder_.Finish();
 }
 
-//////////////////////////////////////////
-/// Commands for Asset
 struct AddAsset FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_ACCPUBKEY = 4,
-    VT_ASSET = 6
+    VT_ASSET_TYPE = 6,
+    VT_ASSET = 8
   };
   const iroha::PublicKey *accPubKey() const {
     return GetPointer<const iroha::PublicKey *>(VT_ACCPUBKEY);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<iroha::Asset>> *asset() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<iroha::Asset>> *>(VT_ASSET);
+  const flatbuffers::Vector<uint8_t> *asset_type() const {
+    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_ASSET_TYPE);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<void>> *asset() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<void>> *>(VT_ASSET);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyFieldRequired<flatbuffers::uoffset_t>(verifier, VT_ACCPUBKEY) &&
            verifier.VerifyTable(accPubKey()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, VT_ASSET_TYPE) &&
+           verifier.Verify(asset_type()) &&
            VerifyFieldRequired<flatbuffers::uoffset_t>(verifier, VT_ASSET) &&
            verifier.Verify(asset()) &&
-           verifier.VerifyVectorOfTables(asset()) &&
+           VerifyAnyAssetVector(verifier, asset(), asset_type()) &&
            verifier.EndTable();
   }
 };
@@ -531,7 +537,10 @@ struct AddAssetBuilder {
   void add_accPubKey(flatbuffers::Offset<iroha::PublicKey> accPubKey) {
     fbb_.AddOffset(AddAsset::VT_ACCPUBKEY, accPubKey);
   }
-  void add_asset(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<iroha::Asset>>> asset) {
+  void add_asset_type(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> asset_type) {
+    fbb_.AddOffset(AddAsset::VT_ASSET_TYPE, asset_type);
+  }
+  void add_asset(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<void>>> asset) {
     fbb_.AddOffset(AddAsset::VT_ASSET, asset);
   }
   AddAssetBuilder(flatbuffers::FlatBufferBuilder &_fbb)
@@ -540,7 +549,7 @@ struct AddAssetBuilder {
   }
   AddAssetBuilder &operator=(const AddAssetBuilder &);
   flatbuffers::Offset<AddAsset> Finish() {
-    const auto end = fbb_.EndTable(start_, 2);
+    const auto end = fbb_.EndTable(start_, 3);
     auto o = flatbuffers::Offset<AddAsset>(end);
     fbb_.Required(o, AddAsset::VT_ACCPUBKEY);
     fbb_.Required(o, AddAsset::VT_ASSET);
@@ -551,9 +560,11 @@ struct AddAssetBuilder {
 inline flatbuffers::Offset<AddAsset> CreateAddAsset(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<iroha::PublicKey> accPubKey = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<iroha::Asset>>> asset = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> asset_type = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<void>>> asset = 0) {
   AddAssetBuilder builder_(_fbb);
   builder_.add_asset(asset);
+  builder_.add_asset_type(asset_type);
   builder_.add_accPubKey(accPubKey);
   return builder_.Finish();
 }
@@ -561,31 +572,39 @@ inline flatbuffers::Offset<AddAsset> CreateAddAsset(
 inline flatbuffers::Offset<AddAsset> CreateAddAssetDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<iroha::PublicKey> accPubKey = 0,
-    const std::vector<flatbuffers::Offset<iroha::Asset>> *asset = nullptr) {
+    const std::vector<uint8_t> *asset_type = nullptr,
+    const std::vector<flatbuffers::Offset<void>> *asset = nullptr) {
   return iroha::CreateAddAsset(
       _fbb,
       accPubKey,
-      asset ? _fbb.CreateVector<flatbuffers::Offset<iroha::Asset>>(*asset) : 0);
+      asset_type ? _fbb.CreateVector<uint8_t>(*asset_type) : 0,
+      asset ? _fbb.CreateVector<flatbuffers::Offset<void>>(*asset) : 0);
 }
 
 struct RemoveAsset FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_ACCPUBKEY = 4,
-    VT_ASSET = 6
+    VT_ASSET_TYPE = 6,
+    VT_ASSET = 8
   };
   const iroha::PublicKey *accPubKey() const {
     return GetPointer<const iroha::PublicKey *>(VT_ACCPUBKEY);
   }
-  const flatbuffers::Vector<flatbuffers::Offset<iroha::Asset>> *asset() const {
-    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<iroha::Asset>> *>(VT_ASSET);
+  const flatbuffers::Vector<uint8_t> *asset_type() const {
+    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_ASSET_TYPE);
+  }
+  const flatbuffers::Vector<flatbuffers::Offset<void>> *asset() const {
+    return GetPointer<const flatbuffers::Vector<flatbuffers::Offset<void>> *>(VT_ASSET);
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyFieldRequired<flatbuffers::uoffset_t>(verifier, VT_ACCPUBKEY) &&
            verifier.VerifyTable(accPubKey()) &&
+           VerifyField<flatbuffers::uoffset_t>(verifier, VT_ASSET_TYPE) &&
+           verifier.Verify(asset_type()) &&
            VerifyFieldRequired<flatbuffers::uoffset_t>(verifier, VT_ASSET) &&
            verifier.Verify(asset()) &&
-           verifier.VerifyVectorOfTables(asset()) &&
+           VerifyAnyAssetVector(verifier, asset(), asset_type()) &&
            verifier.EndTable();
   }
 };
@@ -596,7 +615,10 @@ struct RemoveAssetBuilder {
   void add_accPubKey(flatbuffers::Offset<iroha::PublicKey> accPubKey) {
     fbb_.AddOffset(RemoveAsset::VT_ACCPUBKEY, accPubKey);
   }
-  void add_asset(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<iroha::Asset>>> asset) {
+  void add_asset_type(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> asset_type) {
+    fbb_.AddOffset(RemoveAsset::VT_ASSET_TYPE, asset_type);
+  }
+  void add_asset(flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<void>>> asset) {
     fbb_.AddOffset(RemoveAsset::VT_ASSET, asset);
   }
   RemoveAssetBuilder(flatbuffers::FlatBufferBuilder &_fbb)
@@ -605,7 +627,7 @@ struct RemoveAssetBuilder {
   }
   RemoveAssetBuilder &operator=(const RemoveAssetBuilder &);
   flatbuffers::Offset<RemoveAsset> Finish() {
-    const auto end = fbb_.EndTable(start_, 2);
+    const auto end = fbb_.EndTable(start_, 3);
     auto o = flatbuffers::Offset<RemoveAsset>(end);
     fbb_.Required(o, RemoveAsset::VT_ACCPUBKEY);
     fbb_.Required(o, RemoveAsset::VT_ASSET);
@@ -616,9 +638,11 @@ struct RemoveAssetBuilder {
 inline flatbuffers::Offset<RemoveAsset> CreateRemoveAsset(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<iroha::PublicKey> accPubKey = 0,
-    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<iroha::Asset>>> asset = 0) {
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> asset_type = 0,
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<void>>> asset = 0) {
   RemoveAssetBuilder builder_(_fbb);
   builder_.add_asset(asset);
+  builder_.add_asset_type(asset_type);
   builder_.add_accPubKey(accPubKey);
   return builder_.Finish();
 }
@@ -626,14 +650,16 @@ inline flatbuffers::Offset<RemoveAsset> CreateRemoveAsset(
 inline flatbuffers::Offset<RemoveAsset> CreateRemoveAssetDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<iroha::PublicKey> accPubKey = 0,
-    const std::vector<flatbuffers::Offset<iroha::Asset>> *asset = nullptr) {
+    const std::vector<uint8_t> *asset_type = nullptr,
+    const std::vector<flatbuffers::Offset<void>> *asset = nullptr) {
   return iroha::CreateRemoveAsset(
       _fbb,
       accPubKey,
-      asset ? _fbb.CreateVector<flatbuffers::Offset<iroha::Asset>>(*asset) : 0);
+      asset_type ? _fbb.CreateVector<uint8_t>(*asset_type) : 0,
+      asset ? _fbb.CreateVector<flatbuffers::Offset<void>>(*asset) : 0);
 }
 
-struct CreateAsset FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+struct CmdCreateAsset FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_ASSET_NAME = 4,
     VT_DOMAIN_NAME = 6,
@@ -666,43 +692,43 @@ struct CreateAsset FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
 };
 
-struct CreateAssetBuilder {
+struct CmdCreateAssetBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_asset_name(flatbuffers::Offset<flatbuffers::String> asset_name) {
-    fbb_.AddOffset(CreateAsset::VT_ASSET_NAME, asset_name);
+    fbb_.AddOffset(CmdCreateAsset::VT_ASSET_NAME, asset_name);
   }
   void add_domain_name(flatbuffers::Offset<flatbuffers::String> domain_name) {
-    fbb_.AddOffset(CreateAsset::VT_DOMAIN_NAME, domain_name);
+    fbb_.AddOffset(CmdCreateAsset::VT_DOMAIN_NAME, domain_name);
   }
   void add_ledger_name(flatbuffers::Offset<flatbuffers::String> ledger_name) {
-    fbb_.AddOffset(CreateAsset::VT_LEDGER_NAME, ledger_name);
+    fbb_.AddOffset(CmdCreateAsset::VT_LEDGER_NAME, ledger_name);
   }
   void add_description(flatbuffers::Offset<flatbuffers::String> description) {
-    fbb_.AddOffset(CreateAsset::VT_DESCRIPTION, description);
+    fbb_.AddOffset(CmdCreateAsset::VT_DESCRIPTION, description);
   }
-  CreateAssetBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  CmdCreateAssetBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  CreateAssetBuilder &operator=(const CreateAssetBuilder &);
-  flatbuffers::Offset<CreateAsset> Finish() {
+  CmdCreateAssetBuilder &operator=(const CmdCreateAssetBuilder &);
+  flatbuffers::Offset<CmdCreateAsset> Finish() {
     const auto end = fbb_.EndTable(start_, 4);
-    auto o = flatbuffers::Offset<CreateAsset>(end);
-    fbb_.Required(o, CreateAsset::VT_ASSET_NAME);
-    fbb_.Required(o, CreateAsset::VT_DOMAIN_NAME);
-    fbb_.Required(o, CreateAsset::VT_LEDGER_NAME);
+    auto o = flatbuffers::Offset<CmdCreateAsset>(end);
+    fbb_.Required(o, CmdCreateAsset::VT_ASSET_NAME);
+    fbb_.Required(o, CmdCreateAsset::VT_DOMAIN_NAME);
+    fbb_.Required(o, CmdCreateAsset::VT_LEDGER_NAME);
     return o;
   }
 };
 
-inline flatbuffers::Offset<CreateAsset> CreateCreateAsset(
+inline flatbuffers::Offset<CmdCreateAsset> CreateCmdCreateAsset(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<flatbuffers::String> asset_name = 0,
     flatbuffers::Offset<flatbuffers::String> domain_name = 0,
     flatbuffers::Offset<flatbuffers::String> ledger_name = 0,
     flatbuffers::Offset<flatbuffers::String> description = 0) {
-  CreateAssetBuilder builder_(_fbb);
+  CmdCreateAssetBuilder builder_(_fbb);
   builder_.add_description(description);
   builder_.add_ledger_name(ledger_name);
   builder_.add_domain_name(domain_name);
@@ -710,13 +736,13 @@ inline flatbuffers::Offset<CreateAsset> CreateCreateAsset(
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<CreateAsset> CreateCreateAssetDirect(
+inline flatbuffers::Offset<CmdCreateAsset> CreateCmdCreateAssetDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     const char *asset_name = nullptr,
     const char *domain_name = nullptr,
     const char *ledger_name = nullptr,
     const char *description = nullptr) {
-  return iroha::CreateCreateAsset(
+  return iroha::CreateCmdCreateAsset(
       _fbb,
       asset_name ? _fbb.CreateString(asset_name) : 0,
       domain_name ? _fbb.CreateString(domain_name) : 0,
@@ -1210,8 +1236,8 @@ inline bool VerifyCommand(flatbuffers::Verifier &verifier, const void *obj, Comm
       auto ptr = reinterpret_cast<const RemoveAsset *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case Command::CreateAsset: {
-      auto ptr = reinterpret_cast<const CreateAsset *>(obj);
+    case Command::CmdCreateAsset: {
+      auto ptr = reinterpret_cast<const CmdCreateAsset *>(obj);
       return verifier.VerifyTable(ptr);
     }
     case Command::Transfer: {

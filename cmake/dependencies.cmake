@@ -163,6 +163,41 @@ IMPORTED_LINK_INTERFACE_LANGUAGES "C"
 add_dependencies(sqlite sqlite_sqlite)
 
 
+###########################
+#         LMDB            #
+###########################
+find_package(LMDB)
+
+if(NOT LMDB_FOUND)
+  ExternalProject_Add(lmdb_LMDB
+    GIT_REPOSITORY    "https://github.com/LMDB/lmdb.git"
+    GIT_TAG           "mdb.master"
+    CONFIGURE_COMMAND ""
+    BUILD_IN_SOURCE   1
+    BUILD_COMMAND     cd libraries/liblmdb && $(MAKE) liblmdb.a CC="${CMAKE_C_COMPILER}"
+    INSTALL_COMMAND   "" # remove install step
+    TEST_COMMAND      "" # remove test step
+    UPDATE_COMMAND    "" # remove update step
+    )
+  ExternalProject_Get_Property(lmdb_LMDB source_dir)
+  set(LMDB_INCLUDE_DIRS ${source_dir}/libraries/liblmdb)
+  set(LMDB_LIBRARIES ${source_dir}/libraries/liblmdb/liblmdb.a)
+  file(MAKE_DIRECTORY ${LMDB_INCLUDE_DIRS})
+endif()
+
+add_library(LMDB STATIC IMPORTED)
+set_target_properties(LMDB PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${LMDB_INCLUDE_DIRS}
+  IMPORTED_LOCATION ${LMDB_LIBRARIES}
+  IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+  )
+
+if(NOT LMDB_FOUND)
+  add_dependencies(LMDB lmdb_LMDB)
+endif()
+
+
+
 if(TESTING)
   ##########################
   #         gtest          #

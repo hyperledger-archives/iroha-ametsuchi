@@ -76,11 +76,10 @@ class Array {
    */
   bool is_committed() const;
 
+  size_t size();
+
   RandomAccessIterator begin();
-
   RandomAccessIterator end();
-
-
 
  private:
   file::RWFile file_;

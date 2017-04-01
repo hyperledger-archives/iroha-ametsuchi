@@ -84,8 +84,6 @@ class Index {
 
  private:
   file::RWFile file_;
-
-
   file::offset_t last_;     // last value in index
   std::size_t last_index_;  // index of the last element
 
