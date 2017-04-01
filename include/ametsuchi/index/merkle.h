@@ -238,21 +238,20 @@ size_t NarrowMerkleTree<T>::drop(size_t ind) {
   if( previous_drop_number >= ind ) return ind;
   size_t id_tx = txs;
   size_t cap = 1, xcap = capacity();
-  size_t ret = ind; bool upd_flag = false;
+  bool upd_flag = false; txs = ind;
   for( auto layer = data.begin(); layer != data.end(); ++layer ) {
     size_t num = ( id_tx % ( cap * xcap ) )/cap;
     size_t rm_num = std::min( layer->size(), (id_tx - ind + cap - 1)/cap );
     layer->pop( rm_num );
     if( !upd_flag && layer->size() ) {
-      ret = id_tx - rm_num * cap;
+      txs = id_tx - rm_num * cap;
       upd_flag = true;
     }
     id_tx -= num * cap;
     cap *= xcap;
   }
-  txs = ret;
-  previous_drop_number = ret;
-  return ret;
+  previous_drop_number = txs;
+  return txs;
 }
 
 template <typename T>
