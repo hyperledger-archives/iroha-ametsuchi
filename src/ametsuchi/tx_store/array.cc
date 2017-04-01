@@ -23,29 +23,23 @@ namespace ametsuchi {
 namespace tx_store {
 
 Array::Array(const std::string &path)
-    : file_(path),
-      index_(path + "_index"),
-      uncommitted_(),
-      commit_size(0) {
-
-  if (!file_.open())
-  {
-    //TODO: handle exception
-
+    : file_(path), index_(path + "_index"), uncommitted_(), commit_size(0) {
+  if (!file_.open()) {
+    throw exception::IOError("Can't open database file");
   }
 }
 
 std::size_t Array::append(const ByteArray &data) {
-
   auto size = data.size();
   auto ptr = reinterpret_cast<byte_t *>(&size);
 
-  std::copy(ptr, ptr+sizeof(std::size_t), std::back_inserter(uncommitted_)); // the same as push back in the loop
+  std::copy(
+      ptr, ptr + sizeof(std::size_t),
+      std::back_inserter(uncommitted_));  // the same as push back in the loop
   std::copy(data.begin(), data.end(), std::back_inserter(uncommitted_));
-  commit_size += data.size()+sizeof(std::size_t);
+  commit_size += data.size() + sizeof(std::size_t);
   // Update index offset
   return index_.append(commit_size);
-
 }
 
 std::size_t Array::append_batch(const std::vector<ByteArray> &batch_data) {
@@ -58,7 +52,8 @@ std::size_t Array::append_batch(const std::vector<ByteArray> &batch_data) {
   first_offset = append(*iter);
   ++iter;
 
-  for (;iter < batch_data.end(); ++iter) {
+  auto end = batch_data.end();
+  for (; iter != end; ++iter) {
     append(*iter);
   }
   return first_offset;
@@ -86,8 +81,7 @@ void Array::rollback() {
   commit_size = 0;
 }
 
-bool Array::is_committed() const
-{
+bool Array::is_committed() const {
   return index_.is_committed() && uncommitted_.size() == 0;
 }
 

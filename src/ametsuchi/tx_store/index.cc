@@ -26,13 +26,11 @@ using file::offset_t;
 Index::Index(const std::string &path) : Index(path, 1024) {}
 
 file::offset_t Index::get(std::size_t n) {
-
   file_.seek(n * sizeof(offset_t));
   return *reinterpret_cast<offset_t *>(file_.read(sizeof(offset_t)).data());
 }
 
 std::size_t Index::append(file::offset_t offset) {
-
   file::offset_t new_offset = last_ + offset;
   uncommitted_.push_back(new_offset);
   // Return the number of transaction
@@ -41,47 +39,33 @@ std::size_t Index::append(file::offset_t offset) {
 
 std::size_t Index::size() const { return file_.size() / sizeof(offset_t); }
 
-void Index::set_cache_size(std::size_t cache_size) {
-  cache.setMaxCacheSize(cache_size);
-}
 Index::Index(const std::string &path, const std::size_t inMemSize)
-    : file_(path), cache(inMemSize), uncommitted_() {
-
-  if (!file_.open())
-  {
-    //TODO: handle exception
-
+    : file_(path), uncommitted_() {
+  if (!file_.open()) {
+    throw exception::IOError("can not open the file");
   }
 
   if (!file_.size()) {
-
     // Append inital index
     last_ = 0;
     last_index_ = 0;
     file_.append(reinterpret_cast<byte_t *>(&last_), sizeof(file::offset_t));
   }
 }
-void Index::commit() {
 
-  file_.append(reinterpret_cast<byte_t*>(uncommitted_.data()),
-               uncommitted_.size()*sizeof(file::offset_t));
+void Index::commit() {
+  file_.append(reinterpret_cast<byte_t *>(uncommitted_.data()),
+               uncommitted_.size() * sizeof(file::offset_t));
 
   last_ = uncommitted_.back();
   last_index_ += uncommitted_.size();
 
   uncommitted_.clear();
-
 }
 
-void Index::rollback() {
-  uncommitted_.clear();
+void Index::rollback() { uncommitted_.clear(); }
 
-
-}
-
-bool Index::is_committed() const {
-  return uncommitted_.size() == 0;
-}
+bool Index::is_committed() const { return uncommitted_.size() == 0; }
 
 }  // namespace tx_store
 }  // namespace ametsuchi

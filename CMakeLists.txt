@@ -48,6 +48,7 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/tx_store/array.h
   include/ametsuchi/tx_store/index.h
   include/ametsuchi/tx_store/iterator.h
+  include/ametsuchi/tx_store/tx_store.h
   )
 
 set(AMETSUCHI_SRC
@@ -60,6 +61,7 @@ set(AMETSUCHI_SRC
   src/ametsuchi/tx_store/array.cc
   src/ametsuchi/tx_store/index.cc
   src/ametsuchi/tx_store/iterator.cc
+  src/ametsuchi/tx_store/tx_store.cc
   )
 
 # Library.
@@ -93,26 +95,6 @@ if(DOCS)
     VERBATIM
   )
 endif(DOCS)
-
-
-# set variable AMETSUCHI_COMPILE_SCHEMA to the path of fbs file
-if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
-  message(STATUS "Compiling ${AMETSUCHI_COMPILE_SCHEMA} schema.")
-  message(STATUS "Output will be: ${PROJECT_SOURCE_DIR}/include/ametsuchi/api_generated.h")
-
-  add_custom_command(
-    OUTPUT  api_generated.h
-    COMMAND ${flatc_EXECUTABLE} --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
-    COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
-  )
-
-  add_custom_target(compileSchema
-    DEPENDS api_generated.h
-    COMMENT "Generating header file to include/ametsuchi/api_generated.h")
-
-  add_dependencies(${LIBAMETSUCHI_NAME} compileSchema)
-endif()
 
 
 if(TESTING)

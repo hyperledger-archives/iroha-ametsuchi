@@ -32,13 +32,6 @@ namespace file {
 using flag_t = uint8_t;
 using offset_t = int64_t;
 
-#define PACKED_STRUCT __attribute__ ((__packed__))
-
-#define INVALID_OFFSET INT64_MAX;
-
-inline bool is_valid(offset_t offset) {
-  return offset != INVALID_OFFSET;
-}
 
 /**
  * Abstraction over file operations:

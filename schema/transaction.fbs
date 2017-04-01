@@ -2,7 +2,7 @@ include "key.fbs";
 include "commands.fbs";
 include "primitives.fbs";
 
-namespace iroha.api;
+namespace iroha;
 
 table Transaction {
   creatorPubKey:   PublicKey (required);

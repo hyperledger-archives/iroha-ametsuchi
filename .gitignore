@@ -6,3 +6,4 @@
 build/
 external/
 /.gtm/
+include/generated/*

@@ -15,31 +15,42 @@
  * limitations under the License.
  */
 
-
+#include <ametsuchi/generated/transaction_generated.h>
 #include <ametsuchi/tx_store/array.h>
+#include <ametsuchi/tx_store/iterator.h>
 #include <ametsuchi/tx_store/tx_store.h>
 
 namespace ametsuchi {
 namespace tx_store {
 
+
 // TODO(warchant): we need better management for database files
-static db_path = Eng::get().get_database_directory();
-static Array STORE = Array(db_path + "/ledger");
+static Array STORE(Env::get().get_database_directory() + "/ledger");
 
+void append(const std::vector<ByteArray> &batch) { STORE.append_batch(batch); }
 
-void append(const std::vector<TX> &batch) {}
+void append(const ByteArray &tx) { STORE.append(tx); }
 
-void append(const TX &tx) {}
+void commit() { STORE.commit(); }
 
-std::vector<TX> getAddTxByCreator(const std::string &publicKey) {}
+void rollback() { STORE.rollback(); }
 
-std::vector<TX> getTransferTxBySender(const std::string &publicKey) {}
+// TODO: create SQLite index
+std::vector<ByteArray> getAddTxByCreator(const std::string &publicKey) {
+  std::vector<ByteArray> ret;
+  for (auto &&it : STORE) {
+    ret.push_back(it);
+  }
+  return ret;
+}
 
-std::vector<TX> getTransferTxByReceiver(const std::string &publicKey) {}
+std::vector<ByteArray> getTransferTxBySender(const std::string &publicKey) {
+  throw "not implemented;";
+}
 
-bool commit() {}
-
-bool rollback() {}
+std::vector<ByteArray> getTransferTxByReceiver(const std::string &publicKey) {
+  throw "not implemented;";
+}
 
 }  // namespace tx_store
 }  // namespace ametsuchi

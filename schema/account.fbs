@@ -2,7 +2,7 @@ include "key.fbs";
 include "primitives.fbs";
 include "asset.fbs";
 
-namespace iroha.api;
+namespace iroha;
 
 
 table Account {
@@ -16,8 +16,8 @@ table Account {
 }
 
 
-// message represents custom user data, related to account. User is able to store blobs in his account and access it by key. 
-// e.g., 
+// message represents custom user data, related to account. User is able to store blobs in his account and access it by key.
+// e.g.,
 //{
 //  accPubKey: "account1",
 //  data: {
@@ -29,5 +29,5 @@ table Message {
   accPubKey: PublicKey (required);
 
   // values can be accessed by key for O(log(n)). Look at "Storing maps" section in flatbuffers docs
-  data: [KeyValueObject];  
+  data: [KeyValueObject];
 }

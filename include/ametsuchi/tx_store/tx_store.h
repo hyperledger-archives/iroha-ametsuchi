@@ -25,21 +25,19 @@
 namespace ametsuchi {
 namespace tx_store {
 
-using TX = iroha::api::Transaction;
 
-void append(const std::vector<TX> &batch);
+void append(const std::vector<ByteArray> &batch);
 
-void append(const TX &tx);
+void append(const ByteArray &tx);
 
+void commit();
 
-std::vector<TX> getAddTxByCreator(const std::string &publicKey);
-std::vector<TX> getTransferTxBySender(const std::string &publicKey);
-std::vector<TX> getTransferTxByReceiver(const std::string &publicKey);
+void rollback();
 
 
-bool commit();
-
-bool rollback();
+std::vector<ByteArray> getAddTxByCreator(const std::string &publicKey);
+std::vector<ByteArray> getTransferTxBySender(const std::string &publicKey);
+std::vector<ByteArray> getTransferTxByReceiver(const std::string &publicKey);
 
 }  // namespace tx_store
 }  // namespace ametsuchi

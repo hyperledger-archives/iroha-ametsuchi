@@ -1,7 +1,7 @@
-include "transaction.fbs"; 
+include "transaction.fbs";
 include "commands.fbs";
 
-namespace iroha.api;
+namespace iroha;
 
 file_identifier "IROH";
 file_extension  "iroha";

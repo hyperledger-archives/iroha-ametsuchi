@@ -1,6 +1,7 @@
 include "key.fbs";
 
-namespace iroha.api;
+namespace iroha;
+
 
 /////////////////////////////////////
 enum ProgrammingLanguage: ubyte {Java8}
@@ -8,7 +9,7 @@ enum ProgrammingLanguage: ubyte {Java8}
 table Chaincode {
   // (ledger:domain:chaincode) is a primary key
   code_name:   string  (required, key);  // sorted
-  domain_name: string  (required);  
+  domain_name: string  (required);
   ledger_name: string  (required);
 
   language:    ProgrammingLanguage;
@@ -24,7 +25,7 @@ table KeyValueObject {
 }
 
 /////////////////////////////////////
-/// Permissions 
+/// Permissions
 
 
 table UserPermissionRoot {
@@ -61,7 +62,7 @@ table UserPermissionAsset {
   ledger_name: string (required);
 
   transfer: bool;  // ability to transfer an asset
-  add:      bool;  // ability to add some amount to account 
+  add:      bool;  // ability to add some amount to account
   remove:   bool;  // ability to remove some amount from account
   create:   bool;  // ability to create new asset
 }
@@ -72,7 +73,7 @@ union UserPermission {UserPermissionRoot, UserPermissionLedger, UserPermissionDo
 /// Peer
 
 table Peer {
-  publicKey:       PublicKey (required);  // sorted; primary key. 
+  publicKey:       PublicKey (required);  // sorted; primary key.
   ip:              string;
   trust:           double;
   active:          bool;

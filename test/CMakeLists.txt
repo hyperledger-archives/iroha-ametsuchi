@@ -17,6 +17,9 @@ target_link_libraries(file_test PRIVATE ${LIBAMETSUCHI_NAME})
 AddTest(rw_file_safe_test ametsuchi/file/rw_file_safe_test.cc)
 target_link_libraries(rw_file_safe_test PRIVATE ${LIBAMETSUCHI_NAME})
 
+AddTest(module_sqlite module/sqlite_test.cc)
+target_link_libraries(module_sqlite PRIVATE sqlite)
+
 AddTest(tx_store_test ametsuchi/tx_store/tx_store_test.cc)
 target_link_libraries(tx_store_test PRIVATE ${LIBAMETSUCHI_NAME})
 
@@ -25,3 +28,4 @@ target_link_libraries(tx_store_iterator_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(tx_store_recovery_test ametsuchi/tx_store/tx_store_recovery_test.cc)
 target_link_libraries(tx_store_recovery_test PRIVATE ${LIBAMETSUCHI_NAME})
+
