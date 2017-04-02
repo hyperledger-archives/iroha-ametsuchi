@@ -17,56 +17,137 @@
 
 #include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
-#include <ametsuchi/tx_store/iterator.h>
+#include <flatbuffers/flatbuffers.h>
 #include <spdlog/spdlog.h>
-
-namespace ametsuchi {
 
 static auto console = spdlog::stdout_color_mt("ametsuchi");
 
-Ametsuchi::Ametsuchi(const std::string &db_folder) : path_(db_folder) {
-  int status = mkdir(db_folder.c_str(), 0700);
-  if (-1 == status) {
-    if (errno == EEXIST) {
-      console->debug("{} exists", db_folder);
-      // ok
-    } else {
-      console->critical("mkdir returned code {} for {}", errno, db_folder);
-      throw exception::IOError("mkdir");
-    }
+#define AMETSUCHI_HANDLE(res, err)                                        \
+  if (res == err) {                                                       \
+    console->critical("{}", mdb_strerror(res));                           \
+    console->critical("err in {} at #{} in file {}", __PRETTY_FUNCTION__, \
+                      __LINE__, __FILE__);                                \
   }
 
-  tx_ = std::make_unique<tx_store::Array>(path_ + "/ledger");
+#define AMETSUCHI_TREES_TOTAL 8
+#define AMETSUCHI_DB_SIZE (8L * 1024 * 1024 * 1024)
 
-  create_tx_index();
+namespace ametsuchi {
+
+
+Ametsuchi::Ametsuchi(const std::string &db_folder)
+    : path_(db_folder), tx_store_total(0) {
+  // initialize database:
+  // create folder, create all handles and btrees
+  // in case of any errors prints error to stdout and exits
+  init();
 }
 
 void Ametsuchi::append(const ByteArray &blob) {
-  size_t index = tx_->append(blob);
+  auto tx = iroha::GetTransaction(blob.data());
 
-  append_index(blob, index);
-}
+  MDB_val c_key, c_val;
+  int res;
 
-void Ametsuchi::append(const std::vector<ByteArray> &batch) {
-  auto index = tx_->append_batch(batch);
+  // 1. append TX in the end of TX STORE
+  {
+    c_key.mv_data = &(++tx_store_total);
+    c_key.mv_size = sizeof(tx_store_total);
+    c_val.mv_data = (void *)blob.data();
+    c_val.mv_size = blob.size();
 
-  // update index
-  auto size = batch.size();
-  for (size_t i = 0; i < size; i++) {
-    append_index(batch[i], index[i]);
+    if ((res = mdb_cursor_put(trees_["tx_store"].second, &c_key, &c_val,
+                              MDB_NOOVERWRITE | MDB_APPEND))) {
+      if (res == MDB_KEYEXIST) {
+        console->critical("KEY {} EXISTS IN TX STORE\nentries={}\n",
+                          tx_store_total, mst.ms_entries);
+      }
+      AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+      AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+      AMETSUCHI_HANDLE(res, EACCES);
+      AMETSUCHI_HANDLE(res, EINVAL);
+      exit(res);
+    }
+  }
+
+  // 2. insert record into index_add_creator
+  {
+    auto &&creator = tx->creatorPubKey();
+    c_key.mv_data = (void *)(creator->data()->data());
+    c_key.mv_size = creator->data()->size();
+    c_val.mv_data = &tx_store_total;
+    c_val.mv_size = sizeof(tx_store_total);
+
+    if ((res = mdb_cursor_put(trees_["index_add_creator"].second, &c_key,
+                              &c_val, 0))) {
+      AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+      AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+      AMETSUCHI_HANDLE(res, EACCES);
+      AMETSUCHI_HANDLE(res, EINVAL);
+      exit(res);
+    }
+  }
+
+  // 3. insert record into index_transfer_sender and index_transfer_receiver
+  if (tx->command_type() == iroha::Command::CmdTransferAsset) {
+    // update index_transfer_sender
+    {
+      auto &&sender = tx->command_as_CmdTransferAsset()->sender();
+      c_key.mv_data = (void *)(sender->data()->data());
+      c_key.mv_size = sender->data()->size();
+
+      if ((res = mdb_cursor_put(trees_["index_transfer_sender"].second, &c_key,
+                                &c_val, 0))) {
+        AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+        AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+        AMETSUCHI_HANDLE(res, EACCES);
+        AMETSUCHI_HANDLE(res, EINVAL);
+        exit(res);
+      }
+    }
+
+    // update index_transfer_receiver
+    {
+      auto &&receiver = tx->command_as_CmdTransferAsset()->receiver();
+      c_key.mv_data = (void *)(receiver->data()->data());
+      c_key.mv_size = receiver->data()->size();
+
+      if ((res = mdb_cursor_put(trees_["index_transfer_receiver"].second,
+                                &c_key, &c_val, 0))) {
+        AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+        AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+        AMETSUCHI_HANDLE(res, EACCES);
+        AMETSUCHI_HANDLE(res, EINVAL);
+        exit(res);
+      }
+    }
+  }
+
+  // 4. update WSV
+  {
+    // if Command == Add
+    if (tx->command_type() == iroha::Command::CmdAdd) {
+      cmd_add(blob);
+    }  // Create<Asset>
+    else if (tx->command_type() == iroha::Command::CmdCreateAsset) {
+      cmd_create_asset(blob);
+    }
   }
 }
 
+void Ametsuchi::append(const std::vector<ByteArray> &batch) { return; }
+
 
 void Ametsuchi::commit() {
-  console->debug("commit()");
-  tx_->commit();
-
   // commit old transaction
-  mdb_cursor_close(cursor_1);
-  mdb_cursor_close(cursor_2);
-  mdb_cursor_close(cursor_3);
-  mdb_txn_commit(append_tx);
+  for (auto &&e : trees_) {
+    const std::string &name = e.first;
+    MDB_dbi &dbi = e.second.first;
+    MDB_cursor *cursor = e.second.second;
+
+    mdb_cursor_close(cursor);
+  }
+  mdb_txn_commit(append_tx_);
   mdb_env_stat(env, &mst);
 
   // create new append transaction
@@ -75,7 +156,6 @@ void Ametsuchi::commit() {
 
 
 void Ametsuchi::rollback() {
-  tx_->rollback();
   abort_append_tx();
   open_append_tx();
 }
@@ -124,150 +204,242 @@ std::vector<ByteArray> Ametsuchi::getAddTxByCreator(const std::string &pubKey) {
   return ret;
 }
 
-void Ametsuchi::create_tx_index() {
+
+void Ametsuchi::abort_append_tx() {
+  for (auto &&e : trees_) {
+    MDB_cursor *cursor = e.second.second;
+    mdb_cursor_close(cursor);
+  }
+  mdb_txn_abort(append_tx_);
+}
+
+
+void Ametsuchi::init() {
   int res;
 
-  mdb_env_create(&env);
-  mdb_env_set_mapsize(env, 1024L * 1024 * 2);  // 2 MB
-  mdb_env_set_maxdbs(env, 3);                  // we have only 3 databases
-
-  std::string lmdb = path_ + "/tx_index";
-
-  // create index directory
-  res = mkdir(lmdb.c_str(), 0700);
-  if (res == -1) {
-    if (errno != EEXIST) {
-      console->critical("can not create {} folder", lmdb);
-      throw exception::Exception("create_tx_index mkdir");
+  // create database directory
+  if ((res = mkdir(path_.c_str(), 0700))) {
+    if (res == EEXIST) {
+      console->debug("folder with database exists");
+    } else {
+      AMETSUCHI_HANDLE(res, EACCES);
+      AMETSUCHI_HANDLE(res, ELOOP);
+      AMETSUCHI_HANDLE(res, EMLINK);
+      AMETSUCHI_HANDLE(res, ENAMETOOLONG);
+      AMETSUCHI_HANDLE(res, ENOENT);
+      AMETSUCHI_HANDLE(res, ENOSPC);
+      AMETSUCHI_HANDLE(res, ENOTDIR);
+      AMETSUCHI_HANDLE(res, EROFS);
+      exit(res);
     }
   }
 
-  res = mdb_env_open(env, lmdb.c_str(), MDB_FIXEDMAP, 0700);
-  if (res) {
-    if (res == MDB_VERSION_MISMATCH)
-      console->critical("MDB_VERSION_MISMATCH");
-    else if (res == MDB_INVALID)
-      console->critical("MDB_INVALID");
-    else if (res == ENOENT)
-      console->critical("ENOENT");
-    else if (res == EACCES)
-      console->critical("EACCES");
-    else if (res == EAGAIN)
-      console->critical("EAGAIN");
-
-    console->critical("can not open index db, code {}", res);
-    throw exception::Exception("create_tx_index mdb_env_open");
+  // create environment
+  if ((res = mdb_env_create(&env))) {
+    AMETSUCHI_HANDLE(res, MDB_VERSION_MISMATCH);
+    AMETSUCHI_HANDLE(res, MDB_INVALID);
+    AMETSUCHI_HANDLE(res, ENOENT);
+    AMETSUCHI_HANDLE(res, EACCES);
+    AMETSUCHI_HANDLE(res, EAGAIN);
+    exit(res);
   }
 
+  // set maximum mmap size. Must be multiple of OS page size (4 KB).
+  // max size of the database (!!!)
+  if ((res = mdb_env_set_mapsize(env, AMETSUCHI_DB_SIZE))) {
+    AMETSUCHI_HANDLE(res, EINVAL);
+    exit(res);
+  }
+
+  // set number of databases in single file
+  if ((res = mdb_env_set_maxdbs(env, AMETSUCHI_TREES_TOTAL))) {
+    AMETSUCHI_HANDLE(res, EINVAL);
+    exit(res);
+  }
+
+  // create database environment
+  if ((res = mdb_env_open(env, path_.c_str(), MDB_FIXEDMAP, 0700))) {
+    AMETSUCHI_HANDLE(res, MDB_VERSION_MISMATCH);
+    AMETSUCHI_HANDLE(res, MDB_INVALID);
+    AMETSUCHI_HANDLE(res, ENOENT);
+    AMETSUCHI_HANDLE(res, EACCES);
+    AMETSUCHI_HANDLE(res, EAGAIN);
+    exit(res);
+  }
+
+  // stats about db
+  mdb_env_stat(env, &mst);
+
+  // initialize
   open_append_tx();
 }
 
-/**
- * Create separate databases:
- * 1. (tx_type="Add", creator pubkey)
- * 2. (tx_type="Transfer", sender pubkey)
- * 3. (tx_type="Transfer", receiver pubkey)
- *
- * each allows key duplicates
- */
-void Ametsuchi::open_append_tx() {
+
+void Ametsuchi::init_btree(const std::string &name, uint32_t flags) {
   int res;
-  if ((res = mdb_txn_begin(env, NULL, 0, &append_tx))) {
-    console->critical("mdb_tx_begin");
+  MDB_dbi dbi;
+  MDB_cursor *cursor;
+  if ((res = mdb_dbi_open(append_tx_, name.c_str(), flags, &dbi))) {
+    AMETSUCHI_HANDLE(res, MDB_NOTFOUND);
+    AMETSUCHI_HANDLE(res, MDB_DBS_FULL);
     exit(res);
   }
 
-  if ((res = mdb_dbi_open(append_tx, "add_creator",
-                          MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE,
-                          &dbi_index1))) {
-    console->critical("mdb_dbi_open add_creator");
+  if ((res = mdb_cursor_open(append_tx_, dbi, &cursor))) {
+    AMETSUCHI_HANDLE(res, EINVAL);
     exit(res);
   }
 
-  if ((res = mdb_dbi_open(append_tx, "transfer_sender",
-                          MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE,
-                          &dbi_index2))) {
-    console->critical("mdb_dbi_open transfer_sender");
-    exit(res);
+  // close previous cursor if it is not closed
+  auto e = trees_[name];
+  if (e.second) {
+    mdb_cursor_close(e.second);
   }
 
-  if ((res = mdb_dbi_open(append_tx, "transfer_receiver",
-                          MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE,
-                          &dbi_index3))) {
-    console->critical("mdb_dbi_open transfer_receiver");
-    exit(res);
-  }
-
-  if ((res = mdb_cursor_open(append_tx, dbi_index1, &cursor_1))) {
-    console->critical("mdb_cursor_open 1");
-    exit(res);
-  }
-
-  if ((res = mdb_cursor_open(append_tx, dbi_index2, &cursor_2))) {
-    console->critical("mdb_cursor_open 2");
-    exit(res);
-  }
-
-  if ((res = mdb_cursor_open(append_tx, dbi_index3, &cursor_3))) {
-    console->critical("mdb_cursor_open 3");
-    exit(res);
-  }
+  auto tree = std::make_pair(dbi, cursor);
+  auto item = std::make_pair(name, tree);
+  trees_.insert(item);
 }
 
-void Ametsuchi::append_index(const ByteArray &blob, size_t index) {
-  auto tx = iroha::GetTransaction(blob.data());
+size_t Ametsuchi::tx_store_size() {
+  MDB_val c_key, c_val;
+  int res;
+  if ((res = mdb_cursor_get(trees_["tx_store"].second, &c_key, &c_val,
+                            MDB_LAST)) == MDB_NOTFOUND) {
+    return 0u;
+  }
 
-  // update add_creator index
+  size_t size = *reinterpret_cast<size_t *>(c_key.mv_data);
+  return size;
+}
+
+void Ametsuchi::open_append_tx() {
+  int res;
+
+  // begin "append" transaction
+  if ((res = mdb_txn_begin(env, NULL, 0, &append_tx_))) {
+    AMETSUCHI_HANDLE(res, MDB_PANIC);
+    AMETSUCHI_HANDLE(res, MDB_MAP_RESIZED);
+    AMETSUCHI_HANDLE(res, MDB_READERS_FULL);
+    AMETSUCHI_HANDLE(res, ENOMEM);
+    exit(res);
+  }
+
+  // create database instances for each tree, open cursors for each tree, save
+  // them in map this.trees_: [name] => std::pair<dbi, cursor>
+
+  // [autoincrement_key] => tx (NODUP)
+  init_btree("tx_store", MDB_CREATE | MDB_INTEGERKEY);
+  tx_store_total = tx_store_size();  // last index in db as "total entries"
+
+  // [pubkey] => autoincrement_key (DUP)
+  init_btree("index_add_creator", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+
+  // [pubkey] => autoincrement_key (DUP)
+  init_btree("index_transfer_sender", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+
+  // [pubkey] => autoincrement_key (DUP)
+  init_btree("index_transfer_receiver",
+             MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+
+  // [pubkey] => assets (DUP)
+  init_btree("wsv_pubkey_assets", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+
+  // [pubkey] => account (NODUP)
+  init_btree("wsv_pubkey_account", MDB_CREATE);
+
+  // [ledger_name+domain_name+asset_name] => asset (NODUP)
+  init_btree("wsv_assetid_asset", MDB_CREATE);
+
+  // [ip] => peer (NODUP)
+  init_btree("wsv_pubkey_peer", MDB_CREATE);
+
+  assert(AMETSUCHI_TREES_TOTAL == trees_.size());
+}
+
+
+inline void Ametsuchi::cmd_add(const ByteArray &blob) {
   MDB_val c_key, c_val;
   int res;
 
-  auto &&creator = tx->creatorPubKey();
-  c_key.mv_data = (void *)(creator->data()->Data());
-  c_key.mv_size = creator->data()->size();
+  auto &&tx = iroha::GetTransaction(blob.data());
+  auto &&cmd = tx->command_as_CmdAdd();
 
-  c_val.mv_data = &index;
-  c_val.mv_size = sizeof(index);
+  // if Add<Account>
+  if (cmd->object_type() == iroha::Object::Account) {
+    auto account = cmd->object_as_Account();
+    auto acc_pubk = account->pubKey();
+    c_key.mv_data = (void *)(acc_pubk->data()->data());
+    c_key.mv_size = acc_pubk->data()->size();
+    c_val.mv_data = &tx_store_total;
+    c_val.mv_size = sizeof(tx_store_total);
 
-  if ((res = mdb_cursor_put(cursor_1, &c_key, &c_val, 0))) {
-    console->critical("error while appending");
-    abort_append_tx();
-    exit(res);
-  }
-
-  if (tx->command_type() == iroha::Command::CmdTransferAsset) {
-    // update transfer_sender index
-    {
-      auto &&sender = tx->command_as_CmdTransferAsset()->sender();
-      c_key.mv_data = (void *)(sender->data()->data());
-      c_key.mv_size = sender->data()->size();
-
-      if ((res = mdb_cursor_put(cursor_2, &c_key, &c_val, 0))) {
-        console->critical("error while appending transfer_sender");
-        abort_append_tx();
-        exit(res);
-      }
+    if ((res = mdb_cursor_put(trees_["wsv_pubkey_account"].second, &c_key,
+                              &c_val, 0))) {
+      AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+      AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+      AMETSUCHI_HANDLE(res, EACCES);
+      AMETSUCHI_HANDLE(res, EINVAL);
+      exit(res);
     }
 
-    // update transfer_receiver index
-    {
-      auto &&receiver = tx->command_as_CmdTransferAsset()->receiver();
-      c_key.mv_data = (void *)(receiver->data()->data());
-      c_key.mv_size = receiver->data()->size();
+  }  // if Add<Peer>
+  else if (cmd->object_type() == iroha::Object::Peer) {
+    auto &&peer = cmd->object_as_Peer();
+    auto &&ip = peer->ip();
 
-      if ((res = mdb_cursor_put(cursor_3, &c_key, &c_val, 0))) {
-        console->critical("error while appending transfer_sender");
-        abort_append_tx();
-        exit(res);
-      }
+    // flatbuffers::FlatBufferBuilder fbb;
+    // fbb.PushElement(peer);
+    // TODO: how to get bytes of peer?
+
+
+    c_key.mv_data = (void *)(ip->data());
+    c_key.mv_size = ip->size();
+    c_val.mv_data = 0 /*bytes of peer*/;
+    c_val.mv_size = 0 /*size of peer*/;
+
+    if ((res = mdb_cursor_put(trees_["wsv_pubkey_peer"].second, &c_key, &c_val,
+                              0))) {
+      AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+      AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+      AMETSUCHI_HANDLE(res, EACCES);
+      AMETSUCHI_HANDLE(res, EINVAL);
+      exit(res);
     }
+  } else {
+    console->debug(
+        "Ametsuchi supports only Add<Peer> and Add<Account> transactions. "
+        "WSV is not updated.");
   }
 }
 
-void Ametsuchi::abort_append_tx() {
-  mdb_cursor_close(cursor_1);
-  mdb_cursor_close(cursor_2);
-  mdb_cursor_close(cursor_3);
-  mdb_txn_abort(append_tx);
+
+inline void Ametsuchi::cmd_create_asset(const ByteArray &blob) {
+  MDB_val c_key, c_val;
+  int res;
+
+  auto tx = iroha::GetTransaction(blob.data());
+  auto cmd = tx->command_as_CmdAdd();
+
+  auto asset = tx->command_as_CmdCreateAsset();
+
+  std::string pk{asset->ledger_name()->begin(), asset->ledger_name()->end()};
+  pk += asset->domain_name()->data();
+  pk += asset->asset_name()->data();
+
+  c_key.mv_data = (void *)(pk.c_str());
+  c_key.mv_size = pk.size();
+  c_val.mv_data = (void *)asset->description()->data();
+  c_val.mv_size = asset->description()->size();
+
+  if ((res = mdb_cursor_put(trees_["wsv_assetid_asset"].second, &c_key, &c_val,
+                            0))) {
+    AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+    AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+    AMETSUCHI_HANDLE(res, EACCES);
+    AMETSUCHI_HANDLE(res, EINVAL);
+    exit(res);
+  }
 }
 
 }  // namespace ametsuchi

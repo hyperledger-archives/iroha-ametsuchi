@@ -18,14 +18,16 @@
 #ifndef AMETSUCHI_DB_H
 #define AMETSUCHI_DB_H
 
-#include <ametsuchi/env.h>
-#include <ametsuchi/globals.h>
-#include <ametsuchi/tx_store/array.h>
 #include <lmdb.h>
+#include <cstdint>
 #include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ametsuchi {
+
+using ByteArray = std::vector<uint8_t>;
 
 class Ametsuchi {
  public:
@@ -41,25 +43,25 @@ class Ametsuchi {
  private:
   std::string path_;
 
-  std::unique_ptr<tx_store::Array> tx_;
-
+  void init();
+  void init_btree(const std::string &name, uint32_t flags);
+  size_t tx_store_size();
   void open_append_tx();
   void abort_append_tx();
-
-  void create_tx_index();
-  void append_index(const ByteArray &blob, size_t index);
 
   MDB_env *env;
   MDB_stat mst;
 
-  MDB_txn *append_tx;    // pointer to db transaction
-  MDB_dbi dbi_index1;    // "Add" transactions by creator key
-  MDB_dbi dbi_index2;    // "Transfer" transactions by sender key
-  MDB_dbi dbi_index3;    // "Transfer" transactions by receiver key
-  MDB_cursor *cursor_1;  // append cursor for index1
-  MDB_cursor *cursor_2;  // append cursor for index2
-  MDB_cursor *cursor_3;  // append cursor for index3
+  MDB_txn *append_tx_;  // pointer to db transaction
+
+  std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
+
+  size_t tx_store_total;
+
+  inline void cmd_add(const ByteArray &tx);
+  inline void cmd_create_asset(const ByteArray& blob);
 };
-}
+
+}  // namespace ametsuchi
 
 #endif  // AMETSUCHI_DB_H

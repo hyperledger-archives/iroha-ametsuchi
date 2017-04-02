@@ -32,33 +32,11 @@ include(cmake/functions.cmake)
 
 
 set(AMETSUCHI_INCLUDE
-  include/ametsuchi/file/file.h
-  include/ametsuchi/file/rw_file.h
-
   include/ametsuchi/ametsuchi.h
-  include/ametsuchi/cache.h
-  include/ametsuchi/comparator.h
-  include/ametsuchi/env.h
-  include/ametsuchi/exception.h
-  include/ametsuchi/globals.h
-  include/ametsuchi/serializer.h
-
-  include/ametsuchi/tx_store/array.h
-  include/ametsuchi/tx_store/index.h
-  include/ametsuchi/tx_store/iterator.h
   )
 
 set(AMETSUCHI_SRC
-  src/ametsuchi/file/file.cc
-  src/ametsuchi/file/rw_file.cc
-
-  src/ametsuchi/env.cc
   src/ametsuchi/ametsuchi.cc
-
-
-  src/ametsuchi/tx_store/array.cc
-  src/ametsuchi/tx_store/index.cc
-  src/ametsuchi/tx_store/iterator.cc
   )
 
 # Library.

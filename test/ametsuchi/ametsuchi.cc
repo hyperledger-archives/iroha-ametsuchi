@@ -1,5 +1,5 @@
 /**
- * Copyright Soramitsu Co., Ltd. 2016 All Rights Reserved.
+ * Copyright Soramitsu Co., Ltd. 2017 All Rights Reserved.
  * http://soramitsu.co.jp
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,23 +15,3 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_GLOBALS_H_
-#define AMETSUCHI_GLOBALS_H_
-
-#include <ametsuchi/env.h>
-#include <ametsuchi/exception.h>
-#include <cstdint>
-#include <cstdlib>
-#include <cassert>
-#include <memory>
-#include <string>
-#include <vector>
-
-namespace ametsuchi {
-
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
-
-}
-
-#endif  // AMETSUCHI_GLOBALS_H_
