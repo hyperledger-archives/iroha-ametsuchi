@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <ametsuchi/buffer.h>
+#include <ametsuchi/circular_buffer.h>
 #include <ametsuchi/exception.h>
 #include <ametsuchi/globals.h>
 #include <algorithm>
@@ -36,7 +36,7 @@ constexpr size_t popcount(T n) {
 }
 
 /**
- *   \brief Optimized merkle tree for append-only
+ *   @brief Optimized merkle tree for append-only
  *   storage. With quick rollback property
  *
  *   As far as TXs in ledger cannot be undone
@@ -78,7 +78,7 @@ class NarrowMerkleTree {
   // HashFn(t, T()) should be equal t
   using HashFn = std::function<T(const T &, const T &)>;
   // TODO: use linear buffer layout
-  using Storage = std::vector<buffer::CircularStack<T>>;
+  using Storage = std::vector<buffer::CircularBuffer<T>>;
   NarrowMerkleTree(HashFn, size_t capacity = 0);
 
   /**
@@ -124,9 +124,9 @@ class NarrowMerkleTree {
    * Enforce copying because vector can be changed
    * Doesn't perform emptiness checks
    */
-  inline T get_root() const;
+  T get_root() const;
 
-  inline size_t size() const;
+  constexpr size_t size() const;
 
  private:
   Storage data;
@@ -170,7 +170,7 @@ NarrowMerkleTree<T>::NarrowMerkleTree(HashFn c, size_t capacity)
 template <typename T>
 void NarrowMerkleTree<T>::add(T t) {
   txs++;
-  data[0].push(t);
+  T dropped_child = data[0].push(t);
   bool new_root = false;
   if (txs != 1 && height(txs) > height(txs - 1)) {
     grow();
@@ -224,13 +224,13 @@ void NarrowMerkleTree<T>::drop(size_t num) {
 
 template <typename T>
 T NarrowMerkleTree<T>::get_root() const {
-  const buffer::CircularStack<T> &cs = data.back();
+  const buffer::CircularBuffer<T> &cs = data.back();
   if (cs.size() == 0) throw Exception("Root is empty");
   return cs[0];
 }
 
 template <typename T>
-size_t NarrowMerkleTree<T>::size() const {
+constexpr size_t NarrowMerkleTree<T>::size() const {
   return txs;
 }
 

@@ -28,12 +28,15 @@ namespace buffer {
  * Basic circular buffer
  */
 template <typename T>
-class CircularStack {
+class CircularBuffer {
  public:
-  CircularStack(size_t);
-  CircularStack(CircularStack &&);
-  CircularStack(const CircularStack &) = delete;
-  ~CircularStack();
+  CircularBuffer(size_t);
+  CircularBuffer(CircularBuffer &&);
+  // Used only in narrow merkle tree
+  // and here does need to be copied
+  // deleted for preventing errors
+  CircularBuffer(const CircularBuffer &) = delete;
+  ~CircularBuffer();
 
   /**
    * Performs reallocation of the data
@@ -47,13 +50,13 @@ class CircularStack {
    * O(1)
    * Add element to the buffer end pointer
    */
-  void push(T &&);
+  T push(T &&);
 
   /**
    * O(1)
    * Add element to the buffer end pointer
    */
-  void push(const T &);
+  T push(const T &);
   /**
    * O(1)
    * @param n elemens for removing
@@ -70,11 +73,13 @@ class CircularStack {
   /**
    * Number of elements
    */
-  inline size_t size() const { return sz; }
+  constexpr size_t size() const { return sz; }
   /**
    * Maximum storage capacity
    */
-  inline size_t capacity() const { return cap; }
+  constexpr size_t capacity() const { return cap; }
+
+  constexpr bool is_full() const { return size() == capacity(); }
 
  private:
   // Raw data array
@@ -98,7 +103,7 @@ class CircularStack {
  public:
   class ForwardIter {
    public:
-    ForwardIter(CircularStack<T> *, size_t);
+    ForwardIter(CircularBuffer<T> *, size_t);
     bool operator==(const ForwardIter &i) const;
     bool operator!=(const ForwardIter &i) const;
     ForwardIter &operator++();
@@ -107,13 +112,14 @@ class CircularStack {
     T &operator*();
     T &operator[](size_t t);
     size_t size() const {return cs->size();}
+    size_t capacity() const {return cs->capacity();}
     ForwardIter &to_last() {
       pos = cs->diff(cs->i_end, 1);
       return *this;
     }
 
    private:
-    CircularStack<T> *cs;
+    CircularBuffer<T> *cs;
     size_t pos;
 
     size_t pos_inc(size_t t);
@@ -129,7 +135,7 @@ class CircularStack {
  private:
 };
 
-#include "buffer.inc"
+#include "circular_buffer.inc"
 
 }  // namespace buffer
 }  // namespace ametsuchi

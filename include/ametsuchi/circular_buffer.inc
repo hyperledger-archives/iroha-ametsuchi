@@ -16,13 +16,13 @@
  */
 
 template <typename T>
-CircularStack<T>::CircularStack(size_t s) : cap(s), sz(0), i_end(0) {
+CircularBuffer<T>::CircularBuffer(size_t s) : cap(s), sz(0), i_end(0) {
   if (s == 0) throw Exception("Buffer size cannot be zero");
   v = (T *)malloc(sizeof(T) * capacity());
 }
 
 template <typename T>
-CircularStack<T>::CircularStack(CircularStack &&cs) {
+CircularBuffer<T>::CircularBuffer(CircularBuffer &&cs) {
   v = cs.v;
   cap = cs.cap;
   sz = cs.sz;
@@ -31,95 +31,99 @@ CircularStack<T>::CircularStack(CircularStack &&cs) {
 }
 
 template <typename T>
-CircularStack<T>::~CircularStack() {
+CircularBuffer<T>::~CircularBuffer() {
   if (v) free(v);
   v = nullptr;
 }
 
 template <typename T>
-void CircularStack<T>::resize(size_t s) {
+void CircularBuffer<T>::resize(size_t s) {
   cap = s;
   sz = std::min(capacity(), size());
   v = (T *)realloc(v, sizeof(T) * capacity());
 }
 
 template <typename T>
-void CircularStack<T>::push(T &&t) {
+T CircularBuffer<T>::push(T &&t) {
+  T tmp = v[start()];
   v[i_end] = std::move(t);
   i_end = (i_end + 1) % capacity();
   if (size() < capacity()) sz++;
+  return tmp;
 }
 
 template <typename T>
-void CircularStack<T>::push(const T &t) {
+T CircularBuffer<T>::push(const T &t) {
+  T tmp = v[start()];
   v[i_end] = t;
   i_end = (i_end + 1) % capacity();
   if (size() < capacity()) sz++;
+  return tmp;
 }
 
 template <typename T>
-void CircularStack<T>::pop(size_t n) {
+void CircularBuffer<T>::pop(size_t n) {
   sz = size() < n ? 0 : size() - n;
 }
 
 template <typename T>
-T &CircularStack<T>::operator[](size_t s) {
+T &CircularBuffer<T>::operator[](size_t s) {
   if (s >= size()) throw Exception("Buffer accessing out of size");
   return v[diff(i_end, size() - s)];
 }
 
 template <typename T>
-T CircularStack<T>::operator[](size_t s) const {
+T CircularBuffer<T>::operator[](size_t s) const {
   if (s >= size()) throw Exception("Buffer accessing out of size");
   return v[diff(i_end, size() - s)];
 }
 
 template <typename T>
-CircularStack<T>::ForwardIter::ForwardIter(CircularStack<T> *cs, size_t pos)
+CircularBuffer<T>::ForwardIter::ForwardIter(CircularBuffer<T> *cs, size_t pos)
     : cs(cs), pos(pos) {}
 
 template <typename T>
-bool CircularStack<T>::ForwardIter::operator==(const ForwardIter &i) const {
+bool CircularBuffer<T>::ForwardIter::operator==(const ForwardIter &i) const {
   return cs->v == i.cs->v && pos == i.pos;
 }
 
 template <typename T>
-bool CircularStack<T>::ForwardIter::operator!=(const ForwardIter &i) const {
+bool CircularBuffer<T>::ForwardIter::operator!=(const ForwardIter &i) const {
   return !this->operator==(i);
 }
 
 template <typename T>
-typename CircularStack<T>::ForwardIter
-    &CircularStack<T>::ForwardIter::operator++() {
+typename CircularBuffer<T>::ForwardIter
+    &CircularBuffer<T>::ForwardIter::operator++() {
   pos = pos_inc(1);
   return *this;
 }
 
 template <typename T>
-typename CircularStack<T>::ForwardIter CircularStack<T>::ForwardIter::operator+(
+typename CircularBuffer<T>::ForwardIter CircularBuffer<T>::ForwardIter::operator+(
     size_t t) {
   return {cs, pos_inc(t)};
 }
 
 template <typename T>
-typename CircularStack<T>::ForwardIter &CircularStack<T>::ForwardIter::
+typename CircularBuffer<T>::ForwardIter &CircularBuffer<T>::ForwardIter::
 operator+=(size_t t) {
   pos = pos_inc(t);
   return *this;
 }
 
 template <typename T>
-T &CircularStack<T>::ForwardIter::operator*() {
+T &CircularBuffer<T>::ForwardIter::operator*() {
   return (*cs)[pos];
 }
 
 template <typename T>
-T &CircularStack<T>::ForwardIter::operator[](size_t t) {
+T &CircularBuffer<T>::ForwardIter::operator[](size_t t) {
   return (*cs)[pos_inc(t)];
 }
 
 template <typename T>
-size_t CircularStack<T>::ForwardIter::pos_inc(size_t t) {
+size_t CircularBuffer<T>::ForwardIter::pos_inc(size_t t) {
   // temporal end, that bigger current position
   auto t_end = cs->i_end + pos >= cs->i_end ? cs->size() : 0;
   // calculate new position

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/buffer.h>
+#include <ametsuchi/circular_buffer.h>
 #include <gtest/gtest.h>
 
 namespace ametsuchi {
@@ -23,8 +23,8 @@ namespace buffer {
 
 constexpr auto size = 10;
 
-TEST(CircularStack, IterForEach) {
-  CircularStack<uint64_t> cs(size);
+TEST(CircularBuffer, IterForEach) {
+  CircularBuffer<uint64_t> cs(size);
   for (auto i = 0; i < size; ++i) cs.push(i);
   ASSERT_TRUE(cs.begin() != cs.end());
   auto i = 0;
@@ -44,8 +44,8 @@ TEST(CircularStack, IterForEach) {
   ASSERT_EQ(i, size);
 }
 
-TEST(CircularStack, IterSumOverflow) {
-  CircularStack<uint64_t> cs(size);
+TEST(CircularBuffer, IterSumOverflow) {
+  CircularBuffer<uint64_t> cs(size);
   for (auto i = 0; i < size + 1; ++i) cs.push(i);
   for (auto i = 0; i < size; ++i) {
     ASSERT_EQ(cs.begin() + (size + i), cs.end());
@@ -53,8 +53,8 @@ TEST(CircularStack, IterSumOverflow) {
   }
 }
 
-TEST(CircularStack, IterThroughOneOverflow) {
-  CircularStack<uint64_t> cs(size);
+TEST(CircularBuffer, IterThroughOneOverflow) {
+  CircularBuffer<uint64_t> cs(size);
   for (auto i = 0; i < size; ++i) cs.push(i);
   auto i = 0;
   for (auto c = cs.begin(); c != cs.end(); c += 3) {
@@ -64,16 +64,16 @@ TEST(CircularStack, IterThroughOneOverflow) {
   ASSERT_EQ(i, size + 3 - (size % 3));
 }
 
-TEST(CircularStack, IterAccess) {
-  CircularStack<uint64_t> cs(size);
+TEST(CircularBuffer, IterAccess) {
+  CircularBuffer<uint64_t> cs(size);
   for (auto i = 0; i < size; ++i) cs.push(i);
   for (auto i = 0; i < size; ++i) {
     ASSERT_EQ(cs[i], i);
   }
 }
 
-TEST(CircularStack, IterLast) {
-  CircularStack<uint64_t> cs(size);
+TEST(CircularBuffer, IterLast) {
+  CircularBuffer<uint64_t> cs(size);
   for (auto i = 0; i < size; ++i) {
     ASSERT_EQ(cs.last(), cs.begin().to_last());
     cs.push(i);
