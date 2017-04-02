@@ -31,3 +31,4 @@ table Message {
   // values can be accessed by key for O(log(n)). Look at "Storing maps" section in flatbuffers docs
   data: [KeyValueObject];
 }
+

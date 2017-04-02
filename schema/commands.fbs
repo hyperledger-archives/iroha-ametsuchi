@@ -35,18 +35,16 @@ table Transfer {
 //////////////////////////////////////////
 /// Commands for Asset
 
-union AnyAsset {Asset, Currency}
-
 // logically means asset summation
 table AddAsset {
     accPubKey: PublicKey (required);
-    asset:     [AnyAsset]   (required);
+    asset:     [Asset]   (required);
 }
 
 // logically means asset negation
 table RemoveAsset {
     accPubKey: PublicKey (required);
-    asset:     [AnyAsset]   (required);
+    asset:     [Asset]   (required);
 }
 
 // needed to implement correct permission model:

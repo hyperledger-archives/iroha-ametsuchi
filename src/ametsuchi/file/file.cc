@@ -17,8 +17,7 @@
 
 #include <ametsuchi/exception.h>
 #include <ametsuchi/file/file.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <spdlog/spdlog.h>
 
 namespace ametsuchi {
 namespace file {

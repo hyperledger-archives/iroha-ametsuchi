@@ -19,7 +19,7 @@ struct ConsensusEvent;
 
 struct TransactionResponse;
 
-struct RecieverConfirmation;
+struct ReceiverConfirmation;
 
 struct Response;
 
@@ -182,7 +182,7 @@ inline flatbuffers::Offset<TransactionResponse> CreateTransactionResponseDirect(
       transaction);
 }
 
-struct RecieverConfirmation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+struct ReceiverConfirmation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   enum {
     VT_SIGNATURE = 4,
     VT_HASH = 6
@@ -203,42 +203,42 @@ struct RecieverConfirmation FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table
   }
 };
 
-struct RecieverConfirmationBuilder {
+struct ReceiverConfirmationBuilder {
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
   void add_signature(flatbuffers::Offset<iroha::Signature> signature) {
-    fbb_.AddOffset(RecieverConfirmation::VT_SIGNATURE, signature);
+    fbb_.AddOffset(ReceiverConfirmation::VT_SIGNATURE, signature);
   }
   void add_hash(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> hash) {
-    fbb_.AddOffset(RecieverConfirmation::VT_HASH, hash);
+    fbb_.AddOffset(ReceiverConfirmation::VT_HASH, hash);
   }
-  RecieverConfirmationBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+  ReceiverConfirmationBuilder(flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
   }
-  RecieverConfirmationBuilder &operator=(const RecieverConfirmationBuilder &);
-  flatbuffers::Offset<RecieverConfirmation> Finish() {
+  ReceiverConfirmationBuilder &operator=(const ReceiverConfirmationBuilder &);
+  flatbuffers::Offset<ReceiverConfirmation> Finish() {
     const auto end = fbb_.EndTable(start_, 2);
-    auto o = flatbuffers::Offset<RecieverConfirmation>(end);
+    auto o = flatbuffers::Offset<ReceiverConfirmation>(end);
     return o;
   }
 };
 
-inline flatbuffers::Offset<RecieverConfirmation> CreateRecieverConfirmation(
+inline flatbuffers::Offset<ReceiverConfirmation> CreateReceiverConfirmation(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<iroha::Signature> signature = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint8_t>> hash = 0) {
-  RecieverConfirmationBuilder builder_(_fbb);
+  ReceiverConfirmationBuilder builder_(_fbb);
   builder_.add_hash(hash);
   builder_.add_signature(signature);
   return builder_.Finish();
 }
 
-inline flatbuffers::Offset<RecieverConfirmation> CreateRecieverConfirmationDirect(
+inline flatbuffers::Offset<ReceiverConfirmation> CreateReceiverConfirmationDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
     flatbuffers::Offset<iroha::Signature> signature = 0,
     const std::vector<uint8_t> *hash = nullptr) {
-  return iroha::CreateRecieverConfirmation(
+  return iroha::CreateReceiverConfirmation(
       _fbb,
       signature,
       hash ? _fbb.CreateVector<uint8_t>(*hash) : 0);

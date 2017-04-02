@@ -17,7 +17,6 @@
 
 #include <ametsuchi/globals.h>
 #include <ametsuchi/serializer.h>
-#include <ametsuchi/status.h>
 #include <sstream>
 #include <gtest/gtest.h>
 

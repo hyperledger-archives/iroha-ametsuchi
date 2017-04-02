@@ -59,7 +59,7 @@ add_custom_target(compile_schema
   DEPENDS compileSchema
   COMMENT "Generating headers for FBS"
   )
-add_dependencies(flatbuffers compile_schema)
+add_dependencies(compile_schema flatbuffers)
 
 if(NOT flatbuffers_FOUND)
   add_dependencies(flatbuffers google_flatbuffers)
@@ -71,11 +71,12 @@ endif()
 #############################
 #         speedlog          #
 #############################
-find_package(spdlog 0.11.0)
+find_package(spdlog 0.13.0)
 
 if(NOT spdlog_FOUND)
   ExternalProject_Add(gabime_spdlog
     GIT_REPOSITORY    "https://github.com/gabime/spdlog.git"
+    GIT_TAG           "v0.13.0"
     CONFIGURE_COMMAND "" # remove configure step
     BUILD_COMMAND     "" # remove build step
     INSTALL_COMMAND   "" # remove install step

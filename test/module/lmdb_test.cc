@@ -24,13 +24,13 @@ static auto console = spdlog::stdout_color_mt("lmdb");
 class LMDB_Test : public ::testing::Test {
  protected:
   virtual void TearDown() {
-    remove(lmdb + "data.mdb");
-    remove(lmdb + "lock.mdb");
+    remove((lmdb + "data.mdb").c_str());
+    remove((lmdb + "lock.mdb").c_str());
   }
 
   virtual void TearUp() {
-    remove(lmdb + "data.mdb");
-    remove(lmdb + "lock.mdb");
+    remove((lmdb + "data.mdb").c_str());
+    remove((lmdb + "lock.mdb").c_str());
   }
 
   std::string lmdb = "/tmp/tx_index_test";

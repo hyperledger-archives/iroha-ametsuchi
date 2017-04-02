@@ -16,6 +16,7 @@
  */
 
 #include <ametsuchi/file/rw_file.h>
+#include <spdlog/spdlog.h>
 
 namespace ametsuchi {
 namespace file {

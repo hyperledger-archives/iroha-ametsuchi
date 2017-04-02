@@ -169,6 +169,7 @@ inline flatbuffers::Offset<Message> CreateMessageDirect(
       data ? _fbb.CreateVector<flatbuffers::Offset<iroha::KeyValueObject>>(*data) : 0);
 }
 
+
 }  // namespace iroha
 
 #endif  // FLATBUFFERS_GENERATED_ACCOUNT_IROHA_H_

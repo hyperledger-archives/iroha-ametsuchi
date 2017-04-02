@@ -15,12 +15,10 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
 #include <ametsuchi/tx_store/iterator.h>
 #include <spdlog/spdlog.h>
-
-#define PUBKEY_LENGTH 44
+#include <ametsuchi/ametsuchi.h>
 
 namespace ametsuchi {
 
@@ -46,15 +44,16 @@ Ametsuchi::Ametsuchi(const std::string &db_folder) : path_(db_folder) {
 void Ametsuchi::append(const ByteArray &blob) {
   size_t index = tx_->append(blob);
 
-  append_index(blob);
+  append_index(blob, index);
 }
 
 void Ametsuchi::append(const std::vector<ByteArray> &batch) {
-  tx_->append_batch(batch);
+  auto index = tx_->append_batch(batch);
 
   // update index
-  for (auto &&v : batch) {
-    append_index(v);
+  auto size = batch.size();
+  for (size_t i = 0; i < size; i++) {
+    append_index(batch[i], index[i]);
   }
 }
 
@@ -91,8 +90,8 @@ std::vector<ByteArray> Ametsuchi::getAddTxByCreator(const std::string &pubKey) {
   MDB_dbi read_dbi;
   MDB_cursor *cursor;
 
-  c_key.mv_size = PUBKEY_LENGTH;
-  c_key.mv_data = reinterpret_cast<void *>(pubKey.c_str());
+  c_key.mv_size = pubKey.size();
+  c_key.mv_data = (void *)pubKey.c_str();
 
   mdb_txn_begin(env, NULL, 0, &read_tx);
   mdb_dbi_open(read_tx, "add_creator", MDB_DUPSORT | MDB_DUPFIXED, &read_dbi);
@@ -105,7 +104,7 @@ std::vector<ByteArray> Ametsuchi::getAddTxByCreator(const std::string &pubKey) {
   }
 
   do {
-    size_t index = *reinterpret_cast<size_t *>(c_val.mv_data);
+    size_t index = *static_cast<size_t *>(c_val.mv_data);
     ret.push_back(tx_->get(index));
 
     if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT_DUP)) ==
@@ -197,7 +196,7 @@ void Ametsuchi::open_append_tx() {
 }
 
 
-void Ametsuchi::append_index(const ByteArray &blob) {
+void Ametsuchi::append_index(const ByteArray &blob, size_t index) {
   auto tx = iroha::GetTransaction(blob.data());
 
   if (tx->command_type() == iroha::Command::Add) {
@@ -206,14 +205,14 @@ void Ametsuchi::append_index(const ByteArray &blob) {
     int res;
 
     auto &&creator = tx->creatorPubKey();
-    c_key.mv_data = reinterpret_cast<void *>(creator->data()->data());
+    c_key.mv_data = (void *)(creator->data()->data());
     c_key.mv_size = creator->data()->size();
 
     c_val.mv_data = &index;
     c_val.mv_size = sizeof(index);
 
     if ((res = mdb_cursor_put(cursor_1, &c_key, &c_val, 0))) {
-      console->critical("error while appending {}", tx->hash());
+      console->critical("error while appending");
       abort_append_tx();
       exit(res);
     }
@@ -225,15 +224,14 @@ void Ametsuchi::append_index(const ByteArray &blob) {
       int res;
 
       auto &&sender = tx->command_as_Transfer()->sender();
-      c_key.mv_data = reinterpret_cast<void *>(sender->data()->data());
+      c_key.mv_data = (void *)(sender->data()->data());
       c_key.mv_size = sender->data()->size();
 
       c_val.mv_data = &index;
       c_val.mv_size = sizeof(index);
 
       if ((res = mdb_cursor_put(cursor_2, &c_key, &c_val, 0))) {
-        console->critical("error while appending {} transfer_sender",
-                          tx->hash());
+        console->critical("error while appending transfer_sender");
         abort_append_tx();
         exit(res);
       }
@@ -245,15 +243,14 @@ void Ametsuchi::append_index(const ByteArray &blob) {
       int res;
 
       auto &&receiver = tx->command_as_Transfer()->receiver();
-      c_key.mv_data = reinterpret_cast<void *>(receiver->data()->data());
+      c_key.mv_data = (void *)(receiver->data()->data());
       c_key.mv_size = receiver->data()->size();
 
       c_val.mv_data = &index;
       c_val.mv_size = sizeof(index);
 
       if ((res = mdb_cursor_put(cursor_3, &c_key, &c_val, 0))) {
-        console->critical("error while appending {} transfer_sender",
-                          tx->hash());
+        console->critical("error while appending transfer_sender");
         abort_append_tx();
         exit(res);
       }

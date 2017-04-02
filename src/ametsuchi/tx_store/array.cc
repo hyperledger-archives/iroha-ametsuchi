@@ -53,7 +53,8 @@ std::size_t Array::append(const ByteArray &data) {
   return index_.append(commit_size);
 }
 
-std::size_t Array::append_batch(const std::vector<ByteArray> &batch_data) {
+std::vector<size_t> Array::append_batch(const std::vector<ByteArray> &batch_data) {
+  /*
   if (batch_data.size() == 0) {
     return index_.size() - 1 + uncommitted_.size();
   }
@@ -68,6 +69,12 @@ std::size_t Array::append_batch(const std::vector<ByteArray> &batch_data) {
     append(*iter);
   }
   return first_offset;
+   */
+  std::vector<size_t> offsets(batch_data.size());
+  for (auto &&v : batch_data) {
+    offsets.push_back(this->append(v));
+  }
+  return offsets;
 }
 
 ByteArray Array::get(const std::size_t n) {

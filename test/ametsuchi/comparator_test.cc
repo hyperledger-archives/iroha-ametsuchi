@@ -16,7 +16,6 @@
  */
 
 #include <ametsuchi/comparator.h>
-#include <ametsuchi/status.h>
 #include <gtest/gtest.h>
 
 namespace ametsuchi {

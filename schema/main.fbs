@@ -19,7 +19,7 @@ table TransactionResponse {
   transaction:  Transaction;
 }
 
-table RecieverConfirmation {
+table ReceiverConfirmation {
   signature: Signature;
   hash:      [ubyte];
 }

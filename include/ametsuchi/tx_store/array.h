@@ -18,10 +18,11 @@
 #ifndef AMETSUCHI_ARRAY_H
 #define AMETSUCHI_ARRAY_H
 
-#include <string>
 #include <ametsuchi/file/file.h>
 #include <ametsuchi/file/rw_file.h>
 #include <ametsuchi/tx_store/index.h>
+#include <string>
+#include <vector>
 
 namespace ametsuchi {
 namespace tx_store {
@@ -31,7 +32,6 @@ namespace tx_store {
  */
 class Array {
  public:
-
   class RandomAccessIterator;
 
   /**
@@ -50,9 +50,10 @@ class Array {
   /**
    * Append of the batch of data without commit
    * @param batch_data
-   * @return offset of the begginning of the batch (i.e. to the first ByteArray from batch)
+   * @return offset of the begginning of the batch (i.e. to the first ByteArray
+   * from batch)
    */
-  std::size_t append_batch(const std::vector<ByteArray > &batch_data);
+  std::vector<size_t> append_batch(const std::vector<ByteArray> &batch_data);
 
   /**
    * Get ByteArray by offset
@@ -91,4 +92,4 @@ class Array {
 }  // namespace tx_store
 }  // namespace ametsuchi
 
-#endif //AMETSUCHI_ARRAY_H
+#endif  // AMETSUCHI_ARRAY_H

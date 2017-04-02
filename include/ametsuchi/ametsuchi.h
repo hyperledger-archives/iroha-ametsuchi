@@ -47,7 +47,7 @@ class Ametsuchi {
   void abort_append_tx();
 
   void create_tx_index();
-  void append_index(const ByteArray &blob);
+  void append_index(const ByteArray &blob, size_t index);
 
   MDB_env *env;
   MDB_stat mst;

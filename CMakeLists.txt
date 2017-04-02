@@ -34,7 +34,6 @@ include(cmake/functions.cmake)
 set(AMETSUCHI_INCLUDE
   include/ametsuchi/file/file.h
   include/ametsuchi/file/rw_file.h
-  include/ametsuchi/file/rw_file_safe.h
 
   include/ametsuchi/ametsuchi.h
   include/ametsuchi/cache.h
@@ -43,7 +42,6 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/exception.h
   include/ametsuchi/globals.h
   include/ametsuchi/serializer.h
-  include/ametsuchi/status.h
 
   include/ametsuchi/tx_store/array.h
   include/ametsuchi/tx_store/index.h
@@ -53,7 +51,6 @@ set(AMETSUCHI_INCLUDE
 set(AMETSUCHI_SRC
   src/ametsuchi/file/file.cc
   src/ametsuchi/file/rw_file.cc
-  src/ametsuchi/file/rw_file_safe.cc
 
   src/ametsuchi/env.cc
   src/ametsuchi/ametsuchi.cc
@@ -71,11 +68,10 @@ add_library(${LIBAMETSUCHI_NAME}
   ${AMETSUCHI_SRC}
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
-  flatbuffers
   spdlog
-  sqlite3
   LMDB
-#  keccak
+  flatbuffers
+  #  keccak
   )
 StrictMode(${LIBAMETSUCHI_NAME})
 

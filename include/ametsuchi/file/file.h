@@ -19,7 +19,6 @@
 #define AMETSUCHI_FILE_H
 
 #include <ametsuchi/globals.h>
-#include <spdlog/spdlog.h>
 #include <sys/stat.h>   //
 #include <sys/types.h>  // for stat, access
 #include <unistd.h>     //
