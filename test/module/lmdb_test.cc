@@ -42,7 +42,6 @@ class LMDB_Test : public ::testing::Test {
     mdb_env_set_mapsize(env, 1024L * 1024 * 2);  // 2 MB
     mdb_env_set_maxdbs(env, 3);                  // we have only 3 databases
 
-
     // create index directory
     res = mkdir(lmdb.c_str(), 0700);
     if (res == -1) {
@@ -159,7 +158,7 @@ TEST_F(LMDB_Test, AppendSameKeyAndRead) {
   MDB_dbi read_dbi;
   MDB_cursor *cursor;
 
-  mdb_txn_begin(env, NULL, 0, &read_tx);
+  mdb_txn_begin(env, NULL, MDB_RDONLY, &read_tx);
   mdb_dbi_open(read_tx, "TEST1", MDB_DUPSORT | MDB_DUPFIXED, &read_dbi);
   mdb_cursor_open(read_tx, read_dbi, &cursor);
 

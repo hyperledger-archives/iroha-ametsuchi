@@ -9,24 +9,23 @@ namespace iroha;
 // they share the same commands
 union Object { Peer, Account, Chaincode }
 
-table Add {
+table CmdAdd {
     object: Object (required);
 }
 
-table Remove {
+table CmdRemove {
     object: Object (required);
 }
-
 
 
 // users are able to store custom data in their accounts
-table Store {
+table CmdStore {
     accPubKey: PublicKey        (required);
     data:      [KeyValueObject] (required);
 }
 
 
-table Transfer {
+table CmdTransferAsset {
     currency: Asset     (required);
     sender:   PublicKey (required);
     receiver: PublicKey (required);
@@ -36,13 +35,13 @@ table Transfer {
 /// Commands for Asset
 
 // logically means asset summation
-table AddAsset {
+table CmdAddAsset {
     accPubKey: PublicKey (required);
     asset:     [Asset]   (required);
 }
 
 // logically means asset negation
-table RemoveAsset {
+table CmdRemoveAsset {
     accPubKey: PublicKey (required);
     asset:     [Asset]   (required);
 }
@@ -61,7 +60,7 @@ table CmdCreateAsset {
 
 //////////////////////////////////////////
 /// Commands for Chaincode
-table Execute {
+table CmdExecute {
   code_name:   string  (required);
   domain_name: string  (required);
   ledger_name: string  (required);
@@ -69,7 +68,7 @@ table Execute {
 
 
 // consider chaincode storage as key-value map
-table SetChaincode {
+table CmdSetChaincode {
     chaincode: Chaincode (required);
 }
 //////////////////////////////////////////
@@ -79,19 +78,19 @@ table SetChaincode {
 /// Commands for Peer
 
 // set new peer trust (with specific value)
-table SetPeerTrust {
+table CmdSetPeerTrust {
     peerPubKey: PublicKey (required);
     trust:      double;
 }
 
 // change current trust to some delta
 // example: delta=-5, trust=10 -> newTrust = 10-5 = 5
-table ChangePeerTrust {
+table CmdChangePeerTrust {
     peerPubKey: PublicKey (required);
     delta:      double;
 }
 
-table SetPeerActive {
+table CmdSetPeerActive {
     peerPubKey: PublicKey (required);
     active:     bool;
 }
@@ -100,12 +99,12 @@ table SetPeerActive {
 
 //////////////////////////////////////////
 /// Commands for Account
-table AddSignatory {
+table CmdAddSignatory {
     account:   PublicKey   (required);
     signatory: [PublicKey] (required);
 }
 
-table SetAccountsUseKeys {
+table CmdSetAccountsUseKeys {
     accounts: [PublicKey] (required);
     useKeys:  ushort;
 }
@@ -113,18 +112,18 @@ table SetAccountsUseKeys {
 
 
 union Command {
-    AddAsset,
-    RemoveAsset,
+    CmdAddAsset,
+    CmdRemoveAsset,
     CmdCreateAsset,
-    Transfer,
+    CmdTransferAsset,
 
-    Add,
-    Remove,
-    Execute,
-    Store,
+    CmdAdd,
+    CmdRemove,
+    CmdExecute,
+    CmdStore,
 
-    SetPeerTrust,
-    ChangePeerTrust,
-    SetPeerActive,
-    SetChaincode
+    CmdSetPeerTrust,
+    CmdChangePeerTrust,
+    CmdSetPeerActive,
+    CmdSetChaincode
 }

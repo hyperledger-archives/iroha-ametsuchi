@@ -24,10 +24,14 @@
 namespace ametsuchi {
 namespace tx_store {
 
+#define HANDLE(err) \
+  if (res == err) fprintf(stderr, "err");
 
 class TX_New : public ::testing::Test {
  protected:
-  TX_New() : a("/tmp/ametsuchi") {
+  TX_New() : a("/tmp/ametsuchi") {}
+
+  void add() {
     for (size_t i = 0; i < size; i++) {
       auto tx = create_tx("public1", "an" + i, "dn1", "ln1", "desc1",
                           {1, 2, 3, 4, 5});
@@ -35,27 +39,24 @@ class TX_New : public ::testing::Test {
 
       auto tx2 = create_tx("public2", "an" + i, "dn2", "ln1", "desc1",
                            {1, 2, 3, 4, 5, 6});
-      a.append(tx);
+      a.append(tx2);
     }
 
     a.commit();
   }
+  virtual void TearDown() { rm(); }
 
-  virtual void TearDown() {
-    remove("/tmp/ametsuchi/ledger");
-    remove("/tmp/ametsuchi/ledger_index");
-  }
 
-  virtual void TearUp() {
-    remove("/tmp/ametsuchi/ledger");
-    remove("/tmp/ametsuchi/ledger_index");
-  }
+  void rm() { int res = system("rm -r /tmp/ametsuchi"); }
+
+  virtual void SetUp() { add(); }
 
   Ametsuchi a;
 
-  static inline ByteArray create_tx(std::string pubkey, std::string an, std::string dn,
-                        std::string ln, std::string desc,
-                        std::vector<uint8_t> hash) {
+  static inline ByteArray create_tx(std::string pubkey, std::string an,
+                                    std::string dn, std::string ln,
+                                    std::string desc,
+                                    std::vector<uint8_t> hash) {
     using namespace iroha;
 
     flatbuffers::FlatBufferBuilder fbb;

@@ -32,3 +32,4 @@ table Message {
   data: [KeyValueObject];
 }
 
+root_type Account;

@@ -5,5 +5,5 @@
 # CMake
 build/
 external/
-/.gtm/
-include/generated/*
+.gtm/
+include/ametsuchi/generated/*

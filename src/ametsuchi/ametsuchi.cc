@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
+#include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
 #include <ametsuchi/tx_store/iterator.h>
 #include <spdlog/spdlog.h>
-#include <ametsuchi/ametsuchi.h>
 
 namespace ametsuchi {
 
@@ -93,7 +93,15 @@ std::vector<ByteArray> Ametsuchi::getAddTxByCreator(const std::string &pubKey) {
   c_key.mv_size = pubKey.size();
   c_key.mv_data = (void *)pubKey.c_str();
 
-  mdb_txn_begin(env, NULL, 0, &read_tx);
+  if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &read_tx))) {
+    if (res == MDB_PANIC) console->critical("getAddTxByCreator: MDB_PANIC");
+    if (res == MDB_MAP_RESIZED)
+      console->critical("getAddTxByCreator: MDB_MAP_RESIZED ");
+    if (res == MDB_READERS_FULL)
+      console->critical("getAddTxByCreator: MDB_READERS_FULL");
+    if (res == ENOMEM) console->critical("getAddTxByCreator: ENOMEM");
+    exit(res);
+  }
   mdb_dbi_open(read_tx, "add_creator", MDB_DUPSORT | MDB_DUPFIXED, &read_dbi);
   mdb_cursor_open(read_tx, read_dbi, &cursor);
 
@@ -126,7 +134,7 @@ void Ametsuchi::create_tx_index() {
   std::string lmdb = path_ + "/tx_index";
 
   // create index directory
-  res = mkdir(lmdb.c_str(), 0600);
+  res = mkdir(lmdb.c_str(), 0700);
   if (res == -1) {
     if (errno != EEXIST) {
       console->critical("can not create {} folder", lmdb);
@@ -136,7 +144,18 @@ void Ametsuchi::create_tx_index() {
 
   res = mdb_env_open(env, lmdb.c_str(), MDB_FIXEDMAP, 0700);
   if (res) {
-    console->critical("can not open index db");
+    if (res == MDB_VERSION_MISMATCH)
+      console->critical("MDB_VERSION_MISMATCH");
+    else if (res == MDB_INVALID)
+      console->critical("MDB_INVALID");
+    else if (res == ENOENT)
+      console->critical("ENOENT");
+    else if (res == EACCES)
+      console->critical("EACCES");
+    else if (res == EAGAIN)
+      console->critical("EAGAIN");
+
+    console->critical("can not open index db, code {}", res);
     throw exception::Exception("create_tx_index mdb_env_open");
   }
 
@@ -195,40 +214,32 @@ void Ametsuchi::open_append_tx() {
   }
 }
 
-
 void Ametsuchi::append_index(const ByteArray &blob, size_t index) {
   auto tx = iroha::GetTransaction(blob.data());
 
-  if (tx->command_type() == iroha::Command::Add) {
-    // update index
-    MDB_val c_key, c_val;
-    int res;
+  // update add_creator index
+  MDB_val c_key, c_val;
+  int res;
 
-    auto &&creator = tx->creatorPubKey();
-    c_key.mv_data = (void *)(creator->data()->data());
-    c_key.mv_size = creator->data()->size();
+  auto &&creator = tx->creatorPubKey();
+  c_key.mv_data = (void *)(creator->data()->Data());
+  c_key.mv_size = creator->data()->size();
 
-    c_val.mv_data = &index;
-    c_val.mv_size = sizeof(index);
+  c_val.mv_data = &index;
+  c_val.mv_size = sizeof(index);
 
-    if ((res = mdb_cursor_put(cursor_1, &c_key, &c_val, 0))) {
-      console->critical("error while appending");
-      abort_append_tx();
-      exit(res);
-    }
+  if ((res = mdb_cursor_put(cursor_1, &c_key, &c_val, 0))) {
+    console->critical("error while appending");
+    abort_append_tx();
+    exit(res);
+  }
 
-  } else if (tx->command_type() == iroha::Command::Transfer) {
+  if (tx->command_type() == iroha::Command::CmdTransferAsset) {
     // update transfer_sender index
     {
-      MDB_val c_key, c_val;
-      int res;
-
-      auto &&sender = tx->command_as_Transfer()->sender();
+      auto &&sender = tx->command_as_CmdTransferAsset()->sender();
       c_key.mv_data = (void *)(sender->data()->data());
       c_key.mv_size = sender->data()->size();
-
-      c_val.mv_data = &index;
-      c_val.mv_size = sizeof(index);
 
       if ((res = mdb_cursor_put(cursor_2, &c_key, &c_val, 0))) {
         console->critical("error while appending transfer_sender");
@@ -239,15 +250,9 @@ void Ametsuchi::append_index(const ByteArray &blob, size_t index) {
 
     // update transfer_receiver index
     {
-      MDB_val c_key, c_val;
-      int res;
-
-      auto &&receiver = tx->command_as_Transfer()->receiver();
+      auto &&receiver = tx->command_as_CmdTransferAsset()->receiver();
       c_key.mv_data = (void *)(receiver->data()->data());
       c_key.mv_size = receiver->data()->size();
-
-      c_val.mv_data = &index;
-      c_val.mv_size = sizeof(index);
 
       if ((res = mdb_cursor_put(cursor_3, &c_key, &c_val, 0))) {
         console->critical("error while appending transfer_sender");
