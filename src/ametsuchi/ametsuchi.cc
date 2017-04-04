@@ -18,6 +18,7 @@
 #include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
 #include <flatbuffers/flatbuffers.h>
+#include <math.h>
 #include <spdlog/spdlog.h>
 
 static auto console = spdlog::stdout_color_mt("ametsuchi");
@@ -514,6 +515,59 @@ void Ametsuchi::asset_add(const iroha::AssetAdd *command) {
     }
   } else {
     // asset with given assetid exists. read it.
+  }
+}
+
+void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
+  flatbuffers::FlatBufferBuilder builder(1024);
+  MDB_val c_key, c_val;
+  int res;
+
+  auto asset = flatbuffers::GetRoot<iroha::Asset>(command->asset());
+  auto &&currency = asset->asset_as_Currency();
+  auto amount = currency->amount();
+  auto precision = currency->precision();
+
+  std::string pk;
+  pk += currency->ledger_name()->data();
+  pk += currency->domain_name()->data();
+  pk += currency->currency_name()->data();
+
+  c_key.mv_data = (void *)(pk.c_str());
+  c_key.mv_size = pk.size();
+
+  if ((res = mdb_cursor_get(trees_["wsv_pubkey_assets"].second, &c_key, &c_val,
+                            MDB_SET)) ==
+      MDB_KEYEXIST) {  // there is an item with given key
+    iroha::Asset *a = static_cast<iroha::Asset *>(c_val.mv_data);
+    auto cur_amount = a->asset_as_Currency()->amount();
+    auto cur_precision = a->asset_as_Currency()->precision();
+
+    uint64_t new_amount;
+    uint64_t new_precision;
+
+    if (amount > cur_amount || (amount == cur_amount && precision > cur_precision) ){
+      // bad
+    }
+    if (cur_precision > precision) {
+      uint64_t add = 10;
+      uint64_t tmp = precision;
+      while (tmp > 10) {
+        tmp /= 10;
+        add *= 10;
+      }
+      cur_precision += add;
+      cur_amount -= 1;
+    }
+    new_amount = cur_amount - amount;
+    new_precision = cur_precision - precision;
+
+    auto new_asset = iroha::CreateCurrency(builder,
+                          builder.CreateString(currency->currency_name()),
+                          builder.CreateString(currency->domain_name()),
+                          builder.CreateString(currency->ledger_name()),
+                          builder.CreateString(currency->description()),
+                          new_amount, new_precision);
 
   }
 }
