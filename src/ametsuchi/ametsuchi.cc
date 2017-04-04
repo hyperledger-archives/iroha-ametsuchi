@@ -136,6 +136,11 @@ void Ametsuchi::append(const ByteArray &blob) {
         // asset_remove(tx->command_as_AssetRemove());
         break;
       }
+      case iroha::Command::AssetTransfer: {
+        // TODO
+        // asset_transfer(tx->command_as_AssetTransfer());
+        break;
+      }
       case iroha::Command::AccountAdd: {
         account_add(tx->command_as_AccountAdd());
         break;
