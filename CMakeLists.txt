@@ -33,6 +33,14 @@ include(cmake/functions.cmake)
 
 set(AMETSUCHI_INCLUDE
   include/ametsuchi/ametsuchi.h
+
+  # needed to compile fbs automatically
+  include/ametsuchi/generated/account_generated.h
+  include/ametsuchi/generated/asset_generated.h
+  include/ametsuchi/generated/commands_generated.h
+  include/ametsuchi/generated/main_generated.h
+  include/ametsuchi/generated/primitives_generated.h
+  include/ametsuchi/generated/transaction_generated.h
   )
 
 set(AMETSUCHI_SRC

@@ -24,8 +24,9 @@ table ReceiverConfirmation {
   hash:      [ubyte];
 }
 
-table Response {
-  message:   [Object];
-  code:      Code;
-  signature: Signature;
-}
+// what is Response?
+//table Response {
+//  message:   [Object];
+//  code:      Code;
+//  signature: Signature;
+//}

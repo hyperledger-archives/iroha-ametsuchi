@@ -42,4 +42,3 @@ table Asset {
   asset: AnyAsset;
 }
 
-root_type Asset;

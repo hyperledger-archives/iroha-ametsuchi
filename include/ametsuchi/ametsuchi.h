@@ -24,6 +24,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <ametsuchi/generated/commands_generated.h>
+#include <unordered_set>
 
 namespace ametsuchi {
 
@@ -46,7 +48,7 @@ class Ametsuchi {
   void init();
   void init_btree(const std::string &name, uint32_t flags);
   size_t tx_store_size();
-  void open_append_tx();
+  void init_append_tx();
   void abort_append_tx();
 
   MDB_env *env;
@@ -58,8 +60,12 @@ class Ametsuchi {
 
   size_t tx_store_total;
 
-  inline void cmd_add(const ByteArray &tx);
-  inline void cmd_create_asset(const ByteArray& blob);
+  bool account_add(const iroha::AccountAdd* command);
+  bool peer_add(const iroha::PeerAdd* command);
+  bool asset_create(const iroha::AssetCreate* command);
+  void asset_add(const iroha::AssetAdd* command);
+
+  std::unordered_set<std::string> created_assets_;
 };
 
 }  // namespace ametsuchi

@@ -46,20 +46,21 @@ set_target_properties(flatbuffers PROPERTIES
   IMPORTED_LOCATION ${flatbuffers_LIBRARIES}
   )
 
-# TODO: COMPILE SCHEMA AT ${PROJECT_SOURCE_DIR}/schema to include/ametsuchi/generated
-# compile fbs files
-add_custom_command(
-  OUTPUT compileSchema
-  WORKING_DIRECTORY ${MAKE_DIRECTORY}
-  COMMAND ${flatc_BIN} -c --scoped-enums ${PROJECT_SOURCE_DIR}/schema/*.fbs
-  COMMENT "Generating headers for FBS"
-  )
+function(compile_fbs_to_cpp FBS)
+  string(REGEX REPLACE "\\.fbs$" "_generated.h" GEN_HEADER ${FBS})
+  add_custom_command(
+    OUTPUT include/ametsuchi/generated/${GEN_HEADER}
+    COMMAND "${flatc_BIN}" -c --scoped-enums --no-prefix -o "${PROJECT_SOURCE_DIR}/include/ametsuchi/generated"
+      "${PROJECT_SOURCE_DIR}/schema/${FBS}"
+    DEPENDS flatbuffers)
+endfunction()
 
-add_custom_target(compile_schema
-  DEPENDS compileSchema
-  COMMENT "Generating headers for FBS"
-  )
-add_dependencies(compile_schema flatbuffers)
+compile_fbs_to_cpp(account.fbs)
+compile_fbs_to_cpp(asset.fbs)
+compile_fbs_to_cpp(commands.fbs)
+compile_fbs_to_cpp(main.fbs)
+compile_fbs_to_cpp(primitives.fbs)
+compile_fbs_to_cpp(transaction.fbs)
 
 if(NOT flatbuffers_FOUND)
   add_dependencies(flatbuffers google_flatbuffers)
@@ -136,32 +137,32 @@ if(NOT keccak_FOUND)
 endif()
 
 
-#############################
-#          SQLite           #
-#############################
-ExternalProject_Add(sqlite_sqlite
-  URL               "https://www.sqlite.org/2017/sqlite-autoconf-3170000.tar.gz"
-  # Build static library without libdl
-  CONFIGURE_COMMAND ./configure --disable-shared --disable-dynamic-extensions CC=${CMAKE_C_COMPILER}
-  BUILD_IN_SOURCE   1
-  BUILD_COMMAND     $(MAKE) libsqlite3.la
-  INSTALL_COMMAND   "" # remove install step
-  TEST_COMMAND      "" # remove test step
-  UPDATE_COMMAND    "" # remove update step
-  )
-ExternalProject_Get_Property(sqlite_sqlite source_dir)
-set(sqlite_INCLUDE_DIRS ${source_dir})
-set(sqlite_LIBRARIES ${source_dir}/.libs/libsqlite3.a)
-file(MAKE_DIRECTORY ${sqlite_INCLUDE_DIRS})
-
-add_library(sqlite STATIC IMPORTED)
-set_target_properties(sqlite PROPERTIES
-INTERFACE_INCLUDE_DIRECTORIES ${sqlite_INCLUDE_DIRS}
-IMPORTED_LOCATION ${sqlite_LIBRARIES}
-IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-)
-
-add_dependencies(sqlite sqlite_sqlite)
+##############################
+##          SQLite           #
+##############################
+#ExternalProject_Add(sqlite_sqlite
+#  URL               "https://www.sqlite.org/2017/sqlite-autoconf-3170000.tar.gz"
+#  # Build static library without libdl
+#  CONFIGURE_COMMAND ./configure --disable-shared --disable-dynamic-extensions CC=${CMAKE_C_COMPILER}
+#  BUILD_IN_SOURCE   1
+#  BUILD_COMMAND     $(MAKE) libsqlite3.la
+#  INSTALL_COMMAND   "" # remove install step
+#  TEST_COMMAND      "" # remove test step
+#  UPDATE_COMMAND    "" # remove update step
+#  )
+#ExternalProject_Get_Property(sqlite_sqlite source_dir)
+#set(sqlite_INCLUDE_DIRS ${source_dir})
+#set(sqlite_LIBRARIES ${source_dir}/.libs/libsqlite3.a)
+#file(MAKE_DIRECTORY ${sqlite_INCLUDE_DIRS})
+#
+#add_library(sqlite STATIC IMPORTED)
+#set_target_properties(sqlite PROPERTIES
+#INTERFACE_INCLUDE_DIRECTORIES ${sqlite_INCLUDE_DIRS}
+#IMPORTED_LOCATION ${sqlite_LIBRARIES}
+#IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+#)
+#
+#add_dependencies(sqlite sqlite_sqlite)
 
 
 ###########################
