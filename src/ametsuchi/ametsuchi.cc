@@ -522,7 +522,6 @@ void Ametsuchi::asset_add(const iroha::AssetAdd *command) {
 
 void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
   // TODO: test is needed
-  flatbuffers::FlatBufferBuilder builder(1024);
   MDB_val c_key, c_val;
   int res;
 
