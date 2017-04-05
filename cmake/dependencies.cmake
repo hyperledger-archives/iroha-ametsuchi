@@ -50,7 +50,8 @@ function(compile_fbs_to_cpp FBS)
   string(REGEX REPLACE "\\.fbs$" "_generated.h" GEN_HEADER ${FBS})
   add_custom_command(
     OUTPUT include/ametsuchi/generated/${GEN_HEADER}
-    COMMAND "${flatc_BIN}" -c --scoped-enums --no-prefix -o "${PROJECT_SOURCE_DIR}/include/ametsuchi/generated"
+    COMMAND "${flatc_BIN}" -c --scoped-enums --no-prefix --gen-mutable
+      -o "${PROJECT_SOURCE_DIR}/include/ametsuchi/generated"
       "${PROJECT_SOURCE_DIR}/schema/${FBS}"
     DEPENDS flatbuffers)
 endfunction()

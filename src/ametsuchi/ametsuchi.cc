@@ -19,7 +19,6 @@
 #include <ametsuchi/generated/asset_generated.h>
 #include <ametsuchi/generated/transaction_generated.h>
 #include <flatbuffers/flatbuffers.h>
-#include <math.h>
 #include <spdlog/spdlog.h>
 
 static auto console = spdlog::stdout_color_mt("ametsuchi");
@@ -342,8 +341,7 @@ size_t Ametsuchi::tx_store_size() {
     return 0u;
   }
 
-  size_t size = *reinterpret_cast<size_t *>(c_key.mv_data);
-  return size;
+  return *reinterpret_cast<size_t *>(c_key.mv_data);
 }
 
 void Ametsuchi::init_append_tx() {
@@ -387,6 +385,9 @@ void Ametsuchi::init_append_tx() {
   init_btree("wsv_ip_peer", MDB_CREATE);
 
   assert(AMETSUCHI_TREES_TOTAL == trees_.size());
+
+  // stats about db
+  mdb_env_stat(env, &mst);
 }
 
 
@@ -501,8 +502,7 @@ void Ametsuchi::asset_add(const iroha::AssetAdd *command) {
   c_key.mv_size = pk.size();
 
   if ((res = mdb_cursor_get(trees_["wsv_pubkey_assets"].second, &c_key, &c_val,
-                            MDB_SET)) ==
-      MDB_NOTFOUND) {  // no items with given key
+                            MDB_SET)) == MDB_NOTFOUND) {
     // append new value
     c_key.mv_data = (void *)command->asset()->data();
     c_key.mv_size = command->asset()->size();
@@ -516,6 +516,8 @@ void Ametsuchi::asset_add(const iroha::AssetAdd *command) {
     }
   } else {
     // asset with given assetid exists. read it.
+    auto a = flatbuffers::GetMutableRoot<iroha::Asset>(c_val.mv_data);
+    auto c = a->asset_as_Currency();
   }
 }
 
