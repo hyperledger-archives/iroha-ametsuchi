@@ -521,6 +521,7 @@ void Ametsuchi::asset_add(const iroha::AssetAdd *command) {
 }
 
 void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
+  // TODO: test is needed
   flatbuffers::FlatBufferBuilder builder(1024);
   MDB_val c_key, c_val;
   int res;
@@ -542,7 +543,7 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
 
   if (!(res = mdb_cursor_get(trees_["wsv_pubkey_assets"].second, &c_key, &c_val,
                              MDB_SET))) {  // there is an item with given key
-    auto a = flatbuffers::GetRoot<iroha::Asset>(c_val.mv_data);
+    auto a = flatbuffers::GetMutableRoot<iroha::Asset>(c_val.mv_data);
     auto cur_amount = a->asset_as_Currency()->amount();
     auto cur_precision = a->asset_as_Currency()->precision();
     Currency current_currency(cur_amount, cur_precision);
@@ -554,21 +555,9 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
     }
 
     auto result_currency = current_currency - currency_to_remove;
-
-    auto new_currency = iroha::CreateCurrency(
-        builder, builder.CreateString(currency->currency_name()),
-        builder.CreateString(currency->domain_name()),
-        builder.CreateString(currency->ledger_name()),
-        builder.CreateString(currency->description()),
-        result_currency.get_amount(), result_currency.get_precision());
-    builder.Finish(new_currency);
-
-    auto new_asset = iroha::CreateAsset(builder, iroha::AnyAsset::Currency,
-                                        new_currency.Union());
-    builder.Finish(new_asset);
-
-    c_val.mv_data = (void *)builder.GetBufferPointer();
-    c_val.mv_size = builder.GetSize();
+    auto mutable_currency = static_cast<iroha::Currency *>(a->mutable_asset());
+    mutable_currency->mutate_amount(result_currency.get_amount());
+    mutable_currency->mutate_precision(result_currency.get_precision());
 
     if ((res = mdb_cursor_put(trees_["wsv_pubkey_assets"].second, &c_key,
                               &c_val, 0))) {
