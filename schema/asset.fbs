@@ -31,8 +31,9 @@ table Currency {
 
   description: string;
 
+  // 100.39 => amount = 10039, precision = 2
   amount:    ulong;
-  precision: ulong;
+  precision: ubyte;
 }
 
 

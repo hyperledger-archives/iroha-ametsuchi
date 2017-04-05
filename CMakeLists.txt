@@ -33,6 +33,7 @@ include(cmake/functions.cmake)
 
 set(AMETSUCHI_INCLUDE
   include/ametsuchi/ametsuchi.h
+  include/ametsuchi/currency.h
 
   # needed to compile fbs automatically
   include/ametsuchi/generated/account_generated.h
@@ -45,6 +46,7 @@ set(AMETSUCHI_INCLUDE
 
 set(AMETSUCHI_SRC
   src/ametsuchi/ametsuchi.cc
+  src/ametsuchi/currency.cc
   )
 
 # Library.

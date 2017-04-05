@@ -18,14 +18,15 @@
 #ifndef AMETSUCHI_DB_H
 #define AMETSUCHI_DB_H
 
+#include <ametsuchi/generated/commands_generated.h>
 #include <lmdb.h>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
-#include <ametsuchi/generated/commands_generated.h>
-#include <unordered_set>
+#include "currency.h"
 
 namespace ametsuchi {
 
@@ -60,10 +61,10 @@ class Ametsuchi {
 
   size_t tx_store_total;
 
-  bool account_add(const iroha::AccountAdd* command);
-  bool peer_add(const iroha::PeerAdd* command);
-  bool asset_create(const iroha::AssetCreate* command);
-  void asset_add(const iroha::AssetAdd* command);
+  bool account_add(const iroha::AccountAdd *command);
+  bool peer_add(const iroha::PeerAdd *command);
+  bool asset_create(const iroha::AssetCreate *command);
+  void asset_add(const iroha::AssetAdd *command);
 
   std::unordered_set<std::string> created_assets_;
 };
