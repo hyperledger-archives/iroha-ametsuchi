@@ -16,6 +16,7 @@
  */
 
 #include <ametsuchi/ametsuchi.h>
+#include <ametsuchi/generated/asset_generated.h>
 #include <ametsuchi/generated/transaction_generated.h>
 #include <flatbuffers/flatbuffers.h>
 #include <math.h>
@@ -524,6 +525,10 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
   int res;
 
   auto asset = flatbuffers::GetRoot<iroha::Asset>(command->asset());
+  auto asset1 = flatbuffers::GetMutableRoot<iroha::Asset>(
+      (void *)command->asset()->data());
+
+
   auto &&currency = asset->asset_as_Currency();
   auto amount = currency->amount();
   auto precision = currency->precision();
@@ -546,8 +551,10 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
     uint64_t new_amount;
     uint64_t new_precision;
 
-    if (amount > cur_amount || (amount == cur_amount && precision > cur_precision) ){
-      // bad
+    if (amount > cur_amount ||
+        (amount == cur_amount && precision > cur_precision)) {
+      console->critical("Not enough money to remove");
+      exit(102);
     }
     if (cur_precision > precision) {
       uint64_t add = 10;
@@ -562,13 +569,33 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
     new_amount = cur_amount - amount;
     new_precision = cur_precision - precision;
 
-    auto new_asset = iroha::CreateCurrency(builder,
-                          builder.CreateString(currency->currency_name()),
-                          builder.CreateString(currency->domain_name()),
-                          builder.CreateString(currency->ledger_name()),
-                          builder.CreateString(currency->description()),
-                          new_amount, new_precision);
+    auto new_currency = iroha::CreateCurrency(
+        builder, builder.CreateString(currency->currency_name()),
+        builder.CreateString(currency->domain_name()),
+        builder.CreateString(currency->ledger_name()),
+        builder.CreateString(currency->description()), new_amount,
+        new_precision);
+    builder.Finish(new_currency);
 
+    auto new_asset = iroha::CreateAsset(builder, iroha::AnyAsset::Currency,
+                                    new_currency.Union());
+    builder.Finish(new_asset);
+
+    c_val.mv_data = (void *)builder.GetBufferPointer();
+    c_val.mv_size = builder.GetSize();
+
+    if ((res = mdb_cursor_put(trees_["wsv_pubkey_assets"].second, &c_key,
+                              &c_val, 0))) {
+      /*
+      if (res == MDB_KEYEXIST) {
+        //        return false;
+      }
+      AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+      AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+      AMETSUCHI_HANDLE(res, EACCES);
+      AMETSUCHI_HANDLE(res, EINVAL);
+       */
+    }
   }
 }
 }  // namespace ametsuchi
