@@ -133,8 +133,7 @@ void Ametsuchi::append(const ByteArray &blob) {
         break;
       }
       case iroha::Command::AssetRemove: {
-        // TODO
-        // asset_remove(tx->command_as_AssetRemove());
+        asset_remove(tx->command_as_AssetRemove());
         break;
       }
       case iroha::Command::AssetTransfer: {
@@ -531,6 +530,7 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
   auto &&currency = asset->asset_as_Currency();
   auto amount = currency->amount();
   auto precision = currency->precision();
+  Currency currency_to_remove(amount, precision);
 
   std::string pk;
   pk += currency->ledger_name()->data();
@@ -542,37 +542,25 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
 
   if (!(res = mdb_cursor_get(trees_["wsv_pubkey_assets"].second, &c_key, &c_val,
                              MDB_SET))) {  // there is an item with given key
-    iroha::Asset *a = static_cast<iroha::Asset *>(c_val.mv_data);
+    auto a = flatbuffers::GetRoot<iroha::Asset>(c_val.mv_data);
     auto cur_amount = a->asset_as_Currency()->amount();
     auto cur_precision = a->asset_as_Currency()->precision();
+    Currency current_currency(cur_amount, cur_precision);
 
-    uint64_t new_amount;
-    uint64_t new_precision;
-
-    if (amount > cur_amount ||
-        (amount == cur_amount && precision > cur_precision)) {
-      console->critical("Not enough money to remove");
+    // check if client has enough money
+    if (current_currency < currency_to_remove) {
+      console->critical("Not enough money on account");
       exit(102);
     }
-    if (cur_precision > precision) {
-      uint64_t add = 10;
-      uint64_t tmp = precision;
-      while (tmp > 10) {
-        tmp /= 10;
-        add *= 10;
-      }
-      cur_precision += add;
-      cur_amount -= 1;
-    }
-    new_amount = cur_amount - amount;
-    new_precision = cur_precision - precision;
+
+    auto result_currency = current_currency - currency_to_remove;
 
     auto new_currency = iroha::CreateCurrency(
         builder, builder.CreateString(currency->currency_name()),
         builder.CreateString(currency->domain_name()),
         builder.CreateString(currency->ledger_name()),
-        builder.CreateString(currency->description()), new_amount,
-        new_precision);
+        builder.CreateString(currency->description()),
+        result_currency.get_amount(), result_currency.get_precision());
     builder.Finish(new_currency);
 
     auto new_asset = iroha::CreateAsset(builder, iroha::AnyAsset::Currency,
@@ -584,16 +572,14 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
 
     if ((res = mdb_cursor_put(trees_["wsv_pubkey_assets"].second, &c_key,
                               &c_val, 0))) {
-      /*
-      if (res == MDB_KEYEXIST) {
-        //        return false;
-      }
       AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
       AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
       AMETSUCHI_HANDLE(res, EACCES);
       AMETSUCHI_HANDLE(res, EINVAL);
-       */
     }
+  } else {
+    console->critical("Asset to be updated does not exist");
+    exit(102);
   }
 }
 }  // namespace ametsuchi

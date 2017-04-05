@@ -31,9 +31,13 @@ class Currency {
   Currency operator-(const Currency &a, const Currency &b);
   Currency operator+(const Currency &a, uint64_t num);
   Currency operator-(const Currency &a, uint64_t num);
+  Currency operator-(const Currency &a);
+  bool operator<(const Currency &a);
 
-  uint64_t integer();
-  uint64_t fractional();
+  uint64_t integer() const;
+  uint64_t fractional() const;
+  uint64_t get_amount() const;
+  uint8_t get_precision() const;
 
   std::string to_string();
 

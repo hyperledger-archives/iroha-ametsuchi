@@ -43,13 +43,26 @@ Currency Currency::operator-(const Currency &a, uint64_t num) {
   return Currency(a.amount_ - num, precision_);
 }
 
+Currency Currency::operator-(const Currency &a) {
+  return Currency(amount_ - a.amount_, precision_);
+}
+
+bool Currency::operator<(const Currency &a) {
+  //TODO: test is needed
+  return (integer() < a.integer()) || (integer() == a.integer() && fractional() < a.fractional());
+}
+
 std::string Currency::to_string() {
   return std::to_string(this->integer()) + "." +
          std::to_string(this->fractional());
 }
 
-uint64_t Currency::integer() { return amount_ / div_; }
+uint64_t Currency::integer() const { return amount_ / div_; }
 
-uint64_t Currency::fractional() { return amount_ % div_; }
+uint64_t Currency::fractional() const { return amount_ % div_; }
+
+uint64_t Currency::get_amount() const { return amount_; }
+
+uint8_t Currency::get_precision() const { return precision_; }
 
 }  // namespace ametsuchi
