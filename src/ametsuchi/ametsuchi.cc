@@ -527,15 +527,12 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
 
   auto asset = flatbuffers::GetRoot<iroha::Asset>(command->asset());
 
-  auto &&currency = asset->asset_as_Currency();
+  auto currency = asset->asset_as_Currency();
   auto amount = currency->amount();
   auto precision = currency->precision();
   Currency currency_to_remove(amount, precision);
 
-  std::string pk;
-  pk += currency->ledger_name()->data();
-  pk += currency->domain_name()->data();
-  pk += currency->currency_name()->data();
+  std::string pk = command->accPubKey()->str();
 
   c_key.mv_data = (void *)(pk.c_str());
   c_key.mv_size = pk.size();
@@ -550,7 +547,7 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
     // check if client has enough money
     if (current_currency < currency_to_remove) {
       console->critical("Not enough money on account");
-      exit(102);
+      exit(103);
     }
 
     auto result_currency = current_currency - currency_to_remove;
@@ -567,7 +564,7 @@ void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
     }
   } else {
     console->critical("Asset to be updated does not exist");
-    exit(102);
+    exit(103);
   }
 }
 }  // namespace ametsuchi
