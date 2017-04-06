@@ -29,6 +29,7 @@ class Currency {
 
   Currency operator+(const Currency &a);
   Currency operator-(const Currency &a);
+  bool operator==(const Currency &a);
   bool operator<(const Currency &a);
   bool operator>(const Currency &a);
 

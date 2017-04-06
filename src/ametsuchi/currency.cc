@@ -38,7 +38,6 @@ Currency Currency::operator-(const Currency &a) {
 }
 
 bool Currency::operator<(const Currency &a) {
-  // TODO: test is needed
   return (integer_ < a.integer_) ||
          (integer_ == a.integer_ && fractional_ < a.fractional_);
 }

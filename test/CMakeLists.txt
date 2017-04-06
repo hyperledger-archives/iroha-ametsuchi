@@ -4,7 +4,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin)
 #target_link_libraries(module_keccak PRIVATE keccak)
 
 AddTest(module_lmdb module/lmdb_test.cc)
-target_link_libraries(module_lmdb PRIVATE LMDB spdlog)
+target_link_libraries(module_lmdb PRIVATE LMDB spdlog ${LIBAMETSUCHI_NAME})
 
 AddTest(currency_test ametsuchi/currency_test.cc)
 target_link_libraries(currency_test PRIVATE ${LIBAMETSUCHI_NAME})
