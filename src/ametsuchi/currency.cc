@@ -25,22 +25,26 @@ Currency::Currency(uint64_t amount, uint8_t precision)
   for (uint8_t i = 0; i < precision_; i++) {
     div_ *= 10;
   }
+  integer_ = amount_ / div_;
+  fractional_ = amount_ % div_;
 }
 
-Currency Currency::operator+(const Currency &a, const Currency &b) {
-  return Currency(a.amount_ + b.amount_, precision_);
+Currency Currency::operator+(const Currency &a) {
+  return Currency(amount_ + a.amount_, precision_);
 }
 
-Currency Currency::operator-(const Currency &a, const Currency &b) {
-  return Currency(a.amount_ - b.amount_, precision_);
+Currency Currency::operator-(const Currency &a) {
+  return Currency(amount_ - a.amount_, precision_);
 }
 
-Currency Currency::operator+(const Currency &a, uint64_t num) {
-  return Currency(a.amount_ + num, precision_);
+bool Currency::operator<(const Currency &a) {
+  return (integer_ < a.integer_) ||
+         (integer_ == a.integer_ && fractional_ < a.fractional_);
 }
 
-Currency Currency::operator-(const Currency &a, uint64_t num) {
-  return Currency(a.amount_ - num, precision_);
+bool Currency::operator>(const Currency &a) {
+  return (integer_ > a.integer_) ||
+         (integer_ == a.integer_ && fractional_ > a.fractional_);
 }
 
 std::string Currency::to_string() {
@@ -48,8 +52,12 @@ std::string Currency::to_string() {
          std::to_string(this->fractional());
 }
 
-uint64_t Currency::integer() { return amount_ / div_; }
+uint64_t Currency::integer() const { return integer_; }
 
-uint64_t Currency::fractional() { return amount_ % div_; }
+uint64_t Currency::fractional() const { return fractional_; }
+
+uint64_t Currency::get_amount() const { return amount_; }
+
+uint8_t Currency::get_precision() const { return precision_; }
 
 }  // namespace ametsuchi

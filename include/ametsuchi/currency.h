@@ -27,13 +27,16 @@ class Currency {
  public:
   explicit Currency(uint64_t amount, uint8_t precision = 2);
 
-  Currency operator+(const Currency &a, const Currency &b);
-  Currency operator-(const Currency &a, const Currency &b);
-  Currency operator+(const Currency &a, uint64_t num);
-  Currency operator-(const Currency &a, uint64_t num);
+  Currency operator+(const Currency &a);
+  Currency operator-(const Currency &a);
+  bool operator==(const Currency &a);
+  bool operator<(const Currency &a);
+  bool operator>(const Currency &a);
 
-  uint64_t integer();
-  uint64_t fractional();
+  uint64_t integer() const;
+  uint64_t fractional() const;
+  uint64_t get_amount() const;
+  uint8_t get_precision() const;
 
   std::string to_string();
 
@@ -41,6 +44,8 @@ class Currency {
   uint64_t amount_;
   uint8_t precision_;
   uint64_t div_;
+  uint64_t integer_;
+  uint64_t fractional_;
 };
 }  // namespace ametsuchi
 

@@ -16,6 +16,7 @@
  */
 
 #include <ametsuchi/ametsuchi.h>
+#include <ametsuchi/generated/asset_generated.h>
 #include <ametsuchi/generated/transaction_generated.h>
 #include <flatbuffers/flatbuffers.h>
 #include <spdlog/spdlog.h>
@@ -132,8 +133,7 @@ void Ametsuchi::append(const ByteArray &blob) {
         break;
       }
       case iroha::Command::AssetRemove: {
-        // TODO
-        // asset_remove(tx->command_as_AssetRemove());
+        asset_remove(tx->command_as_AssetRemove());
         break;
       }
       case iroha::Command::AssetTransfer: {
@@ -517,6 +517,54 @@ void Ametsuchi::asset_add(const iroha::AssetAdd *command) {
     // asset with given assetid exists. read it.
     auto a = flatbuffers::GetMutableRoot<iroha::Asset>(c_val.mv_data);
     auto c = a->asset_as_Currency();
+  }
+}
+
+void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
+  // TODO: test is needed
+  MDB_val c_key, c_val;
+  int res;
+
+  auto asset = flatbuffers::GetRoot<iroha::Asset>(command->asset());
+
+  auto currency = asset->asset_as_Currency();
+  auto amount = currency->amount();
+  auto precision = currency->precision();
+  Currency currency_to_remove(amount, precision);
+
+  std::string pk = command->accPubKey()->str();
+
+  c_key.mv_data = (void *)(pk.c_str());
+  c_key.mv_size = pk.size();
+
+  if (!(res = mdb_cursor_get(trees_["wsv_pubkey_assets"].second, &c_key, &c_val,
+                             MDB_SET))) {  // there is an item with given key
+    auto a = flatbuffers::GetMutableRoot<iroha::Asset>(c_val.mv_data);
+    auto cur_amount = a->asset_as_Currency()->amount();
+    auto cur_precision = a->asset_as_Currency()->precision();
+    Currency current_currency(cur_amount, cur_precision);
+
+    // check if client has enough money
+    if (current_currency < currency_to_remove) {
+      console->critical("Not enough money on account");
+      exit(103);
+    }
+
+    auto result_currency = current_currency - currency_to_remove;
+    auto mutable_currency = static_cast<iroha::Currency *>(a->mutable_asset());
+    mutable_currency->mutate_amount(result_currency.get_amount());
+    mutable_currency->mutate_precision(result_currency.get_precision());
+
+    if ((res = mdb_cursor_put(trees_["wsv_pubkey_assets"].second, &c_key,
+                              &c_val, 0))) {
+      AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+      AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+      AMETSUCHI_HANDLE(res, EACCES);
+      AMETSUCHI_HANDLE(res, EINVAL);
+    }
+  } else {
+    console->critical("Asset to be updated does not exist");
+    exit(103);
   }
 }
 }  // namespace ametsuchi
