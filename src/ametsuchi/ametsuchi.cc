@@ -155,8 +155,7 @@ void Ametsuchi::append(const ByteArray &blob) {
         break;
       }
       case iroha::Command::PeerRemove: {
-        // TODO
-        // peer_remove(tx->command_as_PeerRemove());
+        peer_remove(tx->command_as_PeerRemove());
         break;
       }
       default: {
@@ -518,5 +517,42 @@ void Ametsuchi::asset_add(const iroha::AssetAdd *command) {
     auto a = flatbuffers::GetMutableRoot<iroha::Asset>(c_val.mv_data);
     auto c = a->asset_as_Currency();
   }
+}
+
+bool Ametsuchi::peer_remove(const iroha::PeerRemove *command) {
+  MDB_val c_key, c_val;
+  int res;
+
+  auto &&peer = flatbuffers::GetRoot<iroha::Peer>(command->peer()->data());
+  auto &&ip = peer->ip();
+
+  flatbuffers::GetRoot<iroha::Peer>(peer);
+
+  c_key.mv_data = (void *)(ip->data());
+  c_key.mv_size = ip->size();
+  c_val.mv_data = (void *)command->peer()->data();
+  c_val.mv_size = command->peer()->size();
+
+  if ((res = mdb_cursor_get(trees_["wsv_ip_peer"].second, &c_key, &c_val, MDB_SET)))
+  {
+    if (res == MDB_NOTFOUND)
+    {
+      return false;
+    }
+    AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+    AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+    AMETSUCHI_HANDLE(res, EACCES);
+    AMETSUCHI_HANDLE(res, EINVAL);
+  }
+
+  if ((res = mdb_cursor_del(trees_["wsv_ip_peer"].second,MDB_NODUPDATA)))
+  {
+    AMETSUCHI_HANDLE(res, MDB_MAP_FULL);
+    AMETSUCHI_HANDLE(res, MDB_TXN_FULL);
+    AMETSUCHI_HANDLE(res, EACCES);
+    AMETSUCHI_HANDLE(res, EINVAL);
+  }
+
+  return true;
 }
 }  // namespace ametsuchi

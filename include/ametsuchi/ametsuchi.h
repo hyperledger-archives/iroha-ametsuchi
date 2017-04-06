@@ -63,8 +63,11 @@ class Ametsuchi {
 
   bool account_add(const iroha::AccountAdd *command);
   bool peer_add(const iroha::PeerAdd *command);
+  bool peer_remove(const iroha::PeerRemove *command);
+
   bool asset_create(const iroha::AssetCreate *command);
   void asset_add(const iroha::AssetAdd *command);
+
 
   std::unordered_set<std::string> created_assets_;
 };
