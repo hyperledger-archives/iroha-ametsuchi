@@ -62,10 +62,14 @@ class Ametsuchi {
   size_t tx_store_total;
 
   bool account_add(const iroha::AccountAdd *command);
+  bool account_remove(const iroha::AccountRemove *command);
   bool peer_add(const iroha::PeerAdd *command);
+  bool peer_remove(const iroha::PeerRemove *command);
   bool asset_create(const iroha::AssetCreate *command);
   void asset_add(const iroha::AssetAdd *command);
   void asset_remove(const iroha::AssetRemove *command);
+  void asset_transfer(const iroha::AssetTransfer *command);
+
   std::unordered_set<std::string> created_assets_;
 };
 

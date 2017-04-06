@@ -28,8 +28,9 @@ class Ametsuchi_Test : public ::testing::Test {
   std::string folder = "/tmp/ametsuchi/";
   ametsuchi::Ametsuchi ametsuchi_;
 
-  Ametsuchi_Test() : ametsuchi_(ametsuchi::Ametsuchi(folder)) {}
+  Ametsuchi_Test() : ametsuchi_(folder) {}
 };
+
 
 TEST_F(Ametsuchi_Test, AssetTest) {
   // create command
@@ -64,4 +65,5 @@ TEST_F(Ametsuchi_Test, AssetTest) {
   //  auto transaction_object = flatbuffers::GetRoot<iroha::Transaction>(buf);
   std::vector<uint8_t> transaction_vector{buf, buf + size};
   ametsuchi_.append(transaction_vector);
+  ametsuchi_.commit();
 }

@@ -16,15 +16,18 @@
  */
 
 #include <ametsuchi/currency.h>
-#include <cstdint>
+
+#define AMETSUCHI_MAX_PRECISION 18
 
 namespace ametsuchi {
 
 Currency::Currency(uint64_t amount, uint8_t precision)
     : amount_(amount), precision_(precision), div_(1) {
-  for (uint8_t i = 0; i < precision_; i++) {
-    div_ *= 10;
-  }
+  // 2^64 = 1.8 * 10^19
+  if (precision > AMETSUCHI_MAX_PRECISION) throw std::bad_alloc();
+
+  for (uint8_t i = 0; i < precision_; i++) div_ *= 10;
+
   integer_ = amount_ / div_;
   fractional_ = amount_ % div_;
 }
@@ -59,5 +62,9 @@ uint64_t Currency::fractional() const { return fractional_; }
 uint64_t Currency::get_amount() const { return amount_; }
 
 uint8_t Currency::get_precision() const { return precision_; }
+
+bool Currency::operator==(const Currency &a) {
+  return this->integer_ == a.integer_ && this->fractional_ == a.fractional_;
+}
 
 }  // namespace ametsuchi
