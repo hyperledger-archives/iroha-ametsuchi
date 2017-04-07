@@ -36,13 +36,12 @@ class MDB_val;  // forward declaration
 class Ametsuchi {
  public:
   explicit Ametsuchi(const std::string &db_folder);
+  ~Ametsuchi();
 
   void append(const ByteArray &tx);
   void append(const std::vector<ByteArray> &batch);
   void commit();
   void rollback();
-
-  // std::vector<const MDB_val> getAddTxByCreator(const std::string &pubKey);
 
   /**
  * Returns all assets, which belong to user with \p pubKey.
@@ -92,7 +91,7 @@ class Ametsuchi {
   void asset_create(const iroha::AssetCreate *command);
   bool asset_add(const iroha::AssetAdd *command);
   bool asset_remove(const iroha::AssetRemove *command);
-  bool asset_transfer(const iroha::AssetTransfer *command);
+  void asset_transfer(const iroha::AssetTransfer *command);
 
 
   // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)

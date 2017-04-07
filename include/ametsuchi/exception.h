@@ -23,9 +23,6 @@
 namespace ametsuchi {
 namespace exception {
 
-#define NON_TRIVIAL_CHECK \
-  static_assert(std::is_trivial<T>::value, "Passing non-trivial type")
-
 class Exception : public std::exception {
  public:
   /** Constructor (C strings).
@@ -64,9 +61,9 @@ class Exception : public std::exception {
 
 enum class InvalidTransaction {
   PEER_EXISTS = 1,
-  NO_SUCH_PEER,
+  PEER_NOT_FOUND,
   ASSET_EXISTS,
-  NO_SUCH_ASSET,
+  ASSET_NOT_FOUND,
   ACCOUNT_EXISTS,
   NOT_ENOUGH_ASSETS
 };

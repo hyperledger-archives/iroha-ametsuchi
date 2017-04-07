@@ -241,9 +241,9 @@ return ret;
 void Ametsuchi::abort_append_tx() {
   for (auto &&e : trees_) {
     MDB_cursor *cursor = e.second.second;
-    mdb_cursor_close(cursor);
+    if (cursor) mdb_cursor_close(cursor);
   }
-  mdb_txn_abort(append_tx_);
+  if (append_tx_) mdb_txn_abort(append_tx_);
 }
 
 
@@ -412,7 +412,7 @@ void Ametsuchi::account_add(const iroha::AccountAdd *command) {
                             &c_val, 0))) {
     // account with this public key exists
     if (res == MDB_KEYEXIST) {
-      throw;
+      throw exception::InvalidTransaction::ACCOUNT_EXISTS;
     }
     AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
     AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
@@ -591,7 +591,7 @@ void Ametsuchi::peer_remove(const iroha::PeerRemove *command) {
 
   if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET))) {
     if (res == MDB_NOTFOUND) {
-      throw exception::InvalidTransaction::NO_SUCH_PEER;
+      throw exception::InvalidTransaction::PEER_NOT_FOUND;
     }
 
     AMETSUCHI_CRITICAL(res, EINVAL);
@@ -675,51 +675,91 @@ bool Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
    */
 }
 
-bool Ametsuchi::asset_transfer(const iroha::AssetTransfer *command) {
-  // TODO: review and check
+void Ametsuchi::asset_transfer(const iroha::AssetTransfer *command) {
+  auto asset_fb = flatbuffers::GetRoot<iroha::Asset>(command->asset());
 
-  /*
-  // user A sends to user B some asset
+  if (asset_fb->asset_type() != iroha::AnyAsset::Currency)
+    throw exception::InternalError::NOT_IMPLEMENTED;
 
-  MDB_val c_key, c_val;
-  MDB_cursor *cursor = trees_.at("wsv_pubkey_assets").second;
-  int res;
+  auto currency = asset_fb->asset_as_Currency();
 
-  auto asset = flatbuffers::GetRoot<iroha::Asset>(command->asset()->data());
-  auto currency = asset->asset_as_Currency();
-
-  // sender_asset is a vector of 0 or 1 elements
-  auto sender_asset =
+  // sender should have enough assets:
+  MDB_val sender_asset =
       this->accountGetAsset(command->sender(), currency->ledger_name(),
                             currency->domain_name(), currency->currency_name());
+  auto sender_cur = flatbuffers::GetRoot<iroha::Asset>(sender_asset.mv_data)
+                        ->asset_as_Currency();
+  Currency csender(sender_cur->amount(), sender_cur->precision());
+  Currency in_tx(currency->amount(), currency->precision());
 
-  // if user has this asset
-  if (sender_asset.size() == 0) {
-    throw INCORRECT_TRANSACTION;
+  if (csender < in_tx) throw exception::InvalidTransaction::NOT_ENOUGH_ASSETS;
+
+  Currency new_sender_cur = csender - in_tx;
+
+  // cursor is at required position, just replace flatbuffer with a copy
+
+  int res;
+  MDB_val c_key, c_val;
+
+  std::vector<uint8_t> copy{
+      command->asset()->data(),
+      command->asset()->data() + command->asset()->size()};
+
+  auto new_sender_asset =
+      flatbuffers::GetMutableRoot<iroha::Asset>(&copy[0])->asset_as_Currency();
+  // ????????????? WHY CONST ???????????????????
+  // TODO
+
+  new_sender_asset->mutate_amount(new_sender_cur.get_amount());
+
+  c_key.mv_data = (void *)command->sender()->data();
+  c_key.mv_size = command->receiver()->size();
+  c_val.mv_data = (void *)command->asset()->data();
+  c_val.mv_size = command->asset()->size();
+
+  // cursor is at the correct asset, just replace with a copy of FB and flag
+  // MDB_CURRENT
+  // TODO
+
+  if ((res = mdb_cursor_put(trees_.at("wsv_pubkey_assets").second, &c_key,
+                            &c_val, MDB_CURRENT))) {
+    AMETSUCHI_CRITICAL(res, MDB_KEYEXIST);
+    AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
+    AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
+    AMETSUCHI_CRITICAL(res, EACCES);
+    AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
-  auto receiver_asset =
-      this->accountGetAsset(command->receiver(), currency->ledger_name(),
-                            currency->domain_name(), currency->currency_name());
 
-  if (receiver_asset.size() == 0) {
-    // then append new asset to receiver
-    if ((res = mdb_cursor_put(cursor, &c_key, &c_val, 0))) {
-      AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
-      AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
-      AMETSUCHI_CRITICAL(res, EACCES);
-      AMETSUCHI_CRITICAL(res, EINVAL);
+  try {
+    MDB_val receiver_asset = this->accountGetAsset(
+        command->receiver(), currency->ledger_name(), currency->domain_name(),
+        currency->currency_name());
+
+    // cursor is at the correct asset, just replace with a copy of FB and flag
+    // MDB_CURRENT
+    // TODO
+
+  } catch (exception::InvalidTransaction e) {
+    if (e == exception::InvalidTransaction::ASSET_NOT_FOUND) {
+      // append new asset
+      c_key.mv_data = (void *)command->receiver()->data();
+      c_key.mv_size = command->receiver()->size();
+      c_val.mv_data = (void *)command->asset()->data();
+      c_val.mv_size = command->asset()->size();
+
+      if ((res = mdb_cursor_put(trees_.at("wsv_pubkey_assets").second, &c_key,
+                                &c_val, 0))) {
+        AMETSUCHI_CRITICAL(res, MDB_KEYEXIST);
+        AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
+        AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
+        AMETSUCHI_CRITICAL(res, EACCES);
+        AMETSUCHI_CRITICAL(res, EINVAL);
+      }
+    } else {
+      throw;
     }
-
-    // TODO update sender's asset
-
-    // success
-    return true;
   }
-
-
-  return true;
-   */
 }
 
 std::vector<MDB_val> Ametsuchi::accountGetAssets(
@@ -778,7 +818,7 @@ MDB_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
     c_val.mv_data = (void *)blob->second.data();
     c_val.mv_size = blob->second.size();
   } else {
-    throw exception::InvalidTransaction::NO_SUCH_ASSET;
+    throw exception::InvalidTransaction::ASSET_NOT_FOUND;
   }
 
   // query asset by public key
@@ -787,7 +827,8 @@ MDB_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
 
   // if sender has no such asset, then it is incorrect transaction
   if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_GET_BOTH))) {
-    if (res == MDB_NOTFOUND) throw exception::InvalidTransaction::NO_SUCH_ASSET;
+    if (res == MDB_NOTFOUND)
+      throw exception::InvalidTransaction::ASSET_NOT_FOUND;
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
@@ -832,6 +873,20 @@ std::vector<std::pair<MDB_val, MDB_val>> Ametsuchi::read_all_records(
   } while (res == 0);
 
   return ret;
+}
+
+Ametsuchi::~Ametsuchi() {
+  abort_append_tx();
+  for (auto &&it : trees_) {
+    auto dbi = it.second.first;
+    mdb_dbi_close(env, dbi);
+  }
+  mdb_env_close(env);
+}
+
+bool Ametsuchi::account_remove(const iroha::AccountRemove *command) {
+  // TODO
+  return false;
 }
 
 }  // namespace ametsuchi
