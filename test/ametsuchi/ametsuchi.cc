@@ -66,4 +66,34 @@ TEST_F(Ametsuchi_Test, AssetTest) {
   std::vector<uint8_t> transaction_vector{buf, buf + size};
   ametsuchi_.append(transaction_vector);
   ametsuchi_.commit();
+
+  // now do asset add
+  auto currency_to_add = iroha::CreateCurrency(
+      builder, builder.CreateString("Dollar"), builder.CreateString("USA"),
+      builder.CreateString("ledger1"), 0, 100, 2);
+  //  builder.Clear();
+  builder.Finish(currency_to_add);
+
+  auto currency_vector =
+      std::vector<uint8_t>{builder.GetBufferPointer(),
+                           builder.GetBufferPointer() + builder.GetSize()};
+  auto asset_add_offset = iroha::CreateAssetAdd(
+      builder, builder.CreateString("1"),
+      builder.CreateVector(currency_vector.data(), currency_vector.size()));
+
+  auto transaction2_offset = iroha::CreateTransaction(
+      builder, creator_pub_key, iroha::Command::AssetAdd,
+      asset_add_offset.Union(), signatures);
+  //  builder.Clear();
+  builder.Finish(transaction2_offset);
+  auto transaction2 = flatbuffers::GetRoot<iroha::Transaction>(builder.GetBufferPointer());
+  auto asset_add = transaction2->command_as_AssetAdd();
+  auto asset_vector = asset_add->asset();
+  auto asset = flatbuffers::GetRoot<iroha::Asset>(asset_vector->data());
+  auto a = asset->asset_type();
+  std::cout << unsigned(asset->asset_type()) << std::endl;
+
+//  ametsuchi_.append(
+//      std::vector<uint8_t>{builder.GetBufferPointer(),
+//                           builder.GetBufferPointer() + builder.GetSize()});
 }

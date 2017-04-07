@@ -42,6 +42,7 @@ class Ametsuchi {
   void rollback();
 
   std::vector<ByteArray> getAddTxByCreator(const std::string &pubKey);
+  std::vector<ByteArray > getAssetAddByCreator(const std::string &pubKey);
 
  private:
   std::string path_;

@@ -243,6 +243,52 @@ std::vector<ByteArray> Ametsuchi::getAddTxByCreator(const std::string &pubKey) {
 }
 
 
+std::vector<ByteArray> Ametsuchi::getAssetAddByCreator(
+    const std::string &pubKey) {
+  int res;
+
+  std::vector<ByteArray> ret;
+
+  MDB_val c_key, c_val;
+  MDB_txn *read_tx;
+  MDB_dbi read_dbi;
+  MDB_cursor *cursor;
+
+  c_key.mv_size = pubKey.size();
+  c_key.mv_data = (void *)pubKey.c_str();
+
+  if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &read_tx))) {
+    AMETSUCHI_HANDLE(res, MDB_PANIC);
+    AMETSUCHI_HANDLE(res, MDB_MAP_RESIZED);
+    AMETSUCHI_HANDLE(res, MDB_READERS_FULL);
+    AMETSUCHI_HANDLE(res, ENOMEM);
+  }
+  if ((res = mdb_dbi_open(read_tx, "wsv_pubkey_assets", MDB_DUPSORT | MDB_DUPFIXED, &read_dbi))){
+    AMETSUCHI_HANDLE(res, MDB_NOTFOUND);
+    AMETSUCHI_HANDLE(res, MDB_DBS_FULL);
+  }
+  if ((res = mdb_cursor_open(read_tx, read_dbi, &cursor))){
+    AMETSUCHI_HANDLE(res, EINVAL);
+  }
+
+  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET)) ==
+      MDB_NOTFOUND) {                 // no items with given key
+    return std::vector<ByteArray>{};  // return empty vector
+  }
+
+  do {
+    size_t index = *static_cast<size_t *>(c_val.mv_data);
+    auto buf = reinterpret_cast<uint8_t *>(c_val.mv_data);
+    ret.push_back(std::vector<uint8_t >{buf, buf + c_val.mv_size});
+
+    if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT_DUP)) ==
+        MDB_NOTFOUND) {  // no more items with given key
+      break;
+    }
+  } while (!res);
+  return ret;
+}
+
 void Ametsuchi::abort_append_tx() {
   for (auto &&e : trees_) {
     MDB_cursor *cursor = e.second.second;
