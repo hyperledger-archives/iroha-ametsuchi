@@ -32,6 +32,7 @@ class LMDB_Test : public ::testing::Test {
   virtual void TearDown() {
     remove((lmdb + "data.mdb").c_str());
     remove((lmdb + "lock.mdb").c_str());
+    system(("rm -rf " + lmdb).c_str());
   }
 
   virtual void TearUp() {
@@ -82,7 +83,7 @@ class LMDB_Test : public ::testing::Test {
   MDB_dbi dbi_index1;
   MDB_cursor *cursor_1;
 };
-
+/*
 TEST_F(LMDB_Test, AppendSameKeyAndRead) {
   int res;
   open_tx();
@@ -137,4 +138,72 @@ TEST_F(LMDB_Test, AppendSameKeyAndRead) {
   mdb_cursor_close(cursor);
   mdb_txn_abort(read_tx);
   ASSERT_EQ(result, 255);
+}
+*/
+TEST_F(LMDB_Test, LMDB_update){
+  int res;
+  open_tx();
+
+  // WRITE
+  MDB_val key;
+  key.mv_data = (void *)"helloworld";
+  key.mv_size = 10;
+
+  MDB_val val1;
+
+  int a = 2;
+  val1.mv_data = &a;
+  val1.mv_size = sizeof(int);
+
+  HANDLE(mdb_cursor_put(cursor_1, &key, &val1, 0));
+
+  MDB_val val2;
+  int b = 3;
+  val2.mv_data = &a;
+  val2.mv_size = sizeof(int);
+
+  HANDLE(mdb_cursor_put(cursor_1, &key, &val2, 0));
+  commit_tx();
+
+  // retrive
+  MDB_val val;
+  MDB_txn *read_tx;
+  MDB_dbi read_dbi;
+  MDB_cursor *read_cursor;
+
+  HANDLE(mdb_txn_begin(env, NULL, MDB_RDONLY, &read_tx));
+  HANDLE(mdb_dbi_open(read_tx, "TEST1", MDB_DUPSORT | MDB_DUPFIXED, &read_dbi));
+  HANDLE(mdb_cursor_open(read_tx, read_dbi, &read_cursor));
+  HANDLE(mdb_cursor_get(read_cursor, &key, &val, MDB_SET));
+
+  int a_retrived = *reinterpret_cast<int *>(val.mv_data);
+  ASSERT_EQ(a, a_retrived);
+  mdb_cursor_close(read_cursor);
+  mdb_dbi_close(env, read_dbi);
+
+  // delete key value pair
+  MDB_txn *del_tx;
+  MDB_dbi del_dbi;
+//  MDB_cursor *del_cursor;
+  HANDLE(mdb_txn_begin(env, NULL, 0, &del_tx));
+  HANDLE(mdb_dbi_open(del_tx, "TEST1", MDB_DUPSORT | MDB_DUPFIXED, &del_dbi));
+//  HANDLE(mdb_cursor_open(del_tx, del_dbi, &del_cursor));
+
+  HANDLE(mdb_del(del_tx, del_dbi, &key, &val));
+  HANDLE(mdb_txn_commit(del_tx));
+//  mdb_cursor_close(del_cursor);
+  mdb_dbi_close(env, del_dbi);
+
+  // check if record deleted
+  MDB_txn *read_tx_again;
+  MDB_dbi read_dbi_again;
+  MDB_cursor *cursor_again;
+  HANDLE(mdb_txn_begin(env, NULL, 0, &read_tx_again));
+  HANDLE(mdb_dbi_open(read_tx_again, "TEST1", MDB_DUPSORT | MDB_DUPFIXED, &read_dbi_again));
+  HANDLE(mdb_cursor_open(read_tx_again, read_dbi_again, &cursor_again));
+  HANDLE(mdb_cursor_get(cursor_again, &key, &val, MDB_SET));
+
+  a_retrived = *reinterpret_cast<int *>(val.mv_data);
+  ASSERT_NE(a, a_retrived);
+
 }
