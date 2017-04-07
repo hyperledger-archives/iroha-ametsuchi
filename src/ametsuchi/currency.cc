@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/currency.h>
 
 #define AMETSUCHI_MAX_PRECISION 18
@@ -37,6 +38,7 @@ Currency Currency::operator+(const Currency &a) {
 }
 
 Currency Currency::operator-(const Currency &a) {
+  if (amount_ < a.amount_) throw INCORRECT_TRANSACTION;
   return Currency(amount_ - a.amount_, precision_);
 }
 

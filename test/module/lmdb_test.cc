@@ -35,18 +35,13 @@ class LMDB_Test : public ::testing::Test {
     system(("rm -rf " + lmdb).c_str());
   }
 
-  virtual void TearUp() {
-    remove((lmdb + "data.mdb").c_str());
-    remove((lmdb + "lock.mdb").c_str());
-  }
-
-  std::string lmdb = "/tmp/tx_index_test";
+  std::string lmdb = "/tmp/ametsuchi";
 
   LMDB_Test() {
     int res;
 
     HANDLE(mdb_env_create(&env));
-    HANDLE(mdb_env_set_mapsize(env, 1024L * 1024 * 1024 * 16));  // 2 MB
+    HANDLE(mdb_env_set_mapsize(env, 1024L * 1024 * 2));
     HANDLE(mdb_env_set_maxdbs(env, 3));  // we have only 3 databases
 
     // create index directory
@@ -64,10 +59,8 @@ class LMDB_Test : public ::testing::Test {
   void open_tx() {
     int res;
     HANDLE(mdb_txn_begin(env, NULL, 0, &append_tx));
-
     HANDLE(mdb_dbi_open(append_tx, "TEST1",
                         MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE, &dbi_index1));
-
     HANDLE(mdb_cursor_open(append_tx, dbi_index1, &cursor_1));
   }
 

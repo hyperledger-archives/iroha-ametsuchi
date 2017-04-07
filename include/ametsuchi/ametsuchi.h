@@ -30,6 +30,9 @@
 
 namespace ametsuchi {
 
+// possible exceptions
+enum { INCORRECT_TRANSACTION = 1, FATAL_ERROR };
+
 using ByteArray = std::vector<uint8_t>;
 
 class Ametsuchi {
@@ -41,7 +44,30 @@ class Ametsuchi {
   void commit();
   void rollback();
 
-  std::vector<ByteArray> getAddTxByCreator(const std::string &pubKey);
+  // std::vector<const MDB_val> getAddTxByCreator(const std::string &pubKey);
+
+  /**
+ * Returns all assets, which belong to user with \p pubKey.
+ * @param pubKey - account's public key
+ * @param ln - ledger name
+ * @param dn - domain name
+ * @param an - asset (currency) name
+ * @return 0 or * blobs, which are mmaped into memory.
+ */
+  std::vector<MDB_val> accountGetAssets(const flatbuffers::String *pubKey);
+
+  /**
+   * Returns specific asset, which belong to user with \p pubKey.
+   * @param pubKey - account's public key
+   * @param ln - ledger name
+   * @param dn - domain name
+   * @param an - asset (currency) name
+   * @return 0 or 1 blobs, which are mmaped into memory.
+   */
+  std::vector<MDB_val> accountGetAsset(const flatbuffers::String *pubKey,
+                                       const flatbuffers::String *ln,
+                                       const flatbuffers::String *dn,
+                                       const flatbuffers::String *an);
 
  private:
   std::string path_;
@@ -66,9 +92,10 @@ class Ametsuchi {
   bool peer_add(const iroha::PeerAdd *command);
   bool peer_remove(const iroha::PeerRemove *command);
   bool asset_create(const iroha::AssetCreate *command);
-  void asset_add(const iroha::AssetAdd *command);
-  void asset_remove(const iroha::AssetRemove *command);
-  void asset_transfer(const iroha::AssetTransfer *command);
+  bool asset_add(const iroha::AssetAdd *command);
+  bool asset_remove(const iroha::AssetRemove *command);
+  bool asset_transfer(const iroha::AssetTransfer *command);
+
 
   std::unordered_set<std::string> created_assets_;
 };
