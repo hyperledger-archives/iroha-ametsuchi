@@ -30,10 +30,8 @@
 
 namespace ametsuchi {
 
-// possible exceptions
-enum { INCORRECT_TRANSACTION = 1, FATAL_ERROR };
-
 using ByteArray = std::vector<uint8_t>;
+class MDB_val;  // forward declaration
 
 class Ametsuchi {
  public:
@@ -62,42 +60,45 @@ class Ametsuchi {
    * @param ln - ledger name
    * @param dn - domain name
    * @param an - asset (currency) name
-   * @return 0 or 1 blobs, which are mmaped into memory.
+   * @return
    */
-  std::vector<MDB_val> accountGetAsset(const flatbuffers::String *pubKey,
-                                       const flatbuffers::String *ln,
-                                       const flatbuffers::String *dn,
-                                       const flatbuffers::String *an);
+  MDB_val accountGetAsset(const flatbuffers::String *pubKey,
+                          const flatbuffers::String *ln,
+                          const flatbuffers::String *dn,
+                          const flatbuffers::String *an);
 
  private:
   std::string path_;
+  MDB_env *env;
+  MDB_stat mst;
+  MDB_txn *append_tx_;  // pointer to db transaction
+  std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
+  size_t tx_store_total;
 
   void init();
-  void init_btree(const std::string &name, uint32_t flags);
+  void init_btree(const std::string &name, uint32_t flags,
+                  MDB_cmp_func *dupsort = NULL);
   size_t tx_store_size();
   void init_append_tx();
   void abort_append_tx();
+  void read_created_assets();
 
-  MDB_env *env;
-  MDB_stat mst;
 
-  MDB_txn *append_tx_;  // pointer to db transaction
-
-  std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
-
-  size_t tx_store_total;
-
-  bool account_add(const iroha::AccountAdd *command);
+  // handlers for transactions
+  void account_add(const iroha::AccountAdd *command);
   bool account_remove(const iroha::AccountRemove *command);
-  bool peer_add(const iroha::PeerAdd *command);
-  bool peer_remove(const iroha::PeerRemove *command);
-  bool asset_create(const iroha::AssetCreate *command);
+  void peer_add(const iroha::PeerAdd *command);
+  void peer_remove(const iroha::PeerRemove *command);
+  void asset_create(const iroha::AssetCreate *command);
   bool asset_add(const iroha::AssetAdd *command);
   bool asset_remove(const iroha::AssetRemove *command);
   bool asset_transfer(const iroha::AssetTransfer *command);
 
 
-  std::unordered_set<std::string> created_assets_;
+  // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
+  std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;
+  std::vector<std::pair<MDB_val, MDB_val>> read_all_records(
+      const std::string &tree_name);
 };
 
 }  // namespace ametsuchi

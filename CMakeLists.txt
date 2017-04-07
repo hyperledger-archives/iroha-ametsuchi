@@ -34,6 +34,8 @@ include(cmake/functions.cmake)
 set(AMETSUCHI_INCLUDE
   include/ametsuchi/ametsuchi.h
   include/ametsuchi/currency.h
+  include/ametsuchi/exception.h
+  include/ametsuchi/comparator.h
 
   # needed to compile fbs automatically
   include/ametsuchi/generated/account_generated.h

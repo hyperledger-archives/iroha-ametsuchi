@@ -38,7 +38,6 @@ Currency Currency::operator+(const Currency &a) {
 }
 
 Currency Currency::operator-(const Currency &a) {
-  if (amount_ < a.amount_) throw INCORRECT_TRANSACTION;
   return Currency(amount_ - a.amount_, precision_);
 }
 
