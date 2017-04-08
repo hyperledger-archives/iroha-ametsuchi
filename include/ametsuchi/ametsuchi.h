@@ -31,7 +31,7 @@
 namespace ametsuchi {
 
 using ByteArray = std::vector<uint8_t>;
-class MDB_val;  // forward declaration
+
 
 class Ametsuchi {
  public:
@@ -92,6 +92,11 @@ class Ametsuchi {
   bool asset_add(const iroha::AssetAdd *command);
   bool asset_remove(const iroha::AssetRemove *command);
   void asset_transfer(const iroha::AssetTransfer *command);
+
+  void account_add_currency(const flatbuffers::String *acc_pub_key,
+                            const iroha::Currency *c, size_t c_size);
+  void account_remove_currency(const flatbuffers::String *acc_pub_key,
+                               const iroha::Currency *c);
 
 
   // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
