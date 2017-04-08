@@ -85,12 +85,12 @@ class Ametsuchi {
 
   // handlers for transactions
   void account_add(const iroha::AccountAdd *command);
-  bool account_remove(const iroha::AccountRemove *command);
+  void account_remove(const iroha::AccountRemove *command);
   void peer_add(const iroha::PeerAdd *command);
   void peer_remove(const iroha::PeerRemove *command);
   void asset_create(const iroha::AssetCreate *command);
-  bool asset_add(const iroha::AssetAdd *command);
-  bool asset_remove(const iroha::AssetRemove *command);
+  void asset_add(const iroha::AssetAdd *command);
+  void asset_remove(const iroha::AssetRemove *command);
   void asset_transfer(const iroha::AssetTransfer *command);
 
   void account_add_currency(const flatbuffers::String *acc_pub_key,
