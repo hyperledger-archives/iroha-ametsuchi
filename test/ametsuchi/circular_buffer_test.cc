@@ -17,6 +17,7 @@
 
 #include <ametsuchi/circular_buffer.h>
 #include <gtest/gtest.h>
+#include <stack>
 
 namespace ametsuchi {
 namespace buffer {
@@ -129,6 +130,29 @@ TEST(CircularBuffer, IterForEach) {
     cs[1];
   } catch (Exception &e) {
     ASSERT_STREQ(e.what(), "Buffer accessing out of size");
+  }
+}
+
+TEST(CirularStack, PushAndPopAndFront ) {
+  auto size = 10;
+  std::stack<int> st;
+  CircularStack<uint64_t> cs(size);
+  for(auto i = 0; i < size-1; i++ ) {
+    st.push(i);
+    cs.push(i);
+  }
+
+  for(auto i=0; i < 5; i++ ) {
+    ASSERT_EQ( st.top(), cs.back() );
+    st.pop(); cs.pop();
+  }
+  for(auto i = 0; i < 5; i++ ) {
+    st.push(i+size);
+    cs.push(i+size);
+  }
+  while( !st.empty() ){
+    ASSERT_EQ( st.top(), cs.back() );
+    st.pop(); cs.pop();
   }
 }
 

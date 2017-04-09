@@ -63,6 +63,22 @@ class CircularBuffer {
    */
   void pop(size_t n = 1);
 
+
+  /**
+   * O(1)
+   * Accessing element by front.
+   */
+  T &front();
+  T front() const;
+
+  /**
+   * O(1)
+   * Accessing element by back.
+   */
+  T &back();
+  T back() const;
+
+
   /**
    * O(1)
    * Accessing element by index
@@ -95,7 +111,7 @@ class CircularBuffer {
 
   // Determines n position before p
   constexpr size_t diff(size_t p, size_t n) const {
-    return p < n ? p + size() - n : p - n;
+    return p < n ? p + capacity() - n : p - n;
   }
 
   constexpr size_t overflowed() { return capacity(); }

@@ -176,12 +176,12 @@ void NarrowMerkleTree<T>::add(T t) {
     grow();
     new_root = true;
   }
-  
+
   // layer_idx is:
   //        0
   //    0       1
   //  0   1   2
-  // 0 1 2 3 4 5 
+  // 0 1 2 3 4 5
   size_t layer_idx = txs - 1;
   bool need_expand = layer_idx % 2 == 0;
   // This loop traverse up to the tree
