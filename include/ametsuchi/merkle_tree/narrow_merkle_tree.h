@@ -171,7 +171,7 @@ NarrowMerkleTree<T>::NarrowMerkleTree(HashFn c, size_t capacity)
 template <typename T>
 void NarrowMerkleTree<T>::add(T t) {
   txs++;
-  T dropped_child = data[0].push(t);
+  // T dropped_child = data[0].push(t);  // @warchant: it was unused
   bool new_root = false;
   if (txs != 1 && height(txs) > height(txs - 1)) {
     grow();

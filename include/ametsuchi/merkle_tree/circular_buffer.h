@@ -154,6 +154,27 @@ class CircularBuffer {
 
 
 template <typename T>
+T CircularBuffer<T>::back() const {
+  return this->v[i_end];
+}
+
+template <typename T>
+T& CircularBuffer<T>::back() {
+  return this->v[i_end];
+}
+
+template <typename T>
+T CircularBuffer<T>::front() const {
+  return this->v[0];
+}
+
+template <typename T>
+T& CircularBuffer<T>::front() {
+  return this->v[0];
+}
+
+
+template <typename T>
 CircularBuffer<T>::CircularBuffer(size_t s) : cap(s), sz(0), i_end(0) {
   if (s == 0) throw exception::Exception("Buffer size cannot be zero");
   v = (T *)malloc(sizeof(T) * capacity());

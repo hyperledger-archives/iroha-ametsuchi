@@ -28,7 +28,7 @@ TEST(Merkle, Creation) {
 }
 
 TEST(Merkle, Addition) {
-  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; });
+  NarrowMerkleTree<size_t> tree([](auto i, auto j) { return i + j; });
   /*
    *                              55
    *              28                           27
@@ -43,8 +43,8 @@ TEST(Merkle, Addition) {
 }
 
 TEST(Merkle, Dropping) {
-  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; });
-  for (auto i = 0; i < size; ++i) tree.add(i);
+  NarrowMerkleTree<size_t> tree([](auto i, auto j) { return i + j; });
+  for (size_t i = 0; i < size; ++i) tree.add(i);
   tree.drop(6);
   /*
    * data[3]:(0+1 + 2+3  +  4+5 + 6+7)
@@ -61,7 +61,7 @@ TEST(Merkle, Dropping) {
   ASSERT_EQ(tree.size(), 4);
   ASSERT_EQ(tree.get_root(), 3 * 4 / 2);
 
-  for (auto i = 4; i < size; i++) tree.add(i);
+  for (size_t i = 4; i < size; i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
   ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
 
@@ -75,7 +75,7 @@ TEST(Merkle, Dropping) {
   ASSERT_EQ(tree.size(), 8);
   ASSERT_EQ(tree.get_root(), 7 * 8 / 2);
 
-  for (auto i = 8; i < size; i++) tree.add(i);
+  for (size_t i = 8; i < size; i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
   ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
 
@@ -140,12 +140,12 @@ TEST(Merkle, ExtendAddition) {
 
 TEST(Merkle, ExtendDropping) {
   NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 8);
-  for (auto i = 0; i < size; ++i) tree.add(i);
+  for (size_t i = 0; i < size; ++i) tree.add(i);
   tree.drop(6);
   ASSERT_EQ(tree.size(), 6);
   ASSERT_EQ(tree.get_root(), 5 * 6 / 2);
 
-  for (auto i = 6; i < size; i++) tree.add(i);
+  for (size_t i = 6; i < size; i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
   ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
 
@@ -153,7 +153,7 @@ TEST(Merkle, ExtendDropping) {
   ASSERT_EQ(tree.size(), 8);
   ASSERT_EQ(tree.get_root(), 7 * 8 / 2);
 
-  for (auto i = 8; i < size; i++) tree.add(i);
+  for (size_t i = 8; i < size; i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
   ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
 
