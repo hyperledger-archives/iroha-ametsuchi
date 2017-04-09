@@ -15,19 +15,13 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/index/merkle.h>
+#include <ametsuchi/merkle_tree/narrow_merkle_tree.h>
 #include <gtest/gtest.h>
-#include <algorithm>
-#include <numeric>
-#include <cmath>
-#include <vector>
-#include <iostream>
 
 namespace ametsuchi {
-namespace index {
 namespace merkle {
 
-constexpr auto size = 10;
+constexpr size_t size = 10;
 
 TEST(Merkle, Creation) {
   NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; });
@@ -64,12 +58,12 @@ TEST(Merkle, Dropping) {
    * data[1]:
    * data[0]:
    */
-  ASSERT_EQ(tree.size(),4);
-  ASSERT_EQ(tree.get_root(), 3*4/2);
+  ASSERT_EQ(tree.size(), 4);
+  ASSERT_EQ(tree.get_root(), 3 * 4 / 2);
 
-  for(auto i=4;i<size;i++) tree.add(i);
+  for (auto i = 4; i < size; i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
-  ASSERT_EQ(tree.get_root(),9*10/2);
+  ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
 
   tree.drop(8);
   /*
@@ -79,16 +73,14 @@ TEST(Merkle, Dropping) {
    * data[0]:
    */
   ASSERT_EQ(tree.size(), 8);
-  ASSERT_EQ(tree.get_root(), 7*8/2 );
+  ASSERT_EQ(tree.get_root(), 7 * 8 / 2);
 
-  for(auto i=8;i<size;i++) tree.add(i);
+  for (auto i = 8; i < size; i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
-  ASSERT_EQ(tree.get_root(),9*10/2);
+  ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
 
   tree.drop(0);
-  ASSERT_EQ(tree.size(),0);
-
-
+  ASSERT_EQ(tree.size(), 0);
 }
 
 TEST(Merkle, Hegiht) {
@@ -132,7 +124,7 @@ TEST(Merkle, Statics) {
 }
 
 TEST(Merkle, ExtendAddition) {
-  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; },8);
+  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 8);
   /*
    *                              55
    *              28                           27
@@ -147,30 +139,28 @@ TEST(Merkle, ExtendAddition) {
 }
 
 TEST(Merkle, ExtendDropping) {
-  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; },8);
+  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 8);
   for (auto i = 0; i < size; ++i) tree.add(i);
   tree.drop(6);
-  ASSERT_EQ(tree.size(),6);
-  ASSERT_EQ(tree.get_root(), 5*6/2);
+  ASSERT_EQ(tree.size(), 6);
+  ASSERT_EQ(tree.get_root(), 5 * 6 / 2);
 
-  for(auto i=6;i<size;i++) tree.add(i);
+  for (auto i = 6; i < size; i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
-  ASSERT_EQ(tree.get_root(),9*10/2);
+  ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
 
   tree.drop(8);
   ASSERT_EQ(tree.size(), 8);
-  ASSERT_EQ(tree.get_root(), 7*8/2 );
+  ASSERT_EQ(tree.get_root(), 7 * 8 / 2);
 
-  for(auto i=8;i<size;i++) tree.add(i);
+  for (auto i = 8; i < size; i++) tree.add(i);
   ASSERT_EQ(tree.size(), size);
-  ASSERT_EQ(tree.get_root(),9*10/2);
+  ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
 
   tree.drop(0);
-  ASSERT_EQ(tree.size(),0);
-
+  ASSERT_EQ(tree.size(), 0);
 }
 
 
 }  // namespace merkle
-}  // namespace index
 }  // namespace ametsuchi

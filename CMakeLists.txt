@@ -36,6 +36,8 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/currency.h
   include/ametsuchi/exception.h
   include/ametsuchi/comparator.h
+  include/ametsuchi/merkle_tree/narrow_merkle_tree.h
+  include/ametsuchi/merkle_tree/circular_buffer.h
 
   # needed to compile fbs automatically
   include/ametsuchi/generated/account_generated.h

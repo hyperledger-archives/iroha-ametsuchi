@@ -17,22 +17,23 @@
 
 #pragma once
 
-#include <ametsuchi/circular_buffer.h>
 #include <ametsuchi/exception.h>
-#include <ametsuchi/globals.h>
+#include <ametsuchi/merkle_tree/circular_buffer.h>
 #include <algorithm>
-#include <cmath>
-#include <vector>
 #include <bitset>
+#include <cmath>
+#include <functional>
+#include <vector>
 
 namespace ametsuchi {
-namespace index {
 namespace merkle {
+
+using Exception = exception::Exception;
 
 template <typename T>
 constexpr size_t popcount(T n) {
-    //std::bitset<sizeof(T)> b(n);
-    return std::bitset<sizeof(T)>(n).count();
+  // std::bitset<sizeof(T)> b(n);
+  return std::bitset<sizeof(T)>(n).count();
 }
 
 /**
@@ -115,7 +116,7 @@ class NarrowMerkleTree {
     auto x = node ^ (node + 1);
     // count number of leading zeros in x
     // in tree with height `node + 1`
-    return floor(log2(node + 1)) - floor(log2(x));
+    return (size_t)(floor(log2(node + 1)) - floor(log2(x)));
   }
 
   inline size_t capacity() { return data[0].capacity(); }
@@ -204,7 +205,8 @@ void NarrowMerkleTree<T>::add(T t) {
         cur->push(hash(t1, t2));
       } else {
         // there's probably an issue in index for capacity() > 0
-        cur->begin()[(capacity() - layer_idx/2) % capacity()] = std::move(hash(t1, t2));
+        cur->begin()[(capacity() - layer_idx / 2) % capacity()] =
+            std::move(hash(t1, t2));
       }
     }
   }
@@ -235,5 +237,4 @@ constexpr size_t NarrowMerkleTree<T>::size() const {
 }
 
 }  // namespace merkle
-}  // namespace index
 }  // namespace ametsuchi

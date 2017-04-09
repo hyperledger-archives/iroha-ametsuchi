@@ -15,17 +15,17 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/circular_buffer.h>
+#include <ametsuchi/merkle_tree/circular_buffer.h>
 #include <gtest/gtest.h>
 #include <stack>
 
 namespace ametsuchi {
 namespace buffer {
 
-constexpr auto size = 10;
+constexpr size_t size = 10;
 
 TEST(CircularBuffer, Addition) {
-  CircularBuffer<uint64_t> cs(size);
+  CircularBuffer<int> cs(size);
   for (auto i = 0; i < size * size; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
   ASSERT_EQ(cs.capacity(), size);
@@ -44,7 +44,7 @@ TEST(CircularBuffer, AdditionMovingStruct) {
 }
 
 TEST(CircularBuffer, Poping) {
-  CircularBuffer<uint64_t> cs(size);
+  CircularBuffer<int> cs(size);
 
   for (auto i = 0; i < size; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
@@ -70,7 +70,7 @@ TEST(CircularBuffer, Poping) {
 
 TEST(CircularBuffer, Resizing) {
   auto size = 10;
-  CircularBuffer<uint64_t> cs(size);
+  CircularBuffer<int> cs(size);
   for (auto i = 0; i < size * size; ++i) cs.push(i);
   size *= 2;
   cs.resize(size);
@@ -80,7 +80,7 @@ TEST(CircularBuffer, Resizing) {
 }
 
 TEST(CircularBuffer, Accessing) {
-  CircularBuffer<uint64_t> cs(size);
+  CircularBuffer<int> cs(size);
   for (auto i = 0; i < size; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
   ASSERT_EQ(cs.capacity(), size);
@@ -108,13 +108,13 @@ TEST(CircularBuffer, EmptyDestruction) {
 TEST(CircularBuffer, ExceptionCatches) {
   try {
     CircularBuffer<uint64_t> cs(0);
-  } catch (Exception &e) {
+  } catch (exception::Exception &e) {
     ASSERT_STREQ(e.what(), "Buffer size cannot be zero");
   }
   try {
     CircularBuffer<uint64_t> cs(1);
     cs[1];
-  } catch (Exception &e) {
+  } catch (exception::Exception &e) {
     ASSERT_STREQ(e.what(), "Buffer accessing out of size");
   }
 }
@@ -122,37 +122,39 @@ TEST(CircularBuffer, ExceptionCatches) {
 TEST(CircularBuffer, IterForEach) {
   try {
     CircularBuffer<uint64_t> cs(0);
-  } catch (Exception &e) {
+  } catch (exception::Exception &e) {
     ASSERT_STREQ(e.what(), "Buffer size cannot be zero");
   }
   try {
     CircularBuffer<uint64_t> cs(1);
     cs[1];
-  } catch (Exception &e) {
+  } catch (exception::Exception &e) {
     ASSERT_STREQ(e.what(), "Buffer accessing out of size");
   }
 }
 
-TEST(CirularStack, PushAndPopAndFront ) {
+TEST(CirularStack, PushAndPopAndFront) {
   auto size = 10;
   std::stack<int> st;
-  CircularStack<uint64_t> cs(size);
-  for(auto i = 0; i < size-1; i++ ) {
+  CircularBuffer<int> cs(size);
+  for (auto i = 0; i < size - 1; i++) {
     st.push(i);
     cs.push(i);
   }
 
-  for(auto i=0; i < 5; i++ ) {
-    ASSERT_EQ( st.top(), cs.back() );
-    st.pop(); cs.pop();
+  for (auto i = 0; i < 5; i++) {
+    ASSERT_EQ(st.top(), cs.back());
+    st.pop();
+    cs.pop();
   }
-  for(auto i = 0; i < 5; i++ ) {
-    st.push(i+size);
-    cs.push(i+size);
+  for (auto i = 0; i < 5; i++) {
+    st.push(i + size);
+    cs.push(i + size);
   }
-  while( !st.empty() ){
-    ASSERT_EQ( st.top(), cs.back() );
-    st.pop(); cs.pop();
+  while (!st.empty()) {
+    ASSERT_EQ(st.top(), cs.back());
+    st.pop();
+    cs.pop();
   }
 }
 

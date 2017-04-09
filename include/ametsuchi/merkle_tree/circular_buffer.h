@@ -15,9 +15,147 @@
  * limitations under the License.
  */
 
+#pragma once
+
+#include <ametsuchi/exception.h>
+#include <cmath>
+
+namespace ametsuchi {
+namespace buffer {
+
+/**
+ * Basic circular buffer
+ */
+template <typename T>
+class CircularBuffer {
+ public:
+  explicit CircularBuffer(size_t);
+  CircularBuffer(CircularBuffer &&);
+  // Used only in narrow merkle tree
+  // and here does need to be copied
+  // deleted for preventing errors
+  CircularBuffer(const CircularBuffer &) = delete;
+  ~CircularBuffer();
+
+  /**
+   * Performs reallocation of the data
+   * so the buffer able to store provided
+   * number of elems
+   * O(n)
+   */
+  void resize(size_t);
+
+  /**
+   * O(1)
+   * Add element to the buffer end pointer
+   */
+  T push(T &&);
+
+  /**
+   * O(1)
+   * Add element to the buffer end pointer
+   */
+  T push(const T &);
+  /**
+   * O(1)
+   * @param n elemens for removing
+   */
+  void pop(size_t n = 1);
+
+
+  /**
+   * O(1)
+   * Accessing element by front.
+   */
+  // TODO: implement
+  T &front();
+  T front() const;
+
+  /**
+   * O(1)
+   * Accessing element by back.
+   */
+  // TODO: implement
+  T &back();
+  T back() const;
+
+
+  /**
+   * O(1)
+   * Accessing element by index
+   */
+  T &operator[](size_t);
+  T operator[](size_t) const;
+
+  /**
+   * Number of elements
+   */
+  constexpr size_t size() const { return sz; }
+  /**
+   * Maximum storage capacity
+   */
+  constexpr size_t capacity() const { return cap; }
+
+  constexpr bool is_full() const { return size() == capacity(); }
+
+ private:
+  // Raw data array
+  T *v;
+  // Storage capacity
+  size_t cap;
+  // Number of elements stored so far, can be in range [0;cap]
+  size_t sz;
+  // Index of after last element, can be in range [0;sz)
+  size_t i_end;
+
+  constexpr size_t start() const { return diff(i_end, size()); }
+
+  // Determines n position before p
+  constexpr size_t diff(size_t p, size_t n) const {
+    return p < n ? p + capacity() - n : p - n;
+  }
+
+  constexpr size_t overflowed() { return capacity(); }
+
+ public:
+  class ForwardIter {
+   public:
+    ForwardIter(CircularBuffer<T> *, size_t);
+    bool operator==(const ForwardIter &i) const;
+    bool operator!=(const ForwardIter &i) const;
+    ForwardIter &operator++();
+    ForwardIter operator+(size_t t);
+    ForwardIter &operator+=(size_t t);
+    T &operator*();
+    T &operator[](size_t t);
+    size_t size() const { return cs->size(); }
+    size_t capacity() const { return cs->capacity(); }
+    ForwardIter &to_last() {
+      pos = cs->diff(cs->i_end, 1);
+      return *this;
+    }
+
+   private:
+    CircularBuffer<T> *cs;
+    size_t pos;
+
+    size_t pos_inc(size_t t);
+  };
+
+
+  ForwardIter begin() { return ForwardIter(this, diff(i_end, size())); }
+
+  ForwardIter end() { return ForwardIter(this, overflowed()); }
+
+  ForwardIter last() { return ForwardIter(this, diff(i_end, 1)); }
+
+ private:
+};
+
+
 template <typename T>
 CircularBuffer<T>::CircularBuffer(size_t s) : cap(s), sz(0), i_end(0) {
-  if (s == 0) throw Exception("Buffer size cannot be zero");
+  if (s == 0) throw exception::Exception("Buffer size cannot be zero");
   v = (T *)malloc(sizeof(T) * capacity());
 }
 
@@ -68,13 +206,13 @@ void CircularBuffer<T>::pop(size_t n) {
 
 template <typename T>
 T &CircularBuffer<T>::operator[](size_t s) {
-  if (s >= size()) throw Exception("Buffer accessing out of size");
+  if (s >= size()) throw exception::Exception("Buffer accessing out of size");
   return v[diff(i_end, size() - s)];
 }
 
 template <typename T>
 T CircularBuffer<T>::operator[](size_t s) const {
-  if (s >= size()) throw Exception("Buffer accessing out of size");
+  if (s >= size()) throw exception::Exception("Buffer accessing out of size");
   return v[diff(i_end, size() - s)];
 }
 
@@ -100,8 +238,8 @@ typename CircularBuffer<T>::ForwardIter
 }
 
 template <typename T>
-typename CircularBuffer<T>::ForwardIter CircularBuffer<T>::ForwardIter::operator+(
-    size_t t) {
+typename CircularBuffer<T>::ForwardIter CircularBuffer<T>::ForwardIter::
+operator+(size_t t) {
   return {cs, pos_inc(t)};
 }
 
@@ -131,3 +269,7 @@ size_t CircularBuffer<T>::ForwardIter::pos_inc(size_t t) {
   // ensure it doesn't overflow
   return n_pos >= t_end ? cs->overflowed() : n_pos % cs->cap;
 }
+
+
+}  // namespace buffer
+}  // namespace ametsuchi
