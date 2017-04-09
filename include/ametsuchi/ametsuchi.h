@@ -18,26 +18,136 @@
 #ifndef AMETSUCHI_DB_H
 #define AMETSUCHI_DB_H
 
-#include <ametsuchi/env.h>
-#include <ametsuchi/globals.h>
-#include <ametsuchi/table/fixed_table.h>
+#include <ametsuchi/generated/commands_generated.h>
+#include <lmdb.h>
+#include <cstdint>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+#include "currency.h"
+
+#ifndef AMETSUCHI_MAX_DB_SIZE
+#define AMETSUCHI_MAX_DB_SIZE (8L * 1024 * 1024 * 1024)  // 8 GB
+#endif
 
 namespace ametsuchi {
 
 /**
- * Interface to tx_store and world_state
- * @tparam T - flatbuffers, protobuf, any serializable structure
+ * Represents a value, readed from a database.
+ * Used to restrict changing of mmaped data by pointer.
  */
-template <typename T>
+struct AM_val {
+  // pointer, which points to blob with data
+  const void const *data;
+  // size of the pointer
+  const size_t size;
+  AM_val(MDB_val a) : data(a.mv_data), size(a.mv_size) {}
+};
+
+/**
+ * Main class for the database.
+ *  - single Ametsuchi instance for the single database
+ *  - single writer thread
+ *  - multiple readers threads, new read-only transaction for each thread
+ *  - all data is stored as root flatbuffers
+ */
 class Ametsuchi {
  public:
-  void open(std::shared_ptr<Env> env) {
-    // ENV is declared in "globals.h"
-    ENV = env;
-  }
-  void close();
+  explicit Ametsuchi(const std::string &db_folder);
+  ~Ametsuchi();
+
+  /**
+   * Append root flatbuffer Transaction to the Ametsuchi database.
+   * @throw exception::InvalidTransaction with the reason (one of enum values)
+   * @throw exception::InternalError with the reason (one of enum values)
+   * @param tx root type Transaction (contents of TransactionWrapper->tx array)
+   * @return new merkle root
+   */
+  std::string append(const flatbuffers::Vector<uint8_t> *tx);
+  std::string append(const std::vector<flatbuffers::Vector *> &batch);
+
+  /**
+   * Commit appended data to database. Commit creates the latest 'checkpoint',
+   * when you can not rollback.
+   */
+  void commit();
+
+  /**
+   * You can rollback
+   */
+  void rollback();
+
+  /**
+ * Returns all assets, which belong to user with \p pubKey.
+ * @param pubKey - account's public key
+ * @param uncommitted - if true, include uncommitted changes to search.
+ * Otherwise create new read-only TX
+ * @return 0 or * pairs <pointer, size>, which are mmaped into memory.
+ */
+  std::vector<AM_val> accountGetAssets(const flatbuffers::String *pubKey,
+                                       bool uncommitted = false);
+
+  /**
+   * Returns specific asset, which belong to user with \p pubKey.
+   * @param pubKey - account's public key
+   * @param ln - ledger name
+   * @param dn - domain name
+   * @param an - asset (currency) name
+   * @param uncommitted - if true, include uncommitted changes to search.
+ * Otherwise create new read-only TX
+   * @return pair <pointer, size>, which are mmaped from disk
+   */
+  AM_val accountGetAsset(const flatbuffers::String *pubKey,
+                         const flatbuffers::String *ln,
+                         const flatbuffers::String *dn,
+                         const flatbuffers::String *an,
+                         bool uncommitted = false);
+
+ private:
+  /* for internal use only */
+
+  std::string path_;
+  MDB_env *env;
+  MDB_stat mst;
+  MDB_txn *append_tx_;  // pointer to db transaction
+  std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
+  size_t tx_store_total;
+
+  void init();
+  void init_btree(const std::string &name, uint32_t flags,
+                  MDB_cmp_func *dupsort = NULL);
+  size_t tx_store_size();
+  void init_append_tx();
+  void abort_append_tx();
+  void read_created_assets();
+
+  // handlers for transactions
+  void account_add(const iroha::AccountAdd *command);
+  void account_remove(const iroha::AccountRemove *command);
+  void peer_add(const iroha::PeerAdd *command);
+  void peer_remove(const iroha::PeerRemove *command);
+  void asset_create(const iroha::AssetCreate *command);
+  void asset_add(const iroha::AssetAdd *command);
+  void asset_remove(const iroha::AssetRemove *command);
+  void asset_transfer(const iroha::AssetTransfer *command);
+
+  // manipulate with account's assets using these functions
+  void account_add_currency(const flatbuffers::String *acc_pub_key,
+                            const iroha::Currency *c, size_t c_size);
+  void account_remove_currency(const flatbuffers::String *acc_pub_key,
+                               const iroha::Currency *c);
+
+
+  // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
+  std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;
+
+  // reads all records in the given tree
+  std::vector<std::pair<AM_val, AM_val>> read_all_records(
+      const std::string &tree_name);
 };
-}
+
+}  // namespace ametsuchi
 
 #endif  // AMETSUCHI_DB_H

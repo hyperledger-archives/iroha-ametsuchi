@@ -1,0 +1,20 @@
+version: 2
+jobs:
+  build:
+    working_directory: /ametsuchi
+    docker:
+      - image: ubuntu:16.04
+        environment:
+          AMETSUCHI_HOME: /ametsuchi
+    steps:
+      - checkout
+      - run:
+          name: cmake
+          command: cmake .
+      - run:
+          name: make
+          command: make -j4
+      - run:
+          name: run tests
+          command: ctest
+
