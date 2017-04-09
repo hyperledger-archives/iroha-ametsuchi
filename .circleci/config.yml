@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: /ametsuchi
     docker:
-      - image: ubuntu:16.04
+      - image: warchantua/iroha-dev
         environment:
           AMETSUCHI_HOME: /ametsuchi
     steps:
