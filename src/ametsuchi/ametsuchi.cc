@@ -40,14 +40,14 @@ namespace ametsuchi {
 
 
 Ametsuchi::Ametsuchi(const std::string &db_folder)
-    : path_(db_folder), tx_store_total(0) {
+  : path_(db_folder), tx_store_total(0) {
   // initialize database:
   // create folder, create all handles and btrees
   // in case of any errors prints error to stdout and exits
   init();
 }
 
-std::string Ametsuchi::append(const flatbuffers::Vector *blob) {
+std::string Ametsuchi::append(const flatbuffers::Vector<uint8_t> *blob) {
   // TODO calculate the latest merkle root and return it
 
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
@@ -158,13 +158,18 @@ std::string Ametsuchi::append(const flatbuffers::Vector *blob) {
       }
     }
   }
+
+  return "merkle root";
 }
 
-std::string Ametsuchi::append(const std::vector<flatbuffers::Vector *> &batch) {
+std::string Ametsuchi::append(
+  const std::vector<flatbuffers::Vector<uint8_t> *> &batch) {
   // TODO calculate the latest merkle root and return it
-  for (auto &&tx : batch) {
+  for (auto tx : batch) {
     append(tx);
   }
+
+  return "merkle root";
 }
 
 
@@ -399,7 +404,7 @@ void Ametsuchi::account_add(const iroha::AccountAdd *command) {
   int res;
 
   auto account =
-      flatbuffers::GetRoot<iroha::Account>(command->account()->data());
+    flatbuffers::GetRoot<iroha::Account>(command->account()->data());
   auto pubkey = account->pubKey();
 
   c_key.mv_data = (void *)(pubkey->data());
@@ -425,7 +430,7 @@ void Ametsuchi::account_remove(const iroha::AccountRemove *command) {
   int res;
 
   auto account =
-      flatbuffers::GetRoot<iroha::Account>(command->account()->data());
+    flatbuffers::GetRoot<iroha::Account>(command->account()->data());
   auto pubkey = account->pubKey();
 
   c_key.mv_data = (void *)(pubkey->data());
@@ -509,7 +514,7 @@ void Ametsuchi::asset_create(const iroha::AssetCreate *command) {
   // create Asset
   flatbuffers::FlatBufferBuilder fbb;
   auto asset =
-      iroha::CreateCurrencyDirect(fbb, an->data(), dn->data(), ln->data());
+    iroha::CreateCurrencyDirect(fbb, an->data(), dn->data(), ln->data());
   fbb.Finish(asset);
 
   auto ptr = fbb.GetBufferPointer();
@@ -593,14 +598,15 @@ void Ametsuchi::account_add_currency(const flatbuffers::String *acc_pub_key,
   try {
     // may throw ASSET_NOT_FOUND
     AM_val account_asset =
-        this->accountGetAsset(acc_pub_key, c->ledger_name(), c->domain_name(),
-                              c->currency_name(), true);
+      this->accountGetAsset(acc_pub_key, c->ledger_name(), c->domain_name(),
+                            c->currency_name(), true);
 
     assert(c_size == account_asset.size);
 
     // asset exists, change it:
 
-    copy = {account_asset.data, account_asset.data + account_asset.size};
+    copy = {(char *)account_asset.data,
+            (char *)account_asset.data + account_asset.size};
 
     // update the copy
     auto copy_fb = flatbuffers::GetMutableRoot<iroha::Currency>(copy.data());
@@ -614,7 +620,7 @@ void Ametsuchi::account_add_currency(const flatbuffers::String *acc_pub_key,
 
   } catch (exception::InvalidTransaction e) {
     if (e == exception::InvalidTransaction::ASSET_NOT_FOUND) {
-      copy = {c, c + c_size};
+      copy = {(char *)c, (char *)c + c_size};
     } else {
       throw;
     }
@@ -647,12 +653,13 @@ void Ametsuchi::account_remove_currency(const flatbuffers::String *acc_pub_key,
 
   // may throw ASSET_NOT_FOUND
   AM_val account_asset =
-      this->accountGetAsset(acc_pub_key, c->ledger_name(), c->domain_name(),
-                            c->currency_name(), true);
+    this->accountGetAsset(acc_pub_key, c->ledger_name(), c->domain_name(),
+                          c->currency_name(), true);
 
   // asset exists, change it:
 
-  copy = {account_asset.data, account_asset.data + account_asset.size};
+  copy = {(char *)account_asset.data,
+          (char *)account_asset.data + account_asset.size};
 
   // update the copy
   auto copy_fb = flatbuffers::GetMutableRoot<iroha::Currency>(copy.data());
@@ -696,7 +703,7 @@ void Ametsuchi::asset_transfer(const iroha::AssetTransfer *command) {
 }
 
 std::vector<AM_val> Ametsuchi::accountGetAssets(
-    const flatbuffers::String *pubKey, bool uncommitted) {
+  const flatbuffers::String *pubKey, bool uncommitted) {
   MDB_val c_key, c_val;
   MDB_cursor *cursor;
   MDB_txn *tx;
@@ -719,7 +726,7 @@ std::vector<AM_val> Ametsuchi::accountGetAssets(
     }
 
     if ((res ==
-         mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
+      mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
@@ -730,7 +737,7 @@ std::vector<AM_val> Ametsuchi::accountGetAssets(
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
-  std::vector<AM_val> ret(10);  // optimization
+  std::vector<AM_val> ret;
   // account has assets. try to find asset with the same `pk`
   // iterate over account's assets, O(N), where N is number of different
   // assets,
@@ -792,7 +799,7 @@ AM_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
     }
 
     if ((res ==
-         mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
+      mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
@@ -808,18 +815,20 @@ AM_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
-  return c_val;
+  return AM_val(c_val);
 }
 
 
 void Ametsuchi::read_created_assets() {
   created_assets_.clear();
 
-  for (auto &&asset : read_all_records("wsv_assetid_asset")) {
-    std::string assetid{asset.first.data, asset.first.data + asset.first.size};
+  auto records = read_all_records("wsv_assetid_asset");
+  for (auto &&asset : records) {
+    std::string assetid{(char *)asset.first.data,
+                        (char *)asset.first.data + asset.first.size};
 
-    std::vector<uint8_t> assetfb{asset.second.data,
-                                 asset.second.data + asset.second.size};
+    std::vector<uint8_t> assetfb{(char *)asset.second.data,
+                                 (char *)asset.second.data + asset.second.size};
 
     created_assets_[assetid] = assetfb;
   }
@@ -827,7 +836,7 @@ void Ametsuchi::read_created_assets() {
 
 
 std::vector<std::pair<AM_val, AM_val>> Ametsuchi::read_all_records(
-    const std::string &tree_name) {
+  const std::string &tree_name) {
   MDB_cursor *cursor = trees_.at(tree_name).second;
   MDB_val c_key, c_val;
   int res;
@@ -837,9 +846,11 @@ std::vector<std::pair<AM_val, AM_val>> Ametsuchi::read_all_records(
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
-  std::vector<std::pair<AM_val, AM_val>> ret(10);  // optimization
+  std::vector<std::pair<AM_val, AM_val>> ret;
   do {
-    ret.push_back({c_key, c_val});
+    AM_val key(c_key);
+    AM_val val(c_val);
+    ret.push_back({key, val});
 
     if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT))) {
       if (res == MDB_NOTFOUND) return ret;

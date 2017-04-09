@@ -24,10 +24,10 @@ namespace buffer {
 constexpr size_t size = 10;
 
 TEST(CircularBuffer, IterForEach) {
-  CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size; ++i) cs.push(i);
+  CircularBuffer<size_t> cs(size);
+  for (size_t i = 0; i < size; ++i) cs.push(i);
   ASSERT_TRUE(cs.begin() != cs.end());
-  auto i = 0;
+  size_t i = 0;
   for (auto c = cs.begin(); c != cs.end(); ++c) {
     ASSERT_EQ(*c, i++);
   }
@@ -45,9 +45,9 @@ TEST(CircularBuffer, IterForEach) {
 }
 
 TEST(CircularBuffer, IterSumOverflow) {
-  CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size + 1; ++i) cs.push(i);
-  for (auto i = 0; i < size; ++i) {
+  CircularBuffer<size_t> cs(size);
+  for (size_t i = 0; i < size + 1; ++i) cs.push(i);
+  for (size_t i = 0; i < size; ++i) {
     ASSERT_EQ(cs.begin() + (size + i), cs.end());
     if (i != size - 1) ASSERT_NE(cs.begin(), cs.end());
   }
@@ -55,7 +55,7 @@ TEST(CircularBuffer, IterSumOverflow) {
 
 TEST(CircularBuffer, IterThroughOneOverflow) {
   CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size; ++i) cs.push(i);
+  for (size_t i = 0; i < size; ++i) cs.push(i);
   auto i = 0;
   for (auto c = cs.begin(); c != cs.end(); c += 3) {
     ASSERT_EQ(*c, i);
@@ -65,16 +65,16 @@ TEST(CircularBuffer, IterThroughOneOverflow) {
 }
 
 TEST(CircularBuffer, IterAccess) {
-  CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size; ++i) cs.push(i);
-  for (auto i = 0; i < size; ++i) {
+  CircularBuffer<size_t> cs(size);
+  for (size_t i = 0; i < size; ++i) cs.push(i);
+  for (size_t i = 0; i < size; ++i) {
     ASSERT_EQ(cs[i], i);
   }
 }
 
 TEST(CircularBuffer, IterLast) {
-  CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size; ++i) {
+  CircularBuffer<size_t> cs(size);
+  for (size_t i = 0; i < size; ++i) {
     ASSERT_EQ(cs.last(), cs.begin().to_last());
     cs.push(i);
   }

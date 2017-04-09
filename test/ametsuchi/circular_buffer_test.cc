@@ -25,8 +25,8 @@ namespace buffer {
 constexpr size_t size = 10;
 
 TEST(CircularBuffer, Addition) {
-  CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size * size; ++i) cs.push(i);
+  CircularBuffer<size_t> cs(size);
+  for (size_t i = 0; i < size * size; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
   ASSERT_EQ(cs.capacity(), size);
 }
@@ -44,9 +44,9 @@ TEST(CircularBuffer, AdditionMovingStruct) {
 }
 
 TEST(CircularBuffer, Poping) {
-  CircularBuffer<int> cs(size);
+  CircularBuffer<size_t> cs(size);
 
-  for (auto i = 0; i < size; ++i) cs.push(i);
+  for (size_t i = 0; i < size; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
   ASSERT_EQ(cs.capacity(), size);
 
@@ -60,7 +60,7 @@ TEST(CircularBuffer, Poping) {
   ASSERT_EQ(cs.size(), 0);
 
 
-  for (auto i = 0; i < size; ++i) cs.push(i);
+  for (size_t i = 0; i < size; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
   ASSERT_EQ(cs.capacity(), size);
 
@@ -69,22 +69,22 @@ TEST(CircularBuffer, Poping) {
 }
 
 TEST(CircularBuffer, Resizing) {
-  auto size = 10;
-  CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size * size; ++i) cs.push(i);
+  size_t size = 10;
+  CircularBuffer<size_t> cs(size);
+  for (size_t i = 0; i < size * size; ++i) cs.push(i);
   size *= 2;
   cs.resize(size);
-  for (auto i = 0; i < size * size; ++i) cs.push(i);
+  for (size_t i = 0; i < size * size; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
   ASSERT_EQ(cs.capacity(), size);
 }
 
 TEST(CircularBuffer, Accessing) {
-  CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size; ++i) cs.push(i);
+  CircularBuffer<size_t> cs(size);
+  for (size_t i = 0; i < size; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
   ASSERT_EQ(cs.capacity(), size);
-  for (auto i = 0; i < size; ++i) {
+  for (size_t i = 0; i < size; ++i) {
     ASSERT_EQ(cs[i], i);
   }
 }
@@ -92,10 +92,10 @@ TEST(CircularBuffer, Accessing) {
 TEST(CircularBuffer, AccessingOverflow) {
   CircularBuffer<uint64_t> cs(size);
   // 5..14
-  for (auto i = 0; i < size * 1.5; ++i) cs.push(i);
+  for (size_t i = 0; i < size * 1.5; ++i) cs.push(i);
   ASSERT_EQ(cs.size(), size);
   ASSERT_EQ(cs.capacity(), size);
-  for (auto i = 0; i < size; ++i) {
+  for (size_t i = 0; i < size; ++i) {
     ASSERT_EQ(cs[i], i + 5);
   }
 }
@@ -134,20 +134,20 @@ TEST(CircularBuffer, IterForEach) {
 }
 
 TEST(CirularStack, PushAndPopAndFront) {
-  auto size = 10;
-  std::stack<int> st;
-  CircularBuffer<int> cs(size);
-  for (auto i = 0; i < size - 1; i++) {
+  size_t size = 10;
+  std::stack<size_t> st;
+  CircularBuffer<size_t> cs(size);
+  for (size_t i = 0; i < size - 1; i++) {
     st.push(i);
     cs.push(i);
   }
 
-  for (auto i = 0; i < 5; i++) {
+  for (size_t i = 0; i < 5; i++) {
     ASSERT_EQ(st.top(), cs.back());
     st.pop();
     cs.pop();
   }
-  for (auto i = 0; i < 5; i++) {
+  for (size_t i = 0; i < 5; i++) {
     st.push(i + size);
     cs.push(i + size);
   }

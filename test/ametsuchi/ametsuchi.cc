@@ -18,6 +18,7 @@
 #include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
 #include <gtest/gtest.h>
+#include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <spdlog/spdlog.h>
 
@@ -64,6 +65,7 @@ TEST_F(Ametsuchi_Test, AssetTest) {
 
   //  auto transaction_object = flatbuffers::GetRoot<iroha::Transaction>(buf);
   std::vector<uint8_t> transaction_vector{buf, buf + size};
-  ametsuchi_.append(transaction_vector);
+  flatbuffers::Vector<uint8_t>* v = (flatbuffers::Vector<uint8_t>*) transaction_vector.data();
+  ametsuchi_.append(v);
   ametsuchi_.commit();
 }

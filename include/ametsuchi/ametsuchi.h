@@ -19,6 +19,7 @@
 #define AMETSUCHI_DB_H
 
 #include <ametsuchi/generated/commands_generated.h>
+#include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <cstdint>
 #include <string>
@@ -40,10 +41,10 @@ namespace ametsuchi {
  */
 struct AM_val {
   // pointer, which points to blob with data
-  const void const *data;
+  const void *const data;
   // size of the pointer
   const size_t size;
-  AM_val(MDB_val a) : data(a.mv_data), size(a.mv_size) {}
+  explicit AM_val(const MDB_val &a) : data(a.mv_data), size(a.mv_size) {}
 };
 
 /**
@@ -66,7 +67,7 @@ class Ametsuchi {
    * @return new merkle root
    */
   std::string append(const flatbuffers::Vector<uint8_t> *tx);
-  std::string append(const std::vector<flatbuffers::Vector *> &batch);
+  std::string append(const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
 
   /**
    * Commit appended data to database. Commit creates the latest 'checkpoint',
@@ -104,8 +105,6 @@ class Ametsuchi {
                          const flatbuffers::String *dn,
                          const flatbuffers::String *an,
                          bool uncommitted = false);
-
-  std::vector<AM_val>
 
  private:
   /* for internal use only */
