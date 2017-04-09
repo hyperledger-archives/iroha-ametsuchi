@@ -8,7 +8,12 @@ file_extension  "iroha";
 
 table ConsensusEvent {
   peerSignatures: [Signature];
-  transactions:   [Transaction];
+  transactions:   [TransactionWrapper];
+}
+
+// to make an array of nested flatbuffers, we should use this:
+table TransactionWrapper {
+  tx: [ubyte] (nested_flatbuffer: "Transaction");
 }
 
 enum Code: ubyte {COMMIT, FAIL} // TODO: maybe more?

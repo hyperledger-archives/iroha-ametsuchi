@@ -65,6 +65,7 @@ enum class InvalidTransaction {
   ASSET_EXISTS,
   ASSET_NOT_FOUND,
   ACCOUNT_EXISTS,
+  ACCOUNT_NOT_FOUND,
   NOT_ENOUGH_ASSETS
 };
 
