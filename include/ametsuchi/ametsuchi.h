@@ -75,7 +75,7 @@ class Ametsuchi {
   void commit();
 
   /**
-   * You can rollback
+   * You can rollback appended transaction(s) to previous commit.
    */
   void rollback();
 
@@ -104,6 +104,8 @@ class Ametsuchi {
                          const flatbuffers::String *dn,
                          const flatbuffers::String *an,
                          bool uncommitted = false);
+
+  std::vector<AM_val>
 
  private:
   /* for internal use only */
