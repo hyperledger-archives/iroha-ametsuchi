@@ -36,7 +36,7 @@ using hash_t = std::array<uint8_t, HASH_LEN>;
 /**
  * Minimalistic but very fast implementation of Merkle tree which uses array for
  * tree
- * - total number of hashes stored size=2*leafs-1
+ * - total number of hashes stored: size=2*leafs-1
  * - size * HASH_LEN bytes memory total
  * - get root in O(1)
  * - push in O(log2( size ))
@@ -49,7 +49,7 @@ class MerkleTree {
  public:
   /**
    * Constructor
-   * @param leafs a number of leaf nodes in a tree
+   * @param leafs - a number of leaf nodes in a tree
    */
   explicit MerkleTree(size_t leafs);
 
@@ -59,7 +59,7 @@ class MerkleTree {
   hash_t root();
 
   /**
-   * Push item to the tree and recalculate all hashes
+   * Push item to the tree and recalculate all hashes. O(log2(size)).
    * @param item
    */
   void push(const hash_t &item);
