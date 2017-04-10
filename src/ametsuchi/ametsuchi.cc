@@ -318,7 +318,6 @@ void Ametsuchi::init() {
 
   // we should know created assets, so read entire table in memory
   read_created_assets();
-
 }
 
 
