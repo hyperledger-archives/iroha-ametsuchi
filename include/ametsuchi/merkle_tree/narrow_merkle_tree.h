@@ -28,8 +28,6 @@
 namespace ametsuchi {
 namespace merkle {
 
-using Exception = exception::Exception;
-
 template <typename T>
 constexpr size_t popcount(T n) {
   // std::bitset<sizeof(T)> b(n);
@@ -227,7 +225,7 @@ void NarrowMerkleTree<T>::drop(size_t num) {
 template <typename T>
 T NarrowMerkleTree<T>::get_root() const {
   const buffer::CircularBuffer<T> &cs = data.back();
-  if (cs.size() == 0) throw Exception("Root is empty");
+  if (cs.size() == 0) throw exception::Exception("Root is empty");
   return cs[0];
 }
 

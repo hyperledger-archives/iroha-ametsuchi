@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <ametsuchi/merkle_tree/merkle_tree.h>
 #include <ametsuchi/merkle_tree/narrow_merkle_tree.h>
 #include <gtest/gtest.h>
 
@@ -86,13 +87,9 @@ TEST(Merkle, Dropping) {
 TEST(Merkle, Hegiht) {
   {
     constexpr size_t heights[] = {
-        0,
-        1,
-        2, 2,
-        3, 3, 3, 3,
-        4, 4, 4, 4, 4, 4, 4, 4,
-        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6 };
+        0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
     constexpr auto elems = sizeof(heights) / sizeof(heights[0]);
     NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 2);
     for (size_t i = 0; i < elems; ++i) {
@@ -100,11 +97,8 @@ TEST(Merkle, Hegiht) {
     }
   }
   {
-    constexpr size_t heights[] = {
-        0,
-        1, 1, 1,
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
+    constexpr size_t heights[] = {0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                                  2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
     constexpr auto elems = sizeof(heights) / sizeof(heights[0]);
     NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 4);
     for (size_t i = 0; i < elems; ++i) {
@@ -115,7 +109,8 @@ TEST(Merkle, Hegiht) {
 
 TEST(Merkle, Statics) {
   {
-    constexpr size_t diffs[] = {0, 0, 1, 0, 2, 1, 2, 0, 3, 2, 3, 1, 3, 2, 3, 0, 4};
+    constexpr size_t diffs[] = {0, 0, 1, 0, 2, 1, 2, 0, 3,
+                                2, 3, 1, 3, 2, 3, 0, 4};
     constexpr auto elems = sizeof(diffs) / sizeof(diffs[0]);
     for (size_t i = 0; i < elems; ++i) {
       ASSERT_EQ(NarrowMerkleTree<uint64_t>::path_diff(i), diffs[i]) << i;
@@ -161,6 +156,52 @@ TEST(Merkle, ExtendDropping) {
   ASSERT_EQ(tree.size(), 0);
 }
 
+auto str2hex = [](const std::string &hex) {
+  const std::string alp = "0123456789abcdef";
+
+  hash_t out;
+  size_t ptr = 0;
+  for (size_t i = 0; i < hex.length(); i += 2) {
+    out[ptr++] = alp.find(hex[i]) * 16 + alp.find(hex[i + 1]);
+  }
+
+  return out;
+};
+
+// sha3_256 of "1", https://emn178.github.io/online-tools/sha3_256.html
+hash_t h =
+    str2hex("67b176705b46206614219f47a05aee7ae6a3edbe850bbbe214c536b989aea4d2");
+
+// calculated with
+// https://gist.github.com/Warchant/774ad06f7c3e0e17bad0359f4bae3411
+// for tree with 4 leafs
+std::vector<hash_t> roots = {
+    str2hex("67b176705b46206614219f47a05aee7ae6a3edbe850bbbe214c536b989aea4d2"),
+    str2hex("80141312b118fb9099ec9277809de617cacc05a33312d3802d70a3db0d57e44a"),
+    str2hex("a789f4a3c9b124149f17fda28573de4f4a9f205d428339f6308324b0d61917ed"),
+    str2hex("5c3924aaff4fac9a843bc2229fec34ec01843accb996faf949d3a51e0800c2f8"),
+    str2hex("1408519e75164ccfce0bd858b1c32f53dda2422f77adc2166508cbbd658ebab4"),
+    str2hex("eef6f63a47272f280cb39f72d2ada587411e95c488d402044df20072630a8b9f"),
+    str2hex("e618578c471c0eae2a05121d8bbe4a67cccb53f9511286bb60d93c295afcd263"),
+    str2hex("f13ec23c48a494d98b10cd5144dd0e3d8e2619222921e72aa403a0cead44a296")};
+
+TEST(NaiveMerkle, Tree4) {
+  // should with size 4
+  merkle::MerkleTree tree(4);
+  for (size_t i = 0; i < 8; i++) {
+    tree.push(h);
+    auto root = tree.root();
+    ASSERT_EQ(root, roots[i]);
+  }
+}
+
+TEST(NaiveMerkle, Tree128_100k_pushes) {
+  merkle::MerkleTree tree(128);
+  for (size_t i = 0; i < 100000; i++) {
+    tree.push(roots[i % 8]);
+  }
+  SUCCEED();
+}
 
 }  // namespace merkle
 }  // namespace ametsuchi

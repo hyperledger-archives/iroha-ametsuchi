@@ -40,7 +40,7 @@ namespace ametsuchi {
 
 
 Ametsuchi::Ametsuchi(const std::string &db_folder)
-  : path_(db_folder), tx_store_total(0) {
+  : path_(db_folder), tx_store_total(0), tree(AMETSUCHI_BLOCK_SIZE) {
   // initialize database:
   // create folder, create all handles and btrees
   // in case of any errors prints error to stdout and exits
@@ -871,5 +871,9 @@ Ametsuchi::~Ametsuchi() {
   mdb_env_close(env);
 }
 
+
+std::string Ametsuchi::merkle_root() {
+  return std::__cxx11::string();
+}
 
 }  // namespace ametsuchi

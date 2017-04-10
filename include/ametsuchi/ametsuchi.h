@@ -19,6 +19,7 @@
 #define AMETSUCHI_DB_H
 
 #include <ametsuchi/generated/commands_generated.h>
+#include <ametsuchi/merkle_tree/merkle_tree.h>
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <cstdint>
@@ -29,8 +30,16 @@
 #include <vector>
 #include "currency.h"
 
+extern "C" {
+#include <SimpleFIPS202.h>
+}
+
 #ifndef AMETSUCHI_MAX_DB_SIZE
 #define AMETSUCHI_MAX_DB_SIZE (8L * 1024 * 1024 * 1024)  // 8 GB
+#endif
+
+#ifndef AMETSUCHI_BLOCK_SIZE
+#define AMETSUCHI_BLOCK_SIZE (1024)  // the number of leafs in merkle tree
 #endif
 
 namespace ametsuchi {
@@ -79,6 +88,8 @@ class Ametsuchi {
    * You can rollback appended transaction(s) to previous commit.
    */
   void rollback();
+
+  std::string merkle_root();
 
   /**
  * Returns all assets, which belong to user with \p pubKey.
@@ -146,7 +157,9 @@ class Ametsuchi {
 
   // reads all records in the given tree
   std::vector<std::pair<AM_val, AM_val>> read_all_records(
-      const std::string &tree_name);
+    const std::string &tree_name);
+
+  merkle::MerkleTree tree;
 };
 
 }  // namespace ametsuchi
