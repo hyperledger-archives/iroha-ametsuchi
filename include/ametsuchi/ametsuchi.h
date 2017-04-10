@@ -75,8 +75,8 @@ class Ametsuchi {
    * @param tx root type Transaction (contents of TransactionWrapper->tx array)
    * @return new merkle root
    */
-  std::string append(const flatbuffers::Vector<uint8_t> *tx);
-  std::string append(const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
+  merkle::hash_t append(const flatbuffers::Vector<uint8_t> *tx);
+  merkle::hash_t append(const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
 
   /**
    * Commit appended data to database. Commit creates the latest 'checkpoint',
@@ -89,7 +89,7 @@ class Ametsuchi {
    */
   void rollback();
 
-  std::string merkle_root();
+  merkle::hash_t merkle_root();
 
   /**
  * Returns all assets, which belong to user with \p pubKey.
