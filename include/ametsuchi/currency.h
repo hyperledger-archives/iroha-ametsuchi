@@ -26,7 +26,6 @@ namespace ametsuchi {
 class Currency {
  public:
   explicit Currency(uint64_t amount, uint8_t precision = 2);
-  //explicit Currency(uint64_t integer = 0, uint64_t fractional = 0);
 
   Currency operator+(const Currency &a);
   Currency operator-(const Currency &a);

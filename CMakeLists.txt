@@ -34,6 +34,11 @@ include(cmake/functions.cmake)
 set(AMETSUCHI_INCLUDE
   include/ametsuchi/ametsuchi.h
   include/ametsuchi/currency.h
+  include/ametsuchi/exception.h
+  include/ametsuchi/comparator.h
+  include/ametsuchi/merkle_tree/narrow_merkle_tree.h
+  include/ametsuchi/merkle_tree/circular_buffer.h
+  include/ametsuchi/merkle_tree/merkle_tree.h
 
   # needed to compile fbs automatically
   include/ametsuchi/generated/account_generated.h
@@ -47,6 +52,7 @@ set(AMETSUCHI_INCLUDE
 set(AMETSUCHI_SRC
   src/ametsuchi/ametsuchi.cc
   src/ametsuchi/currency.cc
+  src/ametsuchi/merkle_tree/merkle_tree.cc
   )
 
 # Library.
@@ -59,7 +65,7 @@ target_link_libraries(${LIBAMETSUCHI_NAME}
   spdlog
   LMDB
   flatbuffers
-  #  keccak
+  keccak
   )
 StrictMode(${LIBAMETSUCHI_NAME})
 

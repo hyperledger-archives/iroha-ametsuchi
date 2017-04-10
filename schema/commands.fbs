@@ -79,7 +79,7 @@ table AssetCreate {
 }
 
 table AssetTransfer {
-    currency: [ubyte]  (required, nested_flatbuffer: "Asset");
+    asset: [ubyte]  (required, nested_flatbuffer: "Asset");
     sender:   string   (required);
     receiver: string   (required);
 }

@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/currency.h>
 
 #define AMETSUCHI_MAX_PRECISION 18

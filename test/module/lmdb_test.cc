@@ -32,20 +32,16 @@ class LMDB_Test : public ::testing::Test {
   virtual void TearDown() {
     remove((lmdb + "data.mdb").c_str());
     remove((lmdb + "lock.mdb").c_str());
+    system(("rm -rf " + lmdb).c_str());
   }
 
-  virtual void TearUp() {
-    remove((lmdb + "data.mdb").c_str());
-    remove((lmdb + "lock.mdb").c_str());
-  }
-
-  std::string lmdb = "/tmp/tx_index_test";
+  std::string lmdb = "/tmp/ametsuchi";
 
   LMDB_Test() {
     int res;
 
     HANDLE(mdb_env_create(&env));
-    HANDLE(mdb_env_set_mapsize(env, 1024L * 1024 * 1024 * 16));  // 2 MB
+    HANDLE(mdb_env_set_mapsize(env, 1024L * 1024 * 2));
     HANDLE(mdb_env_set_maxdbs(env, 3));  // we have only 3 databases
 
     // create index directory
@@ -63,10 +59,8 @@ class LMDB_Test : public ::testing::Test {
   void open_tx() {
     int res;
     HANDLE(mdb_txn_begin(env, NULL, 0, &append_tx));
-
     HANDLE(mdb_dbi_open(append_tx, "TEST1",
                         MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE, &dbi_index1));
-
     HANDLE(mdb_cursor_open(append_tx, dbi_index1, &cursor_1));
   }
 
@@ -83,58 +77,71 @@ class LMDB_Test : public ::testing::Test {
   MDB_cursor *cursor_1;
 };
 
-TEST_F(LMDB_Test, AppendSameKeyAndRead) {
-  int res;
+
+TEST_F(LMDB_Test, LMDB_Dup_update){
+
   open_tx();
 
-  // WRITE
   MDB_val key;
   key.mv_data = (void *)"helloworld";
   key.mv_size = 10;
 
-  for (int i = 0; i < 255; i++) {
-    MDB_val val;
+  MDB_val val1;
 
-    val.mv_data = &i;
-    val.mv_size = sizeof(int);
+  int a = 2;
+  val1.mv_data = &a;
+  val1.mv_size = sizeof(a);
 
-    HANDLE(mdb_cursor_put(cursor_1, &key, &val, 0));
-  }
+  HANDLE(mdb_cursor_put(cursor_1, &key, &val1, 0));
 
-  key.mv_data = (void *)"hell0world";
-  key.mv_size = 10;
+  MDB_val val2;
+  int b = 3;
+  val2.mv_data = &b;
+  val2.mv_size = sizeof(b);
 
-  for (int i = 0; i < 255; i++) {
-    MDB_val val;
+  HANDLE(mdb_cursor_put(cursor_1, &key, &val2, 0));
+  commit_tx();
 
-    val.mv_data = &i;
-    val.mv_size = sizeof(int);
+  // retrive
+  MDB_val val;
 
-    HANDLE(mdb_cursor_put(cursor_1, &key, &val, 0));
-  }
+  open_tx();
+
+  // We want to replace element that has key and value val1
+  HANDLE(mdb_cursor_get(cursor_1, &key, &val1, MDB_GET_BOTH));
+
+  auto a_retrived = *reinterpret_cast<int *>(val1.mv_data);
+  ASSERT_EQ(a, a_retrived);
+
+  // Update current data:
+  int new_a = 5;
+  MDB_val new_val1;
+  new_val1.mv_data = &new_a;
+  new_val1.mv_size = sizeof(new_a);
+
+  // Remove current data
+  HANDLE(mdb_cursor_del(cursor_1, 0));
+  // Put a new value, and sort it
+  HANDLE(mdb_cursor_put(cursor_1, &key, &new_val1, 0));
 
   commit_tx();
 
-  // READ
-  MDB_val val;
+
+  // Read only transaction:
   MDB_txn *read_tx;
   MDB_dbi read_dbi;
-  MDB_cursor *cursor;
+  MDB_cursor *read_cursor;
 
   HANDLE(mdb_txn_begin(env, NULL, MDB_RDONLY, &read_tx));
   HANDLE(mdb_dbi_open(read_tx, "TEST1", MDB_DUPSORT | MDB_DUPFIXED, &read_dbi));
-  HANDLE(mdb_cursor_open(read_tx, read_dbi, &cursor));
-  HANDLE(mdb_cursor_get(cursor, &key, &val, MDB_SET));
 
-  int result = 0;
-  int res1;
-  do {
-    int index = *reinterpret_cast<int *>(val.mv_data);
-    ASSERT_EQ(index, result++);
-    ((res1 = mdb_cursor_get(cursor, &key, &val, MDB_NEXT_DUP)));
-  } while (res1 == 0);
+  HANDLE(mdb_cursor_open(read_tx, read_dbi, &read_cursor));
+  HANDLE(mdb_cursor_get(read_cursor, &key, &val, MDB_SET));
+  a_retrived = *reinterpret_cast<int *>(val.mv_data);
+  ASSERT_EQ(b, a_retrived);
 
-  mdb_cursor_close(cursor);
-  mdb_txn_abort(read_tx);
-  ASSERT_EQ(result, 255);
+  HANDLE(mdb_cursor_get(read_cursor, &key, &val, MDB_NEXT_DUP));
+  a_retrived = *reinterpret_cast<int *>(val.mv_data);
+
+  ASSERT_EQ(new_a, a_retrived);
 }
