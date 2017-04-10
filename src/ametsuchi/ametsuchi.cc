@@ -633,6 +633,46 @@ void Ametsuchi::peer_remove(const iroha::PeerRemove *command) {
   }
 }
 
+std::vector<AM_val>  Ametsuchi::peerGetAllTransactions(const flatbuffers::String *pubKey,
+                                                       bool uncommited) {
+  MDB_val c_key, c_val;
+  MDB_cursor *cursor;
+  MDB_txn *tx;
+  int res;
+
+
+  if (uncommited) {
+    cursor = trees_.at("index_add_creator").second;
+    tx = append_tx_;
+    // RW transaction
+  } else {
+    // Read-only transaction
+    if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &tx))) {
+      AMETSUCHI_CRITICAL(res, MDB_PANIC);
+      AMETSUCHI_CRITICAL(res, MDB_MAP_RESIZED);
+      AMETSUCHI_CRITICAL(res, MDB_READERS_FULL);
+      AMETSUCHI_CRITICAL(res, ENOMEM);
+    }
+
+    if ((res ==
+        mdb_cursor_open(tx, trees_.at("index_add_creator").first, &cursor))) {
+      AMETSUCHI_CRITICAL(res, EINVAL);
+    }
+  }
+
+  // query asset by public key
+  c_key.mv_data = (void *)pubKey->data();
+  c_key.mv_size = pubKey->size();
+
+  // if creator doesn't exist, then it is incorrect transaction
+  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_FIRST_DUP))) {
+    if (res == MDB_NOTFOUND)
+      throw exception::InvalidTransaction::ASSET_NOT_FOUND;
+    AMETSUCHI_CRITICAL(res, EINVAL);
+  }
+
+  return AM_val(c_val);
+}
 
 void Ametsuchi::asset_remove(const iroha::AssetRemove *command) {
   if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency)
