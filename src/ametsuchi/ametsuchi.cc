@@ -803,6 +803,10 @@ std::vector<AM_val> Ametsuchi::accountGetAssets(
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   } while (res == 0);
+  if (!uncommitted) {
+    mdb_cursor_close(cursor);
+    mdb_txn_abort(tx);
+  }
 
   return ret;
 }
@@ -865,6 +869,11 @@ AM_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
     if (res == MDB_NOTFOUND)
       throw exception::InvalidTransaction::ASSET_NOT_FOUND;
     AMETSUCHI_CRITICAL(res, EINVAL);
+  }
+  if (!uncommitted) {
+    mdb_cursor_close(cursor);
+    mdb_txn_abort(tx);
+
   }
 
   return AM_val(c_val);
@@ -932,6 +941,12 @@ std::vector<AM_val> Ametsuchi::getTxByCreator(const std::string &tree_name,
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   } while (res == 0);
+  if (!uncommitted) {
+    mdb_cursor_close(cursor);
+    mdb_cursor_close(tx_cursor);
+    mdb_txn_abort(tx);
+  }
+
   return ret;
 }
 
