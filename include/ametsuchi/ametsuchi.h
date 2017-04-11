@@ -127,6 +127,12 @@ class Ametsuchi {
   std::vector<AM_val> getPeerTxByCreator(const flatbuffers::String *pubKey,
                                          bool uncommitted = false);
 
+  std::vector<AM_val> getAssetTxBySender(const flatbuffers::String *senderKey,
+                                         bool uncommited = false);
+
+  std::vector<AM_val> getAssetTxByReceiver(const flatbuffers::String *receiverKey,
+                                           bool uncommited = false);
+
  private:
   /* for internal use only */
 
