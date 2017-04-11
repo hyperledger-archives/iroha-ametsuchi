@@ -12,8 +12,8 @@ target_link_libraries(ametsuchi_test PRIVATE ${LIBAMETSUCHI_NAME})
 AddTest(merkle_test ametsuchi/merkle_test.cc)
 target_link_libraries(merkle_test PRIVATE ${LIBAMETSUCHI_NAME})
 
-AddTest(circular_buffer_iter_test ametsuchi/circular_buffer_iter_test.cc)
-target_link_libraries(circular_buffer_iter_test PRIVATE ${LIBAMETSUCHI_NAME})
+AddTest(circular_stack_iter_test ametsuchi/circular_stack_iter_test.cc)
+target_link_libraries(circular_stack_iter_test PRIVATE ${LIBAMETSUCHI_NAME})
 
-AddTest(circular_buffer_test ametsuchi/circular_buffer_test.cc)
-target_link_libraries(circular_buffer_test PRIVATE ${LIBAMETSUCHI_NAME})
+AddTest(circular_stack_test ametsuchi/circular_stack_test.cc)
+target_link_libraries(circular_stack_test PRIVATE ${LIBAMETSUCHI_NAME})

@@ -37,7 +37,7 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/exception.h
   include/ametsuchi/comparator.h
   include/ametsuchi/merkle_tree/narrow_merkle_tree.h
-  include/ametsuchi/merkle_tree/circular_buffer.h
+  include/ametsuchi/merkle_tree/circular_stack.h
   include/ametsuchi/merkle_tree/merkle_tree.h
 
   # needed to compile fbs automatically

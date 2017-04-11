@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/merkle_tree/circular_buffer.h>
+#include <ametsuchi/merkle_tree/circular_stack.h>
 #include <gtest/gtest.h>
 
 namespace ametsuchi {
@@ -23,8 +23,8 @@ namespace buffer {
 
 constexpr size_t size = 10;
 
-TEST(CircularBuffer, IterForEach) {
-  CircularBuffer<size_t> cs(size);
+TEST(CircularStack, IterForEach) {
+  CircularStack<size_t> cs(size);
   for (size_t i = 0; i < size; ++i) cs.push(i);
   ASSERT_TRUE(cs.begin() != cs.end());
   size_t i = 0;
@@ -44,8 +44,8 @@ TEST(CircularBuffer, IterForEach) {
   ASSERT_EQ(i, size);
 }
 
-TEST(CircularBuffer, IterSumOverflow) {
-  CircularBuffer<size_t> cs(size);
+TEST(CircularStack, IterSumOverflow) {
+  CircularStack<size_t> cs(size);
   for (size_t i = 0; i < size + 1; ++i) cs.push(i);
   for (size_t i = 0; i < size; ++i) {
     ASSERT_EQ(cs.begin() + (size + i), cs.end());
@@ -53,8 +53,8 @@ TEST(CircularBuffer, IterSumOverflow) {
   }
 }
 
-TEST(CircularBuffer, IterThroughOneOverflow) {
-  CircularBuffer<int> cs(size);
+TEST(CircularStack, IterThroughOneOverflow) {
+  CircularStack<int> cs(size);
   for (size_t i = 0; i < size; ++i) cs.push(i);
   auto i = 0;
   for (auto c = cs.begin(); c != cs.end(); c += 3) {
@@ -64,16 +64,16 @@ TEST(CircularBuffer, IterThroughOneOverflow) {
   ASSERT_EQ(i, size + 3 - (size % 3));
 }
 
-TEST(CircularBuffer, IterAccess) {
-  CircularBuffer<size_t> cs(size);
+TEST(CircularStack, IterAccess) {
+  CircularStack<size_t> cs(size);
   for (size_t i = 0; i < size; ++i) cs.push(i);
   for (size_t i = 0; i < size; ++i) {
     ASSERT_EQ(cs[i], i);
   }
 }
 
-TEST(CircularBuffer, IterLast) {
-  CircularBuffer<size_t> cs(size);
+TEST(CircularStack, IterLast) {
+  CircularStack<size_t> cs(size);
   for (size_t i = 0; i < size; ++i) {
     ASSERT_EQ(cs.last(), cs.begin().to_last());
     cs.push(i);
