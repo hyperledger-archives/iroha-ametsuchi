@@ -19,7 +19,7 @@
 #define AMETSUCHI_DB_H
 
 #include <ametsuchi/generated/commands_generated.h>
-#include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <ametsuchi/merkle_tree/wrapper_merkle_tree.h>
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <cstdint>
@@ -77,6 +77,7 @@ class Ametsuchi {
    */
   merkle::hash_t append(const flatbuffers::Vector<uint8_t> *tx);
   merkle::hash_t append(const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
+  size_t drop(size_t);
 
   /**
    * Commit appended data to database. Commit creates the latest 'checkpoint',
@@ -90,7 +91,7 @@ class Ametsuchi {
   void rollback();
 
   merkle::hash_t merkle_root();
-
+  const auto& data() const;
   /**
  * Returns all assets, which belong to user with \p pubKey.
  * @param pubKey - account's public key
@@ -159,7 +160,7 @@ class Ametsuchi {
   std::vector<std::pair<AM_val, AM_val>> read_all_records(
     const std::string &tree_name);
 
-  merkle::MerkleTree tree;
+  merkle::WrapperMerkleTree tree;
 };
 
 }  // namespace ametsuchi

@@ -39,6 +39,7 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/merkle_tree/narrow_merkle_tree.h
   include/ametsuchi/merkle_tree/circular_stack.h
   include/ametsuchi/merkle_tree/merkle_tree.h
+  include/ametsuchi/merkle_tree/wrapper_merkle_tree.h
 
   # needed to compile fbs automatically
   include/ametsuchi/generated/account_generated.h
@@ -53,6 +54,7 @@ set(AMETSUCHI_SRC
   src/ametsuchi/ametsuchi.cc
   src/ametsuchi/currency.cc
   src/ametsuchi/merkle_tree/merkle_tree.cc
+  src/ametsuchi/merkle_tree/wrapper_merkle_tree.cc
   )
 
 # Library.

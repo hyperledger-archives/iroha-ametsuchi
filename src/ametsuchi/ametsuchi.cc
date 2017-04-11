@@ -181,6 +181,10 @@ merkle::hash_t Ametsuchi::append(
   return tree.root();
 }
 
+size_t Ametsuchi::drop(size_t index) {
+  tree.drop( index );
+}
+
 
 void Ametsuchi::commit() {
   // commit old transaction
@@ -200,6 +204,11 @@ void Ametsuchi::commit() {
 void Ametsuchi::rollback() {
   abort_append_tx();
   init_append_tx();
+  tree.rollback();
+}
+
+const auto& data() const {
+  return tree.data();
 }
 
 // std::vector<const MDB_val> Ametsuchi::getAddTxByCreator(const std::string

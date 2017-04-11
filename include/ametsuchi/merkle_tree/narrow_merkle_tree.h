@@ -84,7 +84,7 @@ namespace merkle {
     /**
      * Perform appending to the tree, recalculating
      * root and dropping outdated hashes
-     * O( log_capacity( txs ) * capacity )
+     * O( log_capacity( txs ) )
      */
     void add(T);
 
@@ -145,8 +145,8 @@ namespace merkle {
     inline size_t capacity() const { return capacity_; }
 
     /**
-     * Enforce copying because vector can be changed
-     * Doesn't perform emptiness checks
+     * in most cacse O(1)
+     * worst order O( log_capacity( node ) )
      */
     inline T get_root() const;
 
