@@ -1,5 +1,14 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin)
 
+add_library(tx_generator INTERFACE IMPORTED)
+set_target_properties(spdlog PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES "${PROJECT_SOURCE_DIR}/test/generator"
+  )
+
+
+AddTest(tx_generator_test generator/tx_generator_test.cc)
+target_link_libraries(tx_generator_test PRIVATE tx_generator)
+
 AddTest(module_lmdb module/lmdb_test.cc)
 target_link_libraries(module_lmdb PRIVATE LMDB spdlog ${LIBAMETSUCHI_NAME})
 
