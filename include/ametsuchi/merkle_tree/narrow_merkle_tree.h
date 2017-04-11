@@ -227,36 +227,43 @@ namespace merkle {
 
   template <typename T>
   size_t NarrowMerkleTree<T>::drop(size_t ind) {
-    if( ind == 0 ) {
+    if( ind == 0 ) { // when ind = 0, clear all hashes.
       data.clear();
       previous_drop_number = 0;
       txs = 0;
       data.emplace_back( capacity() );
       return 0;
     }
+
+    // it is dengerous calc, so return immediatelly.
     if( previous_drop_number >= ind ) return ind;
-    size_t id_tx = txs;
+
+    size_t id_tx = txs; // now seeing hash pointer
     size_t cap = 1, xcap = capacity();
     bool upd_flag = false; txs = ind;
+
+    // This loop traverse up to the tree
     for( auto layer = data.begin(); layer != data.end(); ++layer ) {
-      size_t num = ( id_tx % ( cap * xcap ) )/cap;
-      size_t rm_num = std::min( layer->size(), (id_tx - ind + cap - 1)/cap );
+      size_t num = ( id_tx % ( cap * xcap ) )/cap; // it is number of hashes, layer has.
+      size_t rm_num = std::min( layer->size(), (id_tx - ind + cap - 1)/cap ); // it is number of hashes should be removed in this layer.
       layer->pop( rm_num );
-      if( !upd_flag && layer->size() ) {
+      if( !upd_flag && layer->size() ) { // if this layer is barely point can be removed, determine current tx pointer after dropped.
         txs = id_tx - rm_num * cap;
         upd_flag = true;
       }
       id_tx -= num * cap;
       cap *= xcap;
     }
+    // memo revert point.
     previous_drop_number = txs;
+
     return txs;
   }
 
   template <typename T>
   T NarrowMerkleTree<T>::get_root() const {
     for( auto layer = data.begin(); layer != data.end(); ++layer ) {
-      if( layer->size() ) return layer->back();
+      if( layer->size() ) return layer->back(); // if this layer has hash, its back is root.
     }
     return T();
   }
