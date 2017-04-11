@@ -33,7 +33,7 @@ static auto console = spdlog::stdout_color_mt("ametsuchi");
     throw exception::InternalError::FATAL;                                \
   }
 
-#define AMETSUCHI_TREES_TOTAL 8
+#define AMETSUCHI_TREES_TOTAL 10
 
 
 namespace ametsuchi {
@@ -66,7 +66,7 @@ void Ametsuchi::put_creator_into_tree(MDB_cursor *cursor,
   }
 }
 
-merkle::hash_t Ametsuchi::append(const flatbuffers::Vector<uint8_t> *blob) {
+merkle::hash_t Ametsuchi::append(const std::vector<uint8_t> *blob) {
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
 
   MDB_val c_key, c_val;
@@ -199,7 +199,7 @@ merkle::hash_t Ametsuchi::append(const flatbuffers::Vector<uint8_t> *blob) {
 }
 
 merkle::hash_t Ametsuchi::append(
-    const std::vector<flatbuffers::Vector<uint8_t> *> &batch) {
+    const std::vector<std::vector<uint8_t> *> &batch) {
   for (auto t : batch) {
     append(t);
 
@@ -413,9 +413,6 @@ void Ametsuchi::init_append_tx() {
   init_btree("tx_store", MDB_CREATE | MDB_INTEGERKEY);
 
   // [pubkey] => autoincrement_key (DUP)
-  init_btree("index_add_creator", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
-
-  // [pubkey] => autoincrement_key (DUP)
   init_btree("index_transfer_sender", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
 
   // [pubkey] => autoincrement_key (DUP)
@@ -592,8 +589,24 @@ void Ametsuchi::asset_create(const iroha::AssetCreate *command) {
 
 
 void Ametsuchi::asset_add(const iroha::AssetAdd *command) {
-  if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency)
+
+  auto asset = command->asset()->data();
+  auto asset_fb = flatbuffers::GetRoot<iroha::Asset>(asset);
+
+  if(asset_fb->asset_type() != iroha::AnyAsset::Currency){
+    printf("%s\n", "hello!");
+  }
+
+  auto some = command->asset_nested_root();
+  if(command->asset_nested_root()->asset_as_ComplexAsset()== nullptr)
+  {
     throw exception::InternalError::NOT_IMPLEMENTED;
+  }
+
+
+
+//  if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency)
+//      throw exception::InternalError::NOT_IMPLEMENTED;
 
   this->account_add_currency(command->accPubKey(),
                              (iroha::Currency *)command->asset()->data(),
@@ -873,7 +886,6 @@ AM_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
   if (!uncommitted) {
     mdb_cursor_close(cursor);
     mdb_txn_abort(tx);
-
   }
 
   return AM_val(c_val);
