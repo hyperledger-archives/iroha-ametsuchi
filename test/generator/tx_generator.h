@@ -63,7 +63,7 @@ std::string random_string(size_t length, std::string alphabet = ALPHABET) {
   std::string s;
   std::generate_n(std::back_inserter(s), length, [&alphabet]() {
     size_t i = (size_t)random_number(0, alphabet.size());
-    return alphabet[i];
+    return (char)alphabet[i];
   });
   return s;
 }
@@ -74,8 +74,8 @@ std::string random_base64_string(size_t length) {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   std::string s;
   std::generate_n(std::back_inserter(s), length, [&alph]() {
-    auto i = generator::random_number(0, sizeof(alph));
-    return alph[i];
+    auto i = generator::random_number(0, sizeof(alph) - 1);
+    return (char)alph[i];
   });
 
   if (s.size() % 4 == 0) {

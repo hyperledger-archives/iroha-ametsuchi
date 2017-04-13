@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/*
 #include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
 #include <gtest/gtest.h>
@@ -69,3 +69,4 @@ TEST_F(Ametsuchi_Test, AssetTest) {
   ametsuchi_.append(v);
   ametsuchi_.commit();
 }
+*/

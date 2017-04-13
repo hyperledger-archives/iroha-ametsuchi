@@ -18,6 +18,16 @@
 #include "tx_generator.h"
 #include <gtest/gtest.h>
 
+void printv(std::vector<uint8_t> v) {
+  auto end = v.end();
+  for (auto it = v.begin(); it != end; ++it) {
+    if (*it >= 32 && *it < 127)
+      printf("\033[0;31m%c\033[0m", *it);
+    else
+      printf("%x", *it);
+  };
+}
+
 TEST(Generator, RandomNumber) {
   for (size_t i = 0; i < 1000; i++) {
     auto n = generator::random_number(50, 100);
@@ -64,7 +74,9 @@ TEST(Generator, RandomPublicKey) {
       flatbuffers::FlatBufferBuilder fbb(2048);                            \
       auto v = generator::random_transaction(                              \
           fbb, iroha::Command::CMD, generator::random_##CMD(fbb).Union()); \
-      auto tx = flatbuffers::GetRoot<iroha::Transaction>(v.data());        \
+      flatbuffers::GetRoot<iroha::Transaction>(v.data());                  \
+      printv(v);                                                           \
+      printf("\n");                                                        \
     });                                                                    \
   }
 
@@ -76,3 +88,5 @@ TEST_COMMAND(AssetAdd)
 TEST_COMMAND(AssetRemove)
 TEST_COMMAND(AssetTransfer)
 TEST_COMMAND(AssetCreate)
+
+#undef TEST_COMMAND

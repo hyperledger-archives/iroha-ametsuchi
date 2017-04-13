@@ -438,9 +438,7 @@ void Ametsuchi::account_remove(const iroha::AccountRemove *command) {
   MDB_val c_key, c_val;
   int res;
 
-  auto account =
-      flatbuffers::GetRoot<iroha::Account>(command->account()->data());
-  auto pubkey = account->pubKey();
+  auto pubkey = command->pubkey();
 
   c_key.mv_data = (void *)(pubkey->data());
   c_key.mv_size = pubkey->size();
