@@ -13,7 +13,7 @@ jobs:
           command: cmake .
       - run:
           name: make
-          command: make -j4
+          command: make
       - run:
           name: run tests
           command: ctest

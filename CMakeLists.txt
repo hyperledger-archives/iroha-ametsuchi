@@ -40,8 +40,6 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/merkle_tree/circular_stack.h
   include/ametsuchi/merkle_tree/merkle_tree.h
 
-  test/generator/tx_generator.h
-
   # needed to compile fbs automatically
   include/ametsuchi/generated/account_generated.h
   include/ametsuchi/generated/asset_generated.h
