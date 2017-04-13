@@ -25,3 +25,4 @@ TEST(Generator, RandomNumber) {
     ASSERT_GE(n, 50);
   }
 }
+

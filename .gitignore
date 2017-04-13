@@ -7,3 +7,5 @@ build/
 external/
 .gtm/
 include/ametsuchi/generated/*
+.idea
+.vscode
