@@ -4,7 +4,7 @@ add_library(tx_generator generator/tx_generator.h)
 set_target_properties(tx_generator PROPERTIES LINKER_LANGUAGE CXX)
 
 AddTest(tx_generator_test generator/tx_generator_test.cc)
-target_link_libraries(tx_generator_test PRIVATE tx_generator)
+target_link_libraries(tx_generator_test PRIVATE tx_generator flatbuffers)
 
 AddTest(module_lmdb module/lmdb_test.cc)
 target_link_libraries(module_lmdb PRIVATE LMDB spdlog ${LIBAMETSUCHI_NAME})

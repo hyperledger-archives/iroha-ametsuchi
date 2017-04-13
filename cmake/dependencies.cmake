@@ -11,11 +11,9 @@ find_package(Threads REQUIRED)
 ################################
 #         flatbuffers          #
 ################################
-if(SCHEMA)
-  find_package(flatbuffers 1.6.0 OPTIONAL_COMPONENTS flatc)
-endif()
+find_package(flatbuffers 1.6.0)
 
-if(NOT flatbuffers_FOUND OR (flatbuffers_FOUND AND SCHEMA AND NOT flatc_EXECUTABLE))
+if(NOT flatbuffers_FOUND)
   set(flatbuffers_CMAKE_ARGS
     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -36,7 +34,7 @@ ExternalProject_Add(google_flatbuffers
 ExternalProject_Get_Property(google_flatbuffers source_dir binary_dir)
 set(flatbuffers_INCLUDE_DIRS ${source_dir}/include)
 set(flatbuffers_LIBRARIES ${binary_dir}/libflatbuffers.a)
-set(flatc_BIN ${binary_dir}/flatc)
+set(flatc_EXECUTABLE ${binary_dir}/flatc)
 file(MAKE_DIRECTORY ${flatbuffers_INCLUDE_DIRS}/generated)
 
 
@@ -49,11 +47,11 @@ set_target_properties(flatbuffers PROPERTIES
 function(compile_fbs_to_cpp FBS)
   string(REGEX REPLACE "\\.fbs$" "_generated.h" GEN_HEADER ${FBS})
   add_custom_command(
-    OUTPUT include/ametsuchi/generated/${GEN_HEADER}
-    COMMAND "${flatc_BIN}" -c --scoped-enums --no-prefix --gen-mutable
+    OUTPUT ${PROJECT_SOURCE_DIR}/include/ametsuchi/generated/${GEN_HEADER}
+    COMMAND "${flatc_EXECUTABLE}" -c --scoped-enums --no-prefix --gen-mutable
       -o "${PROJECT_SOURCE_DIR}/include/ametsuchi/generated"
       "${PROJECT_SOURCE_DIR}/schema/${FBS}"
-    DEPENDS flatbuffers google_flatbuffers)
+    DEPENDS flatbuffers)
 endfunction()
 
 compile_fbs_to_cpp(account.fbs)
