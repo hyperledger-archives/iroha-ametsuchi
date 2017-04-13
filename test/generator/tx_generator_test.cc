@@ -26,3 +26,53 @@ TEST(Generator, RandomNumber) {
   }
 }
 
+TEST(Generator, RandomPrintableChar) {
+  for (size_t i = 0; i < 1000; i++) {
+    auto n = generator::random_printable_char();
+    ASSERT_LT(n, 127);
+    ASSERT_GE(n, 32);
+  }
+}
+
+TEST(Generator, RandomPrintableString) {
+  std::string s;
+  ASSERT_NO_THROW(s = generator::random_string(10));
+  ASSERT_EQ(s.size(), 10);
+}
+
+TEST(Generator, RandomBlob) {
+  std::vector<uint8_t> v(100);
+  ASSERT_NO_THROW(v = generator::random_blob(100));
+  ASSERT_EQ(v.size(), 100);
+}
+
+TEST(Generator, RandomBase64String) {
+  std::string s;
+  ASSERT_NO_THROW(s = generator::random_base64_string(100));
+  ASSERT_EQ(s.size(), 100);
+}
+
+TEST(Generator, RandomPublicKey) {
+  std::string s;
+  ASSERT_NO_THROW(s = generator::random_public_key());
+  ASSERT_EQ(s.size(), generator::PUB_KEY_LENGTH_);
+}
+
+#define TEST_COMMAND(CMD)                                                  \
+  TEST(Generator, RandomTx_##CMD) {                                        \
+    ASSERT_NO_THROW({                                                      \
+      flatbuffers::FlatBufferBuilder fbb(2048);                            \
+      auto v = generator::random_transaction(                              \
+          fbb, iroha::Command::CMD, generator::random_##CMD(fbb).Union()); \
+      auto tx = flatbuffers::GetRoot<iroha::Transaction>(v.data());        \
+    });                                                                    \
+  }
+
+TEST_COMMAND(AccountAdd)
+TEST_COMMAND(AccountRemove)
+TEST_COMMAND(PeerAdd)
+TEST_COMMAND(PeerRemove)
+TEST_COMMAND(AssetAdd)
+TEST_COMMAND(AssetRemove)
+TEST_COMMAND(AssetTransfer)
+TEST_COMMAND(AssetCreate)

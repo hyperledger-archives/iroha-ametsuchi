@@ -27,14 +27,26 @@
 
 namespace generator {
 
+/**
+ * Default ledger and domain for currency
+ */
 std::string LEDGER_ = "ledger_default";
 std::string DOMAIN_ = "domain_default";
+
+/**
+ * Standart lengths of cryptographic primitives
+ */
 size_t HASH_SIZE_ = 64;
 size_t PUB_KEY_LENGTH_ = 44;
 size_t SIGNATURE_LENGTH_ = 88;
+
+/**
+ * Current state of random generators.
+ */
 unsigned int SEED_ = 1337;
-const char BASE64_ALPHABET_[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+const char ALPHABET[] =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 /**
  * returns a number in a range [min, max)
@@ -46,21 +58,30 @@ int64_t random_number(int64_t min, int64_t max) {
 uint8_t random_printable_char() { return (uint8_t)random_number(32, 126 + 1); }
 
 
-std::string random_printable_string(size_t length) {
+std::string random_string(size_t length, std::string alphabet = ALPHABET) {
+  assert(alphabet.size() > 0);
   std::string s;
-  std::generate_n(s.begin(), length, random_printable_char);
+  std::generate_n(std::back_inserter(s), length, [&alphabet]() {
+    size_t i = (size_t)random_number(0, alphabet.size());
+    return alphabet[i];
+  });
   return s;
 }
 
 
 std::string random_base64_string(size_t length) {
+  const char alph[] =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   std::string s;
-  std::generate_n(s.begin(), length, [&BASE64_ALPHABET_]() {
-    auto i = generator::random_number(0, sizeof(BASE64_ALPHABET_));
-    return (char)BASE64_ALPHABET_[i];
+  std::generate_n(std::back_inserter(s), length, [&alph]() {
+    auto i = generator::random_number(0, sizeof(alph));
+    return alph[i];
   });
 
-  while (s.size() % 4 == 0) s.push_back('=');
+  if (s.size() % 4 == 0) {
+    s.pop_back();
+    s.push_back('=');
+  }
   return s;
 }
 
@@ -90,18 +111,18 @@ std::string random_ip() {
 }
 
 
-std::vector<uint8_t> random_account(
-    std::string pubkey = random_public_key(),
-    std::string alias = random_printable_string(10),
-    int signatories = (int)random_number(1, 10)) {
+std::vector<uint8_t> random_account(std::string pubkey = random_public_key(),
+                                    std::string alias = random_string(10),
+                                    uint16_t signatories = (uint16_t)
+                                        random_number(1, 10)) {
   flatbuffers::FlatBufferBuilder fbb(2048);
 
-  std::vector<std::string> sign;
+  std::vector<std::string> sign(signatories);
   std::generate_n(sign.begin(), signatories, random_public_key);
 
   auto account = iroha::CreateAccount(
       fbb, fbb.CreateString(pubkey), fbb.CreateString(alias),
-      fbb.CreateVectorOfStrings(sign), (uint16_t)signatories);
+      fbb.CreateVectorOfStrings(sign), signatories);
 
   fbb.Finish(account);
 
@@ -128,10 +149,9 @@ std::vector<uint8_t> random_peer(std::string pubkey = random_public_key(),
 std::vector<uint8_t> random_currency(
     uint64_t amount = (uint64_t)random_number(1, 50),
     uint8_t precision = (uint8_t)random_number(0, 3),
-    std::string currency_name = random_printable_string(6),
+    std::string currency_name = random_string(6),
     std::string domain_name = DOMAIN_, std::string ledger_name = LEDGER_,
-    std::string description =
-        random_printable_string((size_t)random_number(5, 100))) {
+    std::string description = random_string((size_t)random_number(5, 100))) {
   flatbuffers::FlatBufferBuilder fbb(2048);
 
   auto currency = iroha::CreateCurrency(
@@ -152,7 +172,7 @@ flatbuffers::Offset<iroha::Signature> random_signature(
     const std::vector<uint8_t> signature = random_blob(SIGNATURE_LENGTH_),
     uint64_t timestamp = (uint64_t)random_number(0, 1 << 30)) {
   return iroha::CreateSignature(fbb, fbb.CreateString(pubk),
-                                fbb.CreateVector(signature));
+                                fbb.CreateVector(signature), timestamp);
 }
 
 
@@ -163,7 +183,7 @@ flatbuffers::Offset<iroha::AccountAdd> random_AccountAdd(
 }
 
 
-flatbuffers::Offset<iroha::AccountRemove> random_AcountRemove(
+flatbuffers::Offset<iroha::AccountRemove> random_AccountRemove(
     flatbuffers::FlatBufferBuilder& fbb,
     const std::string accPubKey = random_public_key()) {
   return iroha::CreateAccountRemove(fbb, fbb.CreateString(accPubKey));
@@ -190,7 +210,7 @@ flatbuffers::Offset<iroha::AssetRemove> random_AssetRemove(
 
 flatbuffers::Offset<iroha::AssetCreate> random_AssetCreate(
     flatbuffers::FlatBufferBuilder& fbb,
-    std::string currency_name = random_printable_string(10),
+    std::string currency_name = random_string(10),
     std::string domain_name = DOMAIN_, std::string ledger_name = LEDGER_) {
   return iroha::CreateAssetCreate(fbb, fbb.CreateString(currency_name),
                                   fbb.CreateString(domain_name),
@@ -232,20 +252,20 @@ flatbuffers::Offset<iroha::PeerRemove> random_PeerRemove(
  * @param signatures - number of signatures
  * @param creator - random public key of a creator
  * @param hash - random hash of a transaction
- * @return
+ * @return ready to be transmitted/parsed root Transaction flatbuffer
  */
 std::vector<uint8_t> random_transaction(
-    flatbuffers::FlatBufferBuilder& fbb,
-    iroha::Command cmd_type = iroha::Command::AccountAdd,
-    flatbuffers::Offset<void> command = random_AccountAdd(fbb).Union(),
-    const size_t signatures = 5, std::string creator = random_public_key(),
+    flatbuffers::FlatBufferBuilder& fbb, iroha::Command cmd_type,
+    flatbuffers::Offset<void> command, const size_t signatures = 5,
+    std::string creator = random_public_key(),
     std::vector<uint8_t> hash = random_blob(HASH_SIZE_)) {
   std::vector<flatbuffers::Offset<iroha::Signature>> sigs(signatures);
-  std::generate_n(sigs.begin(), signatures, std::bind(random_signature, fbb));
+  std::generate_n(sigs.begin(), signatures,
+                  [&fbb]() { return random_signature(fbb); });
 
   auto tx = iroha::CreateTransaction(fbb, fbb.CreateString(creator), cmd_type,
                                      command, fbb.CreateVector(sigs),
-                                     fbb.CreateVector(random_blob(HASH_SIZE_)));
+                                     fbb.CreateVector(hash));
 
   fbb.Finish(tx);
 
