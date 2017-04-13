@@ -53,7 +53,7 @@ function(compile_fbs_to_cpp FBS)
     COMMAND "${flatc_BIN}" -c --scoped-enums --no-prefix --gen-mutable
       -o "${PROJECT_SOURCE_DIR}/include/ametsuchi/generated"
       "${PROJECT_SOURCE_DIR}/schema/${FBS}"
-    DEPENDS flatbuffers)
+    DEPENDS flatbuffers google_flatbuffers)
 endfunction()
 
 compile_fbs_to_cpp(account.fbs)
