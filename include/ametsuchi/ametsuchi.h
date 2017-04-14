@@ -75,8 +75,9 @@ class Ametsuchi {
    * @param tx root type Transaction (contents of TransactionWrapper->tx array)
    * @return new merkle root
    */
-  merkle::hash_t append(const flatbuffers::Vector<uint8_t> *tx);
-  merkle::hash_t append(const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
+  merkle::hash_t append(const std::vector<uint8_t> *tx);
+  merkle::hash_t append(
+      const std::vector<std::vector<uint8_t> *> &batch);
 
   /**
    * Commit appended data to database. Commit creates the latest 'checkpoint',
@@ -117,6 +118,21 @@ class Ametsuchi {
                          const flatbuffers::String *an,
                          bool uncommitted = false);
 
+  std::vector<AM_val> getAssetTxByCreator(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
+
+  std::vector<AM_val> getAccountTxByCreator(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+
+  std::vector<AM_val> getPeerTxByCreator(const flatbuffers::String *pubKey,
+                                         bool uncommitted = false);
+
+  std::vector<AM_val> getAssetTxBySender(const flatbuffers::String *senderKey,
+                                         bool uncommited = false);
+
+  std::vector<AM_val> getAssetTxByReceiver(const flatbuffers::String *receiverKey,
+                                           bool uncommited = false);
+
  private:
   /* for internal use only */
 
@@ -151,13 +167,23 @@ class Ametsuchi {
   void account_remove_currency(const flatbuffers::String *acc_pub_key,
                                const iroha::Currency *c);
 
+  // put creator into certain tree
+  void put_creator_into_tree(MDB_cursor *cursor,
+                             const flatbuffers::String *acc_pub_key,
+                             size_t &tx_store_total);
+
+  // get transactions of certain type (asset, account, peer)
+  std::vector<AM_val> getTxByCreator(const std::string &tree_name,
+                                     const flatbuffers::String *pubKey,
+                                     bool uncommitted = false);
+
 
   // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
   std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;
 
   // reads all records in the given tree
   std::vector<std::pair<AM_val, AM_val>> read_all_records(
-    const std::string &tree_name);
+      const std::string &tree_name);
 
   merkle::MerkleTree tree;
 };

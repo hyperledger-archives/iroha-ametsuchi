@@ -17,8 +17,8 @@
 /*
 #include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
-#include <gtest/gtest.h>
 #include <flatbuffers/flatbuffers.h>
+#include <gtest/gtest.h>
 #include <lmdb.h>
 #include <spdlog/spdlog.h>
 
@@ -54,9 +54,13 @@ TEST_F(Ametsuchi_Test, AssetTest) {
   std::vector<flatbuffers::Offset<iroha::Signature>> signatures_vector;
   signatures_vector.push_back(signature);
   auto signatures = builder.CreateVector(signatures_vector.data(), 1);
-  auto transaction = iroha::CreateTransaction(builder, creator_pub_key,
-                                              iroha::Command::AssetCreate,
-                                              asset_create.Union(), signatures);
+
+  size_t hash_len = 32;
+  std::vector<uint8_t> hash_data(hash_len, 0x1);
+  auto hash_field = builder.CreateVector(hash_data);
+  auto transaction = iroha::CreateTransaction(
+      builder, creator_pub_key, iroha::Command::AssetCreate,
+      asset_create.Union(), signatures, hash_field);
 
   builder.Finish(transaction);
 
@@ -65,8 +69,80 @@ TEST_F(Ametsuchi_Test, AssetTest) {
 
   //  auto transaction_object = flatbuffers::GetRoot<iroha::Transaction>(buf);
   std::vector<uint8_t> transaction_vector{buf, buf + size};
-  flatbuffers::Vector<uint8_t>* v = (flatbuffers::Vector<uint8_t>*) transaction_vector.data();
-  ametsuchi_.append(v);
+  //  flatbuffers::Vector<uint8_t>* v = (flatbuffers::Vector<uint8_t>*)
+  //  transaction_vector.data();
+  ametsuchi_.append(&transaction_vector);
   ametsuchi_.commit();
+    builder.Clear();
+
+
+  // now do asset add
+  /*
+  auto another_asset = iroha::CreateComplexAssetDirect(builder, "Dollar", "USA",
+  "ledger1","NONE");
+  builder.Finish(another_asset);
+   */
+
+
+  auto currency_to_add = iroha::CreateCurrencyDirect(
+      builder, "Dollar", "USA", "ledger1", "description", 100, 2);
+  builder.Finish(currency_to_add);
+
+
+  //  auto currency_to_add_object =
+  //  flatbuffers::GetRoot<iroha::Currency>(builder.GetBufferPointer());
+  //  std::cout << "amount = " << currency_to_add_object->amount() << std::endl;
+  std::vector<uint8_t> currency_vector{
+      builder.GetBufferPointer(),
+      builder.GetBufferPointer() + builder.GetSize()};
+  builder.Clear();
+
+  //  auto asset_add_offset = iroha::CreateAssetAdd(
+  //      builder, builder.CreateString("1"),
+  //      //      builder.CreateVector(builder.GetBufferPointer(),
+  //      //      builder.GetSize()));
+  //      builder.CreateVector(currency_vector.data(), currency_vector.size()));
+  auto asset_add_offset =
+      iroha::CreateAssetAddDirect(builder, "1", &currency_vector);
+  //  builder.Finish(asset_add_offset);
+
+  //  auto transaction2_offset = iroha::CreateTransaction(
+  //      builder, creator_pub_key, iroha::Command::AssetAdd,
+  //      asset_add_offset.Union(), signatures);
+  auto transaction2_offset = iroha::CreateTransactionDirect(
+      builder, "1", iroha::Command::AssetAdd, asset_add_offset.Union(),
+      &signatures_vector, &hash_data);
+
+
+  builder.Finish(transaction2_offset);
+
+  auto transaction2 =
+      flatbuffers::GetRoot<iroha::Transaction>(builder.GetBufferPointer());
+  /*
+  transaction2->command()
+  auto asset_add = transaction2->command_as_AssetAdd();
+  //  ASSERT_EQ(asset_add->asset_nested_root()->asset_type(),
+  //  iroha::AnyAsset::Currency);
+  auto asset_vector = asset_add->asset();
+  auto asset = flatbuffers::GetRoot<iroha::Asset>(asset_vector->Data());
+  ASSERT_EQ(asset->asset_type(), iroha::AnyAsset::Currency);
+  //  auto a = asset->asset_type();
+  auto currency = flatbuffers::GetRoot<iroha::Currency>(
+      transaction2->command_as_AssetAdd()->asset()->data());
+  std::cout << (currency->amount()) << std::endl;
+  //  std::cout << "type = " <<
+  //  transaction2->command_as_AssetAdd()->asset_nested_root()->asset_type()
+
+  */
+  buf = builder.GetBufferPointer();
+  size = builder.GetSize();
+
+  std::vector<uint8_t> transaction_vector2{buf, buf + size};
+  //  flatbuffers::Vector<uint8_t>* v = (flatbuffers::Vector<uint8_t>*)
+  //  transaction_vector.data();
+  ametsuchi_.append(&transaction_vector2);
+  ametsuchi_.commit();
+  builder.Clear();
+
 }
 */

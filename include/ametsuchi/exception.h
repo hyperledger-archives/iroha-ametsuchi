@@ -66,7 +66,8 @@ enum class InvalidTransaction {
   ASSET_NOT_FOUND,
   ACCOUNT_EXISTS,
   ACCOUNT_NOT_FOUND,
-  NOT_ENOUGH_ASSETS
+  NOT_ENOUGH_ASSETS,
+  WRONG_COMMAND
 };
 
 enum class InternalError { FATAL, NOT_IMPLEMENTED };
