@@ -28,7 +28,9 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include "currency.h"
+#include <ametsuchi/currency.h>
+#include <ametsuchi/tx_store.h>
+#include <ametsuchi/wsv.h>
 
 extern "C" {
 #include <SimpleFIPS202.h>
@@ -44,17 +46,7 @@ extern "C" {
 
 namespace ametsuchi {
 
-/**
- * Represents a value, readed from a database.
- * Used to restrict changing of mmaped data by pointer.
- */
-struct AM_val {
-  // pointer, which points to blob with data
-  const void *const data;
-  // size of the pointer
-  const size_t size;
-  explicit AM_val(const MDB_val &a) : data(a.mv_data), size(a.mv_size) {}
-};
+
 
 /**
  * Main class for the database.
@@ -114,7 +106,7 @@ class Ametsuchi {
   AM_val accountGetAsset(const flatbuffers::String *pubKey,
                          const flatbuffers::String *ln,
                          const flatbuffers::String *dn,
-                         const flatbuffers::String *an,
+                         const flatbuffers::String *cn,
                          bool uncommitted = false);
 
  private:
@@ -125,7 +117,13 @@ class Ametsuchi {
   MDB_stat mst;
   MDB_txn *append_tx_;  // pointer to db transaction
   std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
+
+  TxStore tx_store;
+  WSV wsv;
+
+
   size_t tx_store_total;
+
 
   void init();
   void init_btree(const std::string &name, uint32_t flags,
@@ -140,7 +138,6 @@ class Ametsuchi {
   void account_remove(const iroha::AccountRemove *command);
   void peer_add(const iroha::PeerAdd *command);
   void peer_remove(const iroha::PeerRemove *command);
-  void asset_create(const iroha::AssetCreate *command);
   void asset_add(const iroha::AssetAdd *command);
   void asset_remove(const iroha::AssetRemove *command);
   void asset_transfer(const iroha::AssetTransfer *command);
