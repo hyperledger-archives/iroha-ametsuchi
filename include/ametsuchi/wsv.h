@@ -18,48 +18,57 @@
 #define AMETSUCHI_WSV_H
 
 
+#include <ametsuchi/common.h>
+#include <ametsuchi/generated/commands_generated.h>
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <unordered_map>
-#include <ametsuchi/generated/commands_generated.h>
-#include <ametsuchi/common.h>
 
 namespace ametsuchi {
 
-class WSV{
-
+class WSV {
  public:
-   WSV();
+  WSV();
   ~WSV();
 
   void update(const flatbuffers::Vector<uint8_t> *blob);
 
-  void init(MDB_txn* append_tx);
+  void init(MDB_txn *append_tx);
 
   /**
-   * Commit appended data to database. Commit creates the latest 'checkpoint',
-   * when you can not rollback.
+   * Close every cursor used in wsv
    */
   void close_cursors();
+
+  /**
+  * Close every dbi used in wsv
+  */
+  void close_dbi(MDB_env* env);
 
 
   // WSV queries:
   AM_val accountGetAsset(const flatbuffers::String *pubKey,
                          const flatbuffers::String *ln,
                          const flatbuffers::String *dn,
-                         const flatbuffers::String *an,
-                         bool uncommitted = true, MDB_env* env = nullptr);
+                         const flatbuffers::String *an, bool uncommitted = true,
+                         MDB_env *env = nullptr);
 
+
+  std::vector<AM_val> accountGetAllAssets(const flatbuffers::String *pubKey,
+                                          bool uncommitted = true,
+                                          MDB_env *env = nullptr);
 
 
  private:
-  //size_t tx_store_total;
   std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
   MDB_txn *append_tx_;
+
+  // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
   std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;
+
   void read_created_assets();
 
-  //WSV commands:
+  // WSV commands:
   void asset_create(const iroha::AssetCreate *command);
   void asset_add(const iroha::AssetAdd *command);
   void asset_remove(const iroha::AssetRemove *command);
@@ -72,13 +81,8 @@ class WSV{
   void account_add_currency(const flatbuffers::String *acc_pub_key,
                             const iroha::Currency *c, size_t c_size);
   void account_remove_currency(const flatbuffers::String *acc_pub_key,
-                                    const iroha::Currency *c);
-
-
-
+                               const iroha::Currency *c);
 };
-
-
 }
 
-#endif //AMETSUCHI_WSV_H
+#endif  // AMETSUCHI_WSV_H

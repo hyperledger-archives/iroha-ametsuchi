@@ -15,32 +15,33 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/wsv.h>
 #include <ametsuchi/comparator.h>
-#include <ametsuchi/generated/transaction_generated.h>
 #include <ametsuchi/currency.h>
+#include <ametsuchi/generated/transaction_generated.h>
+#include <ametsuchi/wsv.h>
 
 namespace ametsuchi {
 
 void WSV::init(MDB_txn *append_tx) {
-
   append_tx_ = append_tx;
   // [pubkey] => assets (DUP)
-  trees_["wsv_pubkey_assets"] = init_btree(append_tx_, "wsv_pubkey_assets", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE,
-             comparator::cmp_assets);
+  trees_["wsv_pubkey_assets"] = init_btree(
+      append_tx_, "wsv_pubkey_assets", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE,
+      comparator::cmp_assets);
 
   // [pubkey] => account (NODUP)
-  trees_["wsv_pubkey_account"] = init_btree(append_tx_, "wsv_pubkey_account", MDB_CREATE);
+  trees_["wsv_pubkey_account"] =
+      init_btree(append_tx_, "wsv_pubkey_account", MDB_CREATE);
 
   // [ledger_name+domain_name+asset_name] => creator public key (NODUP)
-  trees_["wsv_assetid_asset"] = init_btree(append_tx_, "wsv_assetid_asset", MDB_CREATE);
+  trees_["wsv_assetid_asset"] =
+      init_btree(append_tx_, "wsv_assetid_asset", MDB_CREATE);
 
   // [ip] => peer (NODUP)
   trees_["wsv_ip_peer"] = init_btree(append_tx_, "wsv_ip_peer", MDB_CREATE);
 
   // we should know created assets, so read entire table in memory
   read_created_assets();
-
 }
 
 void WSV::update(const flatbuffers::Vector<uint8_t> *blob) {
@@ -86,14 +87,9 @@ void WSV::update(const flatbuffers::Vector<uint8_t> *blob) {
       }
     }
   }
-
 }
-WSV::WSV() {
-
-}
-WSV::~WSV() {
-
-}
+WSV::WSV() {}
+WSV::~WSV() {}
 
 void WSV::read_created_assets() {
   auto records = read_all_records(trees_["wsv_assetid_asset"].second);
@@ -107,15 +103,13 @@ void WSV::read_created_assets() {
 
     created_assets_[assetid] = assetfb;
   }
-
 }
 
 
 void WSV::close_cursors() {
   for (auto &&e : trees_) {
     MDB_cursor *cursor = e.second.second;
-    if (cursor)
-      mdb_cursor_close(cursor);
+    if (cursor) mdb_cursor_close(cursor);
   }
 }
 
@@ -168,9 +162,8 @@ void WSV::asset_add(const iroha::AssetAdd *command) {
     throw exception::InternalError::NOT_IMPLEMENTED;
 
   account_add_currency(command->accPubKey(),
-                             (iroha::Currency *)command->asset()->data(),
-                             command->asset()->size());
-
+                       (iroha::Currency *)command->asset()->data(),
+                       command->asset()->size());
 }
 
 
@@ -184,7 +177,7 @@ void WSV::asset_remove(const iroha::AssetRemove *command) {
 }
 
 void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
-                                     const iroha::Currency *c, size_t c_size) {
+                               const iroha::Currency *c, size_t c_size) {
   int res;
   MDB_val c_key, c_val;
   auto cursor = trees_.at("wsv_pubkey_assets").second;
@@ -192,9 +185,8 @@ void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
 
   try {
     // may throw ASSET_NOT_FOUND
-    AM_val account_asset =
-        accountGetAsset(acc_pub_key, c->ledger_name(), c->domain_name(),
-                              c->currency_name());
+    AM_val account_asset = accountGetAsset(
+        acc_pub_key, c->ledger_name(), c->domain_name(), c->currency_name());
 
     assert(c_size == account_asset.size);
 
@@ -230,7 +222,8 @@ void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
 
   // cursor is at the correct asset, just replace with a copy of FB and flag
   // MDB_CURRENT
-  // TODO: Check if this works for a new Asset (It may replace some random old asset)
+  // TODO: Check if this works for a new Asset (It may replace some random old
+  // asset)
   if ((res = mdb_cursor_put(cursor, &c_key, &c_val, MDB_CURRENT))) {
     AMETSUCHI_CRITICAL(res, MDB_KEYEXIST);
     AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
@@ -241,16 +234,15 @@ void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
 }
 
 void WSV::account_remove_currency(const flatbuffers::String *acc_pub_key,
-                                        const iroha::Currency *c) {
+                                  const iroha::Currency *c) {
   int res;
   MDB_val c_key, c_val;
   auto cursor = trees_.at("wsv_pubkey_assets").second;
   std::vector<uint8_t> copy;
 
   // may throw ASSET_NOT_FOUND
-  AM_val account_asset =
-      accountGetAsset(acc_pub_key, c->ledger_name(), c->domain_name(),
-                            c->currency_name());
+  AM_val account_asset = accountGetAsset(acc_pub_key, c->ledger_name(),
+                                         c->domain_name(), c->currency_name());
 
   // asset exists, change it:
 
@@ -302,8 +294,8 @@ void WSV::asset_transfer(const iroha::AssetTransfer *command) {
 AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
                             const flatbuffers::String *ln,
                             const flatbuffers::String *dn,
-                            const flatbuffers::String *cn,
-                            bool uncommitted, MDB_env* env) {
+                            const flatbuffers::String *cn, bool uncommitted,
+                            MDB_env *env) {
   MDB_val c_key, c_val;
   MDB_cursor *cursor;
   MDB_txn *tx;
@@ -331,7 +323,6 @@ AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
     // reuse existing cursor and "append" transaction
     cursor = trees_.at("wsv_pubkey_assets").second;
     tx = append_tx_;
-
   } else {
     // create read-only transaction, create new RO cursor
     if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &tx))) {
@@ -342,7 +333,7 @@ AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
     }
 
     if ((res ==
-        mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
+         mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
@@ -486,6 +477,63 @@ void WSV::peer_remove(const iroha::PeerRemove *command) {
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 }
+std::vector<AM_val> WSV::accountGetAllAssets(const flatbuffers::String *pubKey,
+                                             bool uncommitted, MDB_env *env) {
+  MDB_val c_key, c_val;
+  MDB_cursor *cursor;
+  MDB_txn *tx;
+  int res;
 
+  // query asset by public key
+  c_key.mv_data = (void *)pubKey->data();
+  c_key.mv_size = pubKey->size();
 
+  if (uncommitted) {
+    cursor = trees_.at("wsv_pubkey_assets").second;
+    tx = append_tx_;
+  } else {
+    // create read-only transaction, create new RO cursor
+    if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &tx))) {
+      AMETSUCHI_CRITICAL(res, MDB_PANIC);
+      AMETSUCHI_CRITICAL(res, MDB_MAP_RESIZED);
+      AMETSUCHI_CRITICAL(res, MDB_READERS_FULL);
+      AMETSUCHI_CRITICAL(res, ENOMEM);
+    }
+
+    if ((res ==
+         mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
+      AMETSUCHI_CRITICAL(res, EINVAL);
+    }
+  }
+
+  // if sender has no such asset, then it is incorrect transaction
+  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET))) {
+    if (res == MDB_NOTFOUND) return std::vector<AM_val>{};
+    AMETSUCHI_CRITICAL(res, EINVAL);
+  }
+
+  std::vector<AM_val> ret;
+  // account has assets. try to find asset with the same `pk`
+  // iterate over account's assets, O(N), where N is number of different
+  // assets,
+  do {
+    // user's current amount
+    ret.push_back(AM_val(c_val));
+
+    // move to next asset in user's account
+    if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT_DUP))) {
+      if (res == MDB_NOTFOUND) return ret;
+      AMETSUCHI_CRITICAL(res, EINVAL);
+    }
+  } while (res == 0);
+
+  return ret;
+}
+
+void WSV::close_dbi(MDB_env* env) {
+  for (auto &&it : trees_) {
+    auto dbi = it.second.first;
+    mdb_dbi_close(env, dbi);
+  }
+}
 }

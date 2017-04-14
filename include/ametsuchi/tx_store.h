@@ -24,20 +24,23 @@
 
 namespace ametsuchi {
 
-class TxStore{
-
+class TxStore {
  public:
   TxStore();
   ~TxStore();
 
   void append(const flatbuffers::Vector<uint8_t> *blob);
-  void init(MDB_txn* append_tx);
+  void init(MDB_txn *append_tx);
 
   /**
-   * Commit appended data to database. Commit creates the latest 'checkpoint',
-   * when you can not rollback.
+   * Close every cursor used in tx_store
    */
   void close_cursors();
+
+  /**
+ * Close every dbi used in tx_store
+ */
+  void close_dbi(MDB_env *env);
 
 
  private:
@@ -45,12 +48,8 @@ class TxStore{
   std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
   MDB_txn *append_tx_;
   void set_tx_total();
-
 };
-
-
 }
 
 
-
-#endif //AMETSUCHI_TX_STORE_H
+#endif  // AMETSUCHI_TX_STORE_H

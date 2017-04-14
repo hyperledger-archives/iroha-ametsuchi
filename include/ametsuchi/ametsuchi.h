@@ -18,8 +18,11 @@
 #ifndef AMETSUCHI_DB_H
 #define AMETSUCHI_DB_H
 
+#include <ametsuchi/currency.h>
 #include <ametsuchi/generated/commands_generated.h>
 #include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <ametsuchi/tx_store.h>
+#include <ametsuchi/wsv.h>
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <cstdint>
@@ -28,9 +31,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <ametsuchi/currency.h>
-#include <ametsuchi/tx_store.h>
-#include <ametsuchi/wsv.h>
 
 extern "C" {
 #include <SimpleFIPS202.h>
@@ -45,7 +45,6 @@ extern "C" {
 #endif
 
 namespace ametsuchi {
-
 
 
 /**
@@ -68,7 +67,8 @@ class Ametsuchi {
    * @return new merkle root
    */
   merkle::hash_t append(const flatbuffers::Vector<uint8_t> *tx);
-  merkle::hash_t append(const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
+  merkle::hash_t append(
+      const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
 
   /**
    * Commit appended data to database. Commit creates the latest 'checkpoint',
@@ -90,8 +90,8 @@ class Ametsuchi {
  * Otherwise create new read-only TX
  * @return 0 or * pairs <pointer, size>, which are mmaped into memory.
  */
-  std::vector<AM_val> accountGetAssets(const flatbuffers::String *pubKey,
-                                       bool uncommitted = false);
+  std::vector<AM_val> accountGetAllAssets(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
 
   /**
    * Returns specific asset, which belong to user with \p pubKey.
@@ -116,45 +116,19 @@ class Ametsuchi {
   MDB_env *env;
   MDB_stat mst;
   MDB_txn *append_tx_;  // pointer to db transaction
-  std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
 
   TxStore tx_store;
   WSV wsv;
 
 
-  size_t tx_store_total;
-
-
   void init();
-  void init_btree(const std::string &name, uint32_t flags,
-                  MDB_cmp_func *dupsort = NULL);
-  size_t tx_store_size();
+
   void init_append_tx();
   void abort_append_tx();
-  void read_created_assets();
-
-  // handlers for transactions
-  void account_add(const iroha::AccountAdd *command);
-  void account_remove(const iroha::AccountRemove *command);
-  void peer_add(const iroha::PeerAdd *command);
-  void peer_remove(const iroha::PeerRemove *command);
-  void asset_add(const iroha::AssetAdd *command);
-  void asset_remove(const iroha::AssetRemove *command);
-  void asset_transfer(const iroha::AssetTransfer *command);
-
-  // manipulate with account's assets using these functions
-  void account_add_currency(const flatbuffers::String *acc_pub_key,
-                            const iroha::Currency *c, size_t c_size);
-  void account_remove_currency(const flatbuffers::String *acc_pub_key,
-                               const iroha::Currency *c);
 
 
   // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
   std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;
-
-  // reads all records in the given tree
-  std::vector<std::pair<AM_val, AM_val>> read_all_records(
-    const std::string &tree_name);
 
   merkle::MerkleTree tree;
 };

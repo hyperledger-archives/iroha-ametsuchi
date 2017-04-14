@@ -18,9 +18,9 @@
 #include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
 
-static auto console = spdlog::stdout_color_mt("ametsuchi");
+// static auto console = spdlog::stdout_color_mt("ametsuchi");
 
-//TODO: remove this
+// TODO: remove this
 #define AMETSUCHI_TREES_TOTAL 8
 
 
@@ -152,7 +152,6 @@ void Ametsuchi::init() {
     if (res == EEXIST) {
       console->debug("folder with database exists");
     } else {
-
       AMETSUCHI_CRITICAL(res, EACCES);
       AMETSUCHI_CRITICAL(res, ELOOP);
       AMETSUCHI_CRITICAL(res, EMLINK);
@@ -199,9 +198,7 @@ void Ametsuchi::init() {
 
   // initialize
   init_append_tx();
-
 }
-
 
 
 void Ametsuchi::init_append_tx() {
@@ -220,69 +217,16 @@ void Ametsuchi::init_append_tx() {
   wsv.init(append_tx_);
 
   // TODO: remove it
-  assert(AMETSUCHI_TREES_TOTAL == trees_.size());
+  // assert(AMETSUCHI_TREES_TOTAL == trees_.size());
 
   // stats about db
   mdb_env_stat(env, &mst);
 }
 
 
-
-
-
-
-
-std::vector<AM_val> Ametsuchi::accountGetAssets(
+std::vector<AM_val> Ametsuchi::accountGetAllAssets(
     const flatbuffers::String *pubKey, bool uncommitted) {
-  MDB_val c_key, c_val;
-  MDB_cursor *cursor;
-  MDB_txn *tx;
-  int res;
-
-  // query asset by public key
-  c_key.mv_data = (void *)pubKey->data();
-  c_key.mv_size = pubKey->size();
-
-  if (uncommitted) {
-    cursor = trees_.at("wsv_pubkey_assets").second;
-    tx = append_tx_;
-  } else {
-    // create read-only transaction, create new RO cursor
-    if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &tx))) {
-      AMETSUCHI_CRITICAL(res, MDB_PANIC);
-      AMETSUCHI_CRITICAL(res, MDB_MAP_RESIZED);
-      AMETSUCHI_CRITICAL(res, MDB_READERS_FULL);
-      AMETSUCHI_CRITICAL(res, ENOMEM);
-    }
-
-    if ((res ==
-         mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
-      AMETSUCHI_CRITICAL(res, EINVAL);
-    }
-  }
-
-  // if sender has no such asset, then it is incorrect transaction
-  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET))) {
-    if (res == MDB_NOTFOUND) return std::vector<AM_val>{};
-    AMETSUCHI_CRITICAL(res, EINVAL);
-  }
-
-  std::vector<AM_val> ret;
-  // account has assets. try to find asset with the same `pk`
-  // iterate over account's assets, O(N), where N is number of different
-  // assets,
-  do {
-    // user's current amount
-    ret.push_back(AM_val(c_val));
-
-    // move to next asset in user's account
-    if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT_DUP))) {
-      if (res == MDB_NOTFOUND) return ret;
-      AMETSUCHI_CRITICAL(res, EINVAL);
-    }
-  } while (res == 0);
-
-  return ret;
+  return wsv.accountGetAllAssets(pubKey, uncommitted, env);
 }
 
 
@@ -291,70 +235,15 @@ AM_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
                                   const flatbuffers::String *dn,
                                   const flatbuffers::String *cn,
                                   bool uncommitted) {
-  MDB_val c_key, c_val;
-  MDB_cursor *cursor;
-  MDB_txn *tx;
-  int res;
-
-  std::string pk;
-  pk += ln->data();
-  pk += dn->data();
-  pk += cn->data();
-
-  // if given asset exists, then we can get its blob, which consists of {ledger
-  // name, domain name and asset name} to speedup read in DUP btree, because we
-  // have custom comparator
-  auto blob = created_assets_.find(pk);
-  if (blob != created_assets_.end()) {
-    // asset found, use asset's flatbuffer to find asset in account faster
-    c_val.mv_data = (void *)blob->second.data();
-    c_val.mv_size = blob->second.size();
-  } else {
-    throw exception::InvalidTransaction::ASSET_NOT_FOUND;
-  }
-
-  // depending on 'uncommitted' we use RO or RW transaction
-  if (uncommitted) {
-    // reuse existing cursor and "append" transaction
-    cursor = trees_.at("wsv_pubkey_assets").second;
-    tx = append_tx_;
-
-  } else {
-    // create read-only transaction, create new RO cursor
-    if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &tx))) {
-      AMETSUCHI_CRITICAL(res, MDB_PANIC);
-      AMETSUCHI_CRITICAL(res, MDB_MAP_RESIZED);
-      AMETSUCHI_CRITICAL(res, MDB_READERS_FULL);
-      AMETSUCHI_CRITICAL(res, ENOMEM);
-    }
-
-    if ((res ==
-         mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
-      AMETSUCHI_CRITICAL(res, EINVAL);
-    }
-  }
-
-  // query asset by public key
-  c_key.mv_data = (void *)pubKey->data();
-  c_key.mv_size = pubKey->size();
-
-  // if sender has no such asset, then it is incorrect transaction
-  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_GET_BOTH))) {
-    if (res == MDB_NOTFOUND)
-      throw exception::InvalidTransaction::ASSET_NOT_FOUND;
-    AMETSUCHI_CRITICAL(res, EINVAL);
-  }
-
-  return AM_val(c_val);
+  return wsv.accountGetAsset(pubKey, ln, dn, cn, uncommitted, env);
 }
 
 
 Ametsuchi::~Ametsuchi() {
   abort_append_tx();
-  for (auto &&it : trees_) {
-    auto dbi = it.second.first;
-    mdb_dbi_close(env, dbi);
-  }
+
+  tx_store.close_dbi(env);
+  wsv.close_dbi(env);
   mdb_env_close(env);
 }
 

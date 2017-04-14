@@ -28,10 +28,6 @@ namespace ametsuchi{
 
 static auto console = spdlog::stdout_color_mt("ametsuchi");
 
-
-
-
-
 std::pair<MDB_dbi, MDB_cursor*> init_btree(MDB_txn* append_tx, const std::string &name, uint32_t flags,
                          MDB_cmp_func *dupsort = NULL) {
   int res;

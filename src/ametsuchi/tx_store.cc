@@ -15,19 +15,17 @@
  * limitations under the License.
  */
 
-#include <ametsuchi/tx_store.h>
 #include <ametsuchi/exception.h>
 #include <ametsuchi/generated/asset_generated.h>
 #include <ametsuchi/generated/transaction_generated.h>
+#include <ametsuchi/tx_store.h>
 
 #include <ametsuchi/common.h>
 
 namespace ametsuchi {
 
 
-
 void TxStore::append(const flatbuffers::Vector<uint8_t> *blob) {
-
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
 
   MDB_val c_key, c_val;
@@ -41,7 +39,6 @@ void TxStore::append(const flatbuffers::Vector<uint8_t> *blob) {
 
     if ((res = mdb_cursor_put(trees_.at("tx_store").second, &c_key, &c_val,
                               MDB_NOOVERWRITE | MDB_APPEND))) {
-
       AMETSUCHI_CRITICAL(res, MDB_KEYEXIST);
       AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
       AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
@@ -94,26 +91,24 @@ void TxStore::append(const flatbuffers::Vector<uint8_t> *blob) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
-
-
-
-
 }
 
-void TxStore::init(MDB_txn* append_tx) {
-
-
+void TxStore::init(MDB_txn *append_tx) {
   append_tx_ = append_tx;
 
   // autoincrement_key => tx (NODUP)
-  trees_["tx_store"] = init_btree(append_tx_, "tx_store", MDB_CREATE | MDB_INTEGERKEY);
+  trees_["tx_store"] =
+      init_btree(append_tx_, "tx_store", MDB_CREATE | MDB_INTEGERKEY);
 
   // [pubkey] => autoincrement_key (DUP)
-  trees_["index_transfer_sender"] = init_btree(append_tx_, "index_transfer_sender", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+  trees_["index_transfer_sender"] =
+      init_btree(append_tx_, "index_transfer_sender",
+                 MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
 
   // [pubkey] => autoincrement_key (DUP)
-  trees_["index_transfer_receiver"] = init_btree(append_tx_, "index_transfer_receiver",
-             MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+  trees_["index_transfer_receiver"] =
+      init_btree(append_tx_, "index_transfer_receiver",
+                 MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
 
   set_tx_total();
 }
@@ -121,37 +116,33 @@ void TxStore::init(MDB_txn* append_tx) {
 void TxStore::close_cursors() {
   for (auto &&e : trees_) {
     MDB_cursor *cursor = e.second.second;
-    if (cursor)
-      mdb_cursor_close(cursor);
+    if (cursor) mdb_cursor_close(cursor);
   }
 }
 
-TxStore::TxStore() {
+TxStore::TxStore() {}
 
-}
-
-TxStore::~TxStore() {
-
-}
+TxStore::~TxStore() {}
 
 void TxStore::set_tx_total() {
-
   MDB_val c_key, c_val;
   int res;
 
   MDB_cursor *cursor = trees_.at("tx_store").second;
 
   if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_LAST))) {
-    if (res == MDB_NOTFOUND)
-    {
+    if (res == MDB_NOTFOUND) {
       tx_store_total = 0u;
     }
     AMETSUCHI_CRITICAL(res, EINVAL);
-  }
-  else
-  {
-    tx_store_total =  *reinterpret_cast<size_t *>(c_key.mv_data);
+  } else {
+    tx_store_total = *reinterpret_cast<size_t *>(c_key.mv_data);
   }
 }
-
+void TxStore::close_dbi(MDB_env *env) {
+  for (auto &&it : trees_) {
+    auto dbi = it.second.first;
+    mdb_dbi_close(env, dbi);
+  }
+}
 }
