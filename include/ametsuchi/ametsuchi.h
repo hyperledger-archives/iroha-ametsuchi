@@ -110,20 +110,41 @@ class Ametsuchi {
                          const flatbuffers::String *asset_name,
                          bool uncommitted = false);
 
-  std::vector<AM_val> getAssetTxByCreator(const flatbuffers::String *pubKey,
-                                          bool uncommited = false);
+  std::vector<AM_val> getAssetTransferBySender(const flatbuffers::String *senderKey,
+                                               bool uncommitted = false);
 
-  std::vector<AM_val> getAccountTxByCreator(const flatbuffers::String *pubKey,
+  std::vector<AM_val> getAssetTransferByReceiver(const flatbuffers::String *receiverKey,
+                                                 bool uncommitted = false);
+
+  std::vector<AM_val> getAssetCreateByKey(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
+
+  std::vector<AM_val> getAssetAddByKey(const flatbuffers::String *pubKey,
+                                       bool uncommitted = false);
+  std::vector<AM_val> getAssetRemoveByKey(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
+  std::vector<AM_val> getAssetTransferByKey(const flatbuffers::String *pubKey,
                                             bool uncommitted = false);
-
-  std::vector<AM_val> getPeerTxByCreator(const flatbuffers::String *pubKey,
+  std::vector<AM_val> getAccountAddByKey(const flatbuffers::String *pubKey,
                                          bool uncommitted = false);
-
-  std::vector<AM_val> getAssetTxBySender(const flatbuffers::String *senderKey,
-                                         bool uncommited = false);
-
-  std::vector<AM_val> getAssetTxByReceiver(
-      const flatbuffers::String *receiverKey, bool uncommited = false);
+  std::vector<AM_val> getAccountAddSignByKey(const flatbuffers::String *pubKey,
+                                             bool uncommitted = false);
+  std::vector<AM_val> getAccountRemoveByKey(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+  std::vector<AM_val> getAccountRemoveSignByKey(const flatbuffers::String *pubKey,
+                                                bool uncommitted = false);
+  std::vector<AM_val> getAccountSetUseKeysByKey(const flatbuffers::String *pubKey,
+                                                bool uncommitted = false);
+  std::vector<AM_val> getPeerAddByKey(const flatbuffers::String *pubKey,
+                                      bool uncommitted = false);
+  std::vector<AM_val> getPeerChangeTrustByKey(const flatbuffers::String *pubKey,
+                                              bool uncommitted = false);
+  std::vector<AM_val> getPeerRemoveByKey(const flatbuffers::String *pubKey,
+                                         bool uncommitted = false);
+  std::vector<AM_val> getPeerSetActiveByKey(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+  std::vector<AM_val> getPeerSetTrustByKey(const flatbuffers::String *pubKey,
+                                           bool uncommitted = false);
 
 
  private:

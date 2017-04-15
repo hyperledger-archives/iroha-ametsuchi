@@ -66,7 +66,7 @@ class WSV {
   std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
   MDB_txn *append_tx_;
 
-  uint32_t WSV_TREES_TOTAL;
+  uint32_t wsv_trees_total;
 
   // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
   std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;

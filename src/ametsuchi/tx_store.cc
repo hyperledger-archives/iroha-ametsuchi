@@ -50,27 +50,58 @@ void TxStore::append(const flatbuffers::Vector<uint8_t> *blob) {
     auto creator = tx->creatorPubKey();
     switch (tx->command_type()) {
       case iroha::Command::AssetCreate:
+        put_tx_into_tree_by_key(trees_.at("index_asset_create").second, creator,
+                                tx_store_total);
+        break;
       case iroha::Command::AssetAdd:
+        put_tx_into_tree_by_key(trees_.at("index_asset_add").second, creator,
+                                tx_store_total);
       case iroha::Command::AssetRemove:
+        put_tx_into_tree_by_key(trees_.at("index_asset_remove").second, creator,
+                                tx_store_total);
       case iroha::Command::AssetTransfer:
-        put_creator_into_tree(trees_.at("index_asset_creator").second, creator,
-                              tx_store_total);
+        put_tx_into_tree_by_key(trees_.at("index_asset_transfer").second,
+                                creator, tx_store_total);
         break;
       case iroha::Command::AccountAdd:
+        put_tx_into_tree_by_key(trees_.at("index_account_add").second, creator,
+                                tx_store_total);
+        break;
       case iroha::Command::AccountAddSignatory:
+        put_tx_into_tree_by_key(trees_.at("index_account_add_sign").second,
+                                creator, tx_store_total);
+        break;
       case iroha::Command::AccountRemove:
+        put_tx_into_tree_by_key(trees_.at("index_account_remove").second,
+                                creator, tx_store_total);
+        break;
       case iroha::Command::AccountRemoveSignatory:
+        put_tx_into_tree_by_key(trees_.at("index_account_remove_sign").second,
+                                creator, tx_store_total);
+        break;
       case iroha::Command::AccountSetUseKeys:
-        put_creator_into_tree(trees_.at("index_account_creator").second,
-                              creator, tx_store_total);
+        put_tx_into_tree_by_key(trees_.at("index_account_set_use_keys").second,
+                                creator, tx_store_total);
         break;
       case iroha::Command::PeerAdd:
+        put_tx_into_tree_by_key(trees_.at("index_peer_add").second, creator,
+                                tx_store_total);
+        break;
       case iroha::Command::PeerChangeTrust:
+        put_tx_into_tree_by_key(trees_.at("index_peer_change_trust").second,
+                                creator, tx_store_total);
+        break;
       case iroha::Command::PeerRemove:
+        put_tx_into_tree_by_key(trees_.at("index_peer_remove").second, creator,
+                                tx_store_total);
+        break;
       case iroha::Command::PeerSetActive:
+        put_tx_into_tree_by_key(trees_.at("index_peer_set_active").second,
+                                creator, tx_store_total);
+        break;
       case iroha::Command::PeerSetTrust:
-        put_creator_into_tree(trees_.at("index_peer_creator").second, creator,
-                              tx_store_total);
+        put_tx_into_tree_by_key(trees_.at("index_peer_set_trust").second,
+                                creator, tx_store_total);
         break;
       default:
         throw exception::InvalidTransaction::WRONG_COMMAND;
@@ -110,33 +141,21 @@ void TxStore::init(MDB_txn *append_tx) {
   append_tx_ = append_tx;
 
   // autoincrement_key => tx (NODUP)
-  trees_["tx_store"] =
-      init_btree(append_tx_, "tx_store", MDB_CREATE | MDB_INTEGERKEY);
+  create_new_tree(append_tx_, "tx_store", MDB_CREATE | MDB_INTEGERKEY);
 
-  // [pubkey] => [autoincrement_key] (DUP)
-  trees_["index_asset_creator"] =
-      init_btree(append_tx_, "index_asset_creator",
-                 MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+  auto name_set = {"index_asset_create",         "index_asset_add",
+                   "index_asset_remove",         "index_asset_transfer",
+                   "index_transfer_sender",      "index_transfer_receiver",
+                   "index_account_add",          "index_account_add_sign",
+                   "index_account_remove",       "index_account_remove_sign",
+                   "index_account_set_use_keys", "index_peer_add",
+                   "index_peer_change_trust",    "index_peer_remove",
+                   "index_peer_set_active",      "index_peer_set_trust"};
 
-  // [pubkey] => [autoincrement_key] (DUP)
-  trees_["index_account_creator"] =
-      init_btree(append_tx_, "index_account_creator",
-                 MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
-
-  // [pubkey] => [autoincrement_key] (DUP)
-  trees_["index_peer_creator"] =
-      init_btree(append_tx_, "index_peer_creator",
-                 MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
-
-  // [pubkey] => autoincrement_key (DUP)
-  trees_["index_transfer_sender"] =
-      init_btree(append_tx_, "index_transfer_sender",
-                 MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
-
-  // [pubkey] => autoincrement_key (DUP)
-  trees_["index_transfer_receiver"] =
-      init_btree(append_tx_, "index_transfer_receiver",
-                 MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+  // TxStore trees: [pubkey] => [autoincrement_key] (DUP)
+  for (auto name : name_set) {
+    create_new_tree(append_tx_, name, MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE);
+  }
 
   set_tx_total();
   assert(get_trees_total() == trees_.size());
@@ -175,14 +194,14 @@ void TxStore::close_dbi(MDB_env *env) {
   }
 }
 uint32_t TxStore::get_trees_total() {
-  TX_STORE_TREES_TOTAL = 6;
+  TX_STORE_TREES_TOTAL = 17;
   return TX_STORE_TREES_TOTAL;
 }
 
 
-void TxStore::put_creator_into_tree(MDB_cursor *cursor,
-                                    const flatbuffers::String *acc_pub_key,
-                                    size_t &tx_store_total) {
+void TxStore::put_tx_into_tree_by_key(MDB_cursor *cursor,
+                                      const flatbuffers::String *acc_pub_key,
+                                      size_t &tx_store_total) {
   MDB_val c_key, c_val;
   int res;
 
@@ -200,9 +219,9 @@ void TxStore::put_creator_into_tree(MDB_cursor *cursor,
 }
 
 
-std::vector<AM_val> TxStore::getTxByCreator(const std::string &tree_name,
-                                            const flatbuffers::String *pubKey,
-                                            bool uncommitted, MDB_env *env) {
+std::vector<AM_val> TxStore::getTxByKey(const std::string &tree_name,
+                                        const flatbuffers::String *pubKey,
+                                        bool uncommitted, MDB_env *env) {
   MDB_val c_key, c_val;
   MDB_cursor *cursor;
   MDB_txn *tx;
@@ -269,25 +288,76 @@ std::vector<AM_val> TxStore::getTxByCreator(const std::string &tree_name,
 
   return ret;
 }
-std::vector<AM_val> TxStore::getAssetTxByCreator(
-    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
-  return getTxByCreator("index_asset_creator", pubKey, uncommitted, env);
+
+
+
+void TxStore::create_new_tree(MDB_txn *append_tx, const std::string &name,
+                              uint32_t flags, MDB_cmp_func *dupsort) {
+  trees_[name] = init_btree(append_tx, name, flags, dupsort);
 }
-std::vector<AM_val> TxStore::getAccountTxByCreator(
-    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
-  return getTxByCreator("index_account_creator", pubKey, uncommitted, env);
-}
-std::vector<AM_val> TxStore::getPeerTxByCreator(
-    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
-  return getTxByCreator("index_peer_creator", pubKey, uncommitted, env);
-}
-std::vector<AM_val> TxStore::getAssetTxBySender(
+
+std::vector<AM_val> TxStore::getAssetTransferBySender(
     const flatbuffers::String *senderKey, bool uncommitted, MDB_env *env) {
-  return getTxByCreator("index_transfer_sender", senderKey, uncommitted, env);
+  return getTxByKey("index_transfer_sender", senderKey, uncommitted, env);
 }
-std::vector<AM_val> TxStore::getAssetTxByReceiver(
+std::vector<AM_val> TxStore::getAssetTransferByReceiver(
     const flatbuffers::String *receiverKey, bool uncommitted, MDB_env *env) {
-  return getTxByCreator("index_transfer_receiver", receiverKey, uncommitted,
-                        env);
+  return getTxByKey("index_transfer_receiver", receiverKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAssetCreateByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_asset_create", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAssetAddByKey(const flatbuffers::String *pubKey,
+                                              bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_asset_add", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAssetRemoveByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_asset_remove", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAssetTransferByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_asset_transfer", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAccountAddByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_account_add", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAccountAddSignByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_account_add_sign", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAccountRemoveByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_account_remove", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAccountRemoveSignByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_account_remove_sign", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getAccountSetUseKeysByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_account_set_use_keys", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getPeerAddByKey(const flatbuffers::String *pubKey,
+                                             bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_peer_add", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getPeerChangeTrustByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_peer_change_trust", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getPeerRemoveByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_peer_remove", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getPeerSetActiveByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_peer_set_active", pubKey, uncommitted, env);
+}
+std::vector<AM_val> TxStore::getPeerSetTrustByKey(
+    const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
+  return getTxByKey("index_peer_set_trust", pubKey, uncommitted, env);
 }
 }
