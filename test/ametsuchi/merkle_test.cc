@@ -210,16 +210,20 @@ TEST(NaiveMerkle, Tree4_1_Rollback) {
   size_t items_total = 3;
 
   merkle::MerkleTree tree(4);
+  tree.dump();
   for (size_t i = 0; i < items_total; i++) {
     tree.push(h);
+    tree.dump();
     auto root = tree.root();
     ASSERT_EQ(root, roots[i]) << "Expected root is different";
   }
 
+  printf("\n");
   for (size_t steps = 1; steps < 3; steps++) {
     tree.rollback(1);
+    tree.dump();
     auto root = tree.root();
-    ASSERT_EQ(root, roots[items_total - steps]) << "Rollback on " << steps
+    EXPECT_EQ(root, roots[items_total - steps - 1]) << "Rollback on " << steps
                                                 << " steps back failed";
   }
 }

@@ -73,6 +73,10 @@ class MerkleTree {
   static hash_t hash(const hash_t &a, const hash_t &b);
   static hash_t hash(const std::vector<uint8_t> &data);
 
+  /**
+   * for debug only
+   */
+  void dump();
  private:
   using tree_t = std::vector<hash_t>;
   std::list<tree_t> trees_;

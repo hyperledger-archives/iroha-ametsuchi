@@ -16,6 +16,8 @@
  */
 
 #include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <iomanip>
+#include <sstream>
 
 namespace ametsuchi {
 namespace merkle {
@@ -132,7 +134,7 @@ void MerkleTree::rollback(size_t steps) {
 
   tree_t &tree = trees_.back();
 
-  i_current_ = i_current_ - steps;
+  i_current_ = i_current_ - steps - 1;
   push(tree[i_current_ - 1]);
 }
 
@@ -168,6 +170,34 @@ hash_t MerkleTree::hash(const std::vector<uint8_t> &data) {
   return output;
 }
 
+void MerkleTree::dump() {
+  tree_t &tree = trees_.back();
+
+  std::string out = "[";
+  for (size_t i = 0; i < tree.size(); i++) {
+    if (i == i_root_) out += "\033[0;31m";     // root = red
+    if (i == i_current_) out += "\033[0;32m";  // current = yellow
+
+    if (tree[i][0] == 0 && tree[i][1] == 0) {
+      out += "0";
+    } else {
+      const char alph[] = "0123456789abcdef";
+      for (size_t j = 0; j < 2; j++) {
+        out += alph[(tree[i][j] / 16)];
+        out += alph[(tree[i][j] % 16)];
+      }
+    }
+
+    if (i == i_root_) out += "\033[0m";
+    if (i == i_current_) out += "\033[0m";
+
+    if (i != tree.size() - 1) out += ", ";
+  }
+
+  out += "]";
+
+  printf("%s\n", out.c_str());
+}
 
 }  // namespace merkle
 }  // namespace ametsuchi
