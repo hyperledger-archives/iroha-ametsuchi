@@ -21,6 +21,7 @@
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <unordered_map>
+#include "common.h"
 
 namespace ametsuchi {
 
@@ -42,12 +43,47 @@ class TxStore {
  */
   void close_dbi(MDB_env *env);
 
+  /*
+   * Get number of trees used in tx_store
+   */
+  uint32_t get_trees_total();
+
+
+  std::vector<AM_val> getAssetTxByCreator(const flatbuffers::String *pubKey,
+                                          bool uncommitted = true,
+                                          MDB_env *env = nullptr);
+
+  std::vector<AM_val> getAccountTxByCreator(const flatbuffers::String *pubKey,
+                                            bool uncommitted = true,
+                                            MDB_env *env = nullptr);
+
+  std::vector<AM_val> getPeerTxByCreator(const flatbuffers::String *pubKey,
+                                         bool uncommitted = true,
+                                         MDB_env *env = nullptr);
+
+  std::vector<AM_val> getAssetTxBySender(const flatbuffers::String *senderKey,
+                                         bool uncommitted = true,
+                                         MDB_env *env = nullptr);
+
+  std::vector<AM_val> getAssetTxByReceiver(const flatbuffers::String *receiverKey,
+                                           bool uncommitted = true,
+                                           MDB_env *env = nullptr);
 
  private:
   size_t tx_store_total;
   std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
   MDB_txn *append_tx_;
   void set_tx_total();
+  uint32_t TX_STORE_TREES_TOTAL;
+  void put_creator_into_tree(MDB_cursor *cursor,
+                             const flatbuffers::String *acc_pub_key,
+                             size_t &tx_store_total);
+
+
+  std::vector<AM_val> getTxByCreator(const std::string &tree_name,
+                                     const flatbuffers::String *pubKey,
+                                     bool uncommitted = true,
+                                     MDB_env *env = nullptr);
 };
 }
 

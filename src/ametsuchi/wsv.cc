@@ -24,6 +24,7 @@ namespace ametsuchi {
 
 void WSV::init(MDB_txn *append_tx) {
   append_tx_ = append_tx;
+
   // [pubkey] => assets (DUP)
   trees_["wsv_pubkey_assets"] = init_btree(
       append_tx_, "wsv_pubkey_assets", MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE,
@@ -42,6 +43,8 @@ void WSV::init(MDB_txn *append_tx) {
 
   // we should know created assets, so read entire table in memory
   read_created_assets();
+
+  assert(get_trees_total() == trees_.size());
 }
 
 void WSV::update(const flatbuffers::Vector<uint8_t> *blob) {
@@ -290,69 +293,6 @@ void WSV::asset_transfer(const iroha::AssetTransfer *command) {
                              command->asset()->size());
 }
 
-
-AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
-                            const flatbuffers::String *ln,
-                            const flatbuffers::String *dn,
-                            const flatbuffers::String *cn, bool uncommitted,
-                            MDB_env *env) {
-  MDB_val c_key, c_val;
-  MDB_cursor *cursor;
-  MDB_txn *tx;
-  int res;
-
-  std::string pk;
-  pk += ln->data();
-  pk += dn->data();
-  pk += cn->data();
-
-  // if given asset exists, then we can get its blob, which consists of {ledger
-  // name, domain name and asset name} to speedup read in DUP btree, because we
-  // have custom comparator
-  auto blob = created_assets_.find(pk);
-  if (blob != created_assets_.end()) {
-    // asset found, use asset's flatbuffer to find asset in account faster
-    c_val.mv_data = (void *)blob->second.data();
-    c_val.mv_size = blob->second.size();
-  } else {
-    throw exception::InvalidTransaction::ASSET_NOT_FOUND;
-  }
-
-  // depending on 'uncommitted' we use RO or RW transaction
-  if (uncommitted) {
-    // reuse existing cursor and "append" transaction
-    cursor = trees_.at("wsv_pubkey_assets").second;
-    tx = append_tx_;
-  } else {
-    // create read-only transaction, create new RO cursor
-    if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &tx))) {
-      AMETSUCHI_CRITICAL(res, MDB_PANIC);
-      AMETSUCHI_CRITICAL(res, MDB_MAP_RESIZED);
-      AMETSUCHI_CRITICAL(res, MDB_READERS_FULL);
-      AMETSUCHI_CRITICAL(res, ENOMEM);
-    }
-
-    if ((res ==
-         mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
-      AMETSUCHI_CRITICAL(res, EINVAL);
-    }
-  }
-
-  // query asset by public key
-  c_key.mv_data = (void *)pubKey->data();
-  c_key.mv_size = pubKey->size();
-
-  // if sender has no such asset, then it is incorrect transaction
-  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_GET_BOTH))) {
-    if (res == MDB_NOTFOUND)
-      throw exception::InvalidTransaction::ASSET_NOT_FOUND;
-    AMETSUCHI_CRITICAL(res, EINVAL);
-  }
-
-  return AM_val(c_val);
-}
-
-
 void WSV::account_add(const iroha::AccountAdd *command) {
   MDB_val c_key, c_val;
   int res;
@@ -379,7 +319,6 @@ void WSV::account_add(const iroha::AccountAdd *command) {
   }
 }
 
-
 void WSV::account_remove(const iroha::AccountRemove *command) {
   MDB_val c_key, c_val;
   int res;
@@ -388,7 +327,6 @@ void WSV::account_remove(const iroha::AccountRemove *command) {
 
   c_key.mv_data = (void *)(pubkey->data());
   c_key.mv_size = pubkey->size();
-
 
   // move cursor to account in pubkey_account tree
   auto cursor = trees_.at("wsv_pubkey_account").second;
@@ -419,6 +357,7 @@ void WSV::account_remove(const iroha::AccountRemove *command) {
     AMETSUCHI_CRITICAL(res, EACCES);
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
+
 }
 
 void WSV::peer_add(const iroha::PeerAdd *command) {
@@ -477,6 +416,73 @@ void WSV::peer_remove(const iroha::PeerRemove *command) {
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 }
+
+AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
+                            const flatbuffers::String *ln,
+                            const flatbuffers::String *dn,
+                            const flatbuffers::String *cn, bool uncommitted,
+                            MDB_env *env) {
+  MDB_val c_key, c_val;
+  MDB_cursor *cursor;
+  MDB_txn *tx;
+  int res;
+
+  std::string pk;
+  pk += ln->data();
+  pk += dn->data();
+  pk += cn->data();
+
+  // if given asset exists, then we can get its blob, which consists of {ledger
+  // name, domain name and asset name} to speedup read in DUP btree, because we
+  // have custom comparator
+  auto blob = created_assets_.find(pk);
+  if (blob != created_assets_.end()) {
+    // asset found, use asset's flatbuffer to find asset in account faster
+    c_val.mv_data = (void *)blob->second.data();
+    c_val.mv_size = blob->second.size();
+  } else {
+    throw exception::InvalidTransaction::ASSET_NOT_FOUND;
+  }
+
+  // depending on 'uncommitted' we use RO or RW transaction
+  if (uncommitted) {
+    // reuse existing cursor and "append" transaction
+    cursor = trees_.at("wsv_pubkey_assets").second;
+    tx = append_tx_;
+  } else {
+    // create read-only transaction, create new RO cursor
+    if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &tx))) {
+      AMETSUCHI_CRITICAL(res, MDB_PANIC);
+      AMETSUCHI_CRITICAL(res, MDB_MAP_RESIZED);
+      AMETSUCHI_CRITICAL(res, MDB_READERS_FULL);
+      AMETSUCHI_CRITICAL(res, ENOMEM);
+    }
+
+    if ((res ==
+        mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
+      AMETSUCHI_CRITICAL(res, EINVAL);
+    }
+  }
+
+  // query asset by public key
+  c_key.mv_data = (void *)pubKey->data();
+  c_key.mv_size = pubKey->size();
+
+  // if sender has no such asset, then it is incorrect transaction
+  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_GET_BOTH))) {
+    if (res == MDB_NOTFOUND)
+      throw exception::InvalidTransaction::ASSET_NOT_FOUND;
+    AMETSUCHI_CRITICAL(res, EINVAL);
+  }
+
+  if (!uncommitted)
+  {
+    mdb_cursor_close(cursor);
+    mdb_txn_abort(tx);
+  }
+  return AM_val(c_val);
+}
+
 std::vector<AM_val> WSV::accountGetAllAssets(const flatbuffers::String *pubKey,
                                              bool uncommitted, MDB_env *env) {
   MDB_val c_key, c_val;
@@ -527,6 +533,11 @@ std::vector<AM_val> WSV::accountGetAllAssets(const flatbuffers::String *pubKey,
     }
   } while (res == 0);
 
+  if (!uncommitted)
+  {
+    mdb_cursor_close(cursor);
+    mdb_txn_abort(tx);
+  }
   return ret;
 }
 
@@ -535,5 +546,9 @@ void WSV::close_dbi(MDB_env* env) {
     auto dbi = it.second.first;
     mdb_dbi_close(env, dbi);
   }
+}
+uint32_t WSV::get_trees_total() {
+  WSV_TREES_TOTAL = 4;
+  return WSV_TREES_TOTAL;
 }
 }

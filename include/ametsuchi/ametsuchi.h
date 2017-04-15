@@ -82,7 +82,8 @@ class Ametsuchi {
   void rollback();
 
   merkle::hash_t merkle_root();
-
+  // ********************
+  // Ametsuchi queries:
   /**
  * Returns all assets, which belong to user with \p pubKey.
  * @param pubKey - account's public key
@@ -109,6 +110,22 @@ class Ametsuchi {
                          const flatbuffers::String *cn,
                          bool uncommitted = false);
 
+  std::vector<AM_val> getAssetTxByCreator(const flatbuffers::String *pubKey,
+                                          bool uncommited = false);
+
+  std::vector<AM_val> getAccountTxByCreator(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+
+  std::vector<AM_val> getPeerTxByCreator(const flatbuffers::String *pubKey,
+                                         bool uncommitted = false);
+
+  std::vector<AM_val> getAssetTxBySender(const flatbuffers::String *senderKey,
+                                         bool uncommited = false);
+
+  std::vector<AM_val> getAssetTxByReceiver(
+      const flatbuffers::String *receiverKey, bool uncommited = false);
+
+
  private:
   /* for internal use only */
 
@@ -119,6 +136,8 @@ class Ametsuchi {
 
   TxStore tx_store;
   WSV wsv;
+
+  uint32_t AMETSUCHI_TREES_TOTAL;
 
 
   void init();

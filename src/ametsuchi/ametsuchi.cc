@@ -20,9 +20,6 @@
 
 // static auto console = spdlog::stdout_color_mt("ametsuchi");
 
-// TODO: remove this
-#define AMETSUCHI_TREES_TOTAL 8
-
 
 namespace ametsuchi {
 
@@ -34,6 +31,16 @@ Ametsuchi::Ametsuchi(const std::string &db_folder)
   // in case of any errors print error to stdout and exit
   init();
 }
+
+
+Ametsuchi::~Ametsuchi() {
+  abort_append_tx();
+
+  tx_store.close_dbi(env);
+  wsv.close_dbi(env);
+  mdb_env_close(env);
+}
+
 
 merkle::hash_t Ametsuchi::append(const flatbuffers::Vector<uint8_t> *blob) {
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
@@ -88,54 +95,6 @@ void Ametsuchi::rollback() {
   init_append_tx();
 }
 
-// std::vector<const MDB_val> Ametsuchi::getAddTxByCreator(const std::string
-// &pubKey) {
-// TODO
-/*
-int res;
-
-std::vector<ByteArray> ret;
-
-MDB_val c_key, c_val;
-MDB_txn *read_tx;
-MDB_dbi read_dbi;
-MDB_cursor *cursor;
-
-c_key.mv_size = pubKey.size();
-c_key.mv_data = (void *)pubKey.c_str();
-
-if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &read_tx))) {
-  if (res == MDB_PANIC) console->critical("getAddTxByCreator: MDB_PANIC");
-  if (res == MDB_MAP_RESIZED)
-    console->critical("getAddTxByCreator: MDB_MAP_RESIZED ");
-  if (res == MDB_READERS_FULL)
-    console->critical("getAddTxByCreator: MDB_READERS_FULL");
-  if (res == ENOMEM) console->critical("getAddTxByCreator: ENOMEM");
-  exit(res);
-}
-mdb_dbi_open(read_tx, "add_creator", MDB_DUPSORT | MDB_DUPFIXED, &read_dbi);
-mdb_cursor_open(read_tx, read_dbi, &cursor);
-
-
-if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET)) ==
-    MDB_NOTFOUND) {                 // no items with given key
-  return std::vector<ByteArray>{};  // return empty vector
-}
-
-do {
-  size_t index = *static_cast<size_t *>(c_val.mv_data);
-  ret.push_back(tx_->get(index));
-
-  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT_DUP)) ==
-      MDB_NOTFOUND) {  // no more items with given key
-    break;
-  }
-} while (!res);
-
-return ret;
- */
-//}
-
 
 void Ametsuchi::abort_append_tx() {
   tx_store.close_cursors();
@@ -178,8 +137,8 @@ void Ametsuchi::init() {
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
+  AMETSUCHI_TREES_TOTAL = wsv.get_trees_total() + tx_store.get_trees_total();
   // set number of databases in single file
-  // TODO: change maxdbs
   if ((res = mdb_env_set_maxdbs(env, AMETSUCHI_TREES_TOTAL))) {
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
@@ -211,14 +170,10 @@ void Ametsuchi::init_append_tx() {
     AMETSUCHI_CRITICAL(res, MDB_READERS_FULL);
     AMETSUCHI_CRITICAL(res, ENOMEM);
   }
+  // Create database instances for each tree, open cursors for each tree, save
+  // them in map for tx_store and wsv
   tx_store.init(append_tx_);
-  // create database instances for each tree, open cursors for each tree, save
-  // them in map this.trees_: [name] => std::pair<dbi, cursor>
   wsv.init(append_tx_);
-
-  // TODO: remove it
-  // assert(AMETSUCHI_TREES_TOTAL == trees_.size());
-
   // stats about db
   mdb_env_stat(env, &mst);
 }
@@ -239,16 +194,27 @@ AM_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
 }
 
 
-Ametsuchi::~Ametsuchi() {
-  abort_append_tx();
-
-  tx_store.close_dbi(env);
-  wsv.close_dbi(env);
-  mdb_env_close(env);
-}
-
-
 merkle::hash_t Ametsuchi::merkle_root() { return tree.root(); }
 
+std::vector<AM_val> Ametsuchi::getAssetTxByCreator(
+    const flatbuffers::String *pubKey, bool uncommitted) {
+  return tx_store.getAssetTxByCreator(pubKey, uncommitted, env);
+}
+std::vector<AM_val> Ametsuchi::getAccountTxByCreator(
+    const flatbuffers::String *pubKey, bool uncommitted) {
+  return tx_store.getAccountTxByCreator(pubKey, uncommitted, env);
+}
+std::vector<AM_val> Ametsuchi::getPeerTxByCreator(
+    const flatbuffers::String *pubKey, bool uncommitted) {
+  return tx_store.getPeerTxByCreator(pubKey, uncommitted, env);
+}
+std::vector<AM_val> Ametsuchi::getAssetTxBySender(
+    const flatbuffers::String *senderKey, bool uncommitted) {
+  return tx_store.getAssetTxBySender(senderKey, uncommitted, env);
+}
+std::vector<AM_val> Ametsuchi::getAssetTxByReceiver(
+    const flatbuffers::String *receiverKey, bool uncommitted) {
+  return tx_store.getAssetTxByReceiver(receiverKey, uncommitted, env);
+}
 
 }  // namespace ametsuchi

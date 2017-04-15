@@ -57,11 +57,16 @@ class WSV {
   std::vector<AM_val> accountGetAllAssets(const flatbuffers::String *pubKey,
                                           bool uncommitted = true,
                                           MDB_env *env = nullptr);
-
+  /*
+   * Get total number of trees
+   */
+  uint32_t get_trees_total();
 
  private:
   std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
   MDB_txn *append_tx_;
+
+  uint32_t WSV_TREES_TOTAL;
 
   // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
   std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;
