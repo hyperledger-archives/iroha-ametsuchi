@@ -31,7 +31,7 @@ class WSV {
   WSV();
   ~WSV();
 
-  void update(const flatbuffers::Vector<uint8_t> *blob);
+  void update(const std::vector<uint8_t> *blob);
 
   void init(MDB_txn *append_tx);
 

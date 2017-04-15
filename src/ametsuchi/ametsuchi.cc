@@ -42,7 +42,7 @@ Ametsuchi::~Ametsuchi() {
 }
 
 
-merkle::hash_t Ametsuchi::append(const flatbuffers::Vector<uint8_t> *blob) {
+merkle::hash_t Ametsuchi::append(const std::vector<uint8_t> *blob) {
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
 
   MDB_val c_key, c_val;
@@ -61,7 +61,7 @@ merkle::hash_t Ametsuchi::append(const flatbuffers::Vector<uint8_t> *blob) {
 }
 
 merkle::hash_t Ametsuchi::append(
-    const std::vector<flatbuffers::Vector<uint8_t> *> &batch) {
+    const std::vector<std::vector<uint8_t> *> &batch) {
   for (auto t : batch) {
     append(t);
 

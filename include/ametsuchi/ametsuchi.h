@@ -66,9 +66,10 @@ class Ametsuchi {
    * @param tx root type Transaction (contents of TransactionWrapper->tx array)
    * @return new merkle root
    */
-  merkle::hash_t append(const flatbuffers::Vector<uint8_t> *tx);
+  //TODO make Flatbuffer vector
+  merkle::hash_t append(const std::vector<uint8_t> *tx);
   merkle::hash_t append(
-      const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
+      const std::vector<std::vector<uint8_t> *> &batch);
 
   /**
    * Commit appended data to database. Commit creates the latest 'checkpoint',

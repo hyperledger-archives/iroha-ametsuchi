@@ -19,16 +19,15 @@
 #ifndef AMETSUCHI_COMMON_H
 #define AMETSUCHI_COMMON_H
 
-
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <ametsuchi/exception.h>
 
 namespace ametsuchi{
 
-static auto console = spdlog::stdout_color_mt("ametsuchi");
+extern std::shared_ptr<spdlog::logger> console;
 
-std::pair<MDB_dbi, MDB_cursor*> init_btree(MDB_txn* append_tx, const std::string &name, uint32_t flags,
+inline std::pair<MDB_dbi, MDB_cursor*> init_btree(MDB_txn* append_tx, const std::string &name, uint32_t flags,
                          MDB_cmp_func *dupsort = NULL) {
   int res;
   MDB_dbi dbi;
@@ -65,7 +64,7 @@ struct AM_val {
 };
 
 
-std::vector<std::pair<AM_val, AM_val>> read_all_records(MDB_cursor *cursor) {
+inline std::vector<std::pair<AM_val, AM_val>> read_all_records(MDB_cursor *cursor) {
   MDB_val c_key, c_val;
   int res;
 

@@ -30,7 +30,7 @@ class TxStore {
   TxStore();
   ~TxStore();
 
-  void append(const flatbuffers::Vector<uint8_t> *blob);
+  void append(const std::vector<uint8_t> *blob);
   void init(MDB_txn *append_tx);
 
   /**

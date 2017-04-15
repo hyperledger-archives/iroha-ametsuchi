@@ -47,7 +47,7 @@ void WSV::init(MDB_txn *append_tx) {
   assert(get_trees_total() == trees_.size());
 }
 
-void WSV::update(const flatbuffers::Vector<uint8_t> *blob) {
+void WSV::update(const std::vector<uint8_t> *blob) {
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
   // 4. update WSV
   {
@@ -161,8 +161,11 @@ void WSV::asset_create(const iroha::AssetCreate *command) {
 
 void WSV::asset_add(const iroha::AssetAdd *command) {
   // Now only Currency is supported
-  if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency)
+  if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency) {
+    //TODO: How to check the asset_type?
+    printf("This asset is not an currency \n");
     throw exception::InternalError::NOT_IMPLEMENTED;
+  }
 
   account_add_currency(command->accPubKey(),
                        (iroha::Currency *)command->asset()->data(),
@@ -548,7 +551,7 @@ void WSV::close_dbi(MDB_env* env) {
   }
 }
 uint32_t WSV::get_trees_total() {
-  WSV_TREES_TOTAL = 4;
-  return WSV_TREES_TOTAL;
+  wsv_trees_total = 4;
+  return wsv_trees_total;
 }
 }

@@ -23,7 +23,7 @@
 namespace ametsuchi {
 
 
-void TxStore::append(const flatbuffers::Vector<uint8_t> *blob) {
+void TxStore::append(const std::vector<uint8_t> *blob) {
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
 
   MDB_val c_key, c_val;

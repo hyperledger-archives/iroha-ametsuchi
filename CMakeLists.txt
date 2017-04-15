@@ -57,6 +57,7 @@ set(AMETSUCHI_SRC
   src/ametsuchi/tx_store.cc
   src/ametsuchi/wsv.cc
   src/ametsuchi/currency.cc
+  src/ametsuchi/common.cc
   src/ametsuchi/merkle_tree/merkle_tree.cc
   )
 
