@@ -183,9 +183,10 @@ std::vector<hash_t> roots = {
     str2hex("1408519e75164ccfce0bd858b1c32f53dda2422f77adc2166508cbbd658ebab4"),
     str2hex("eef6f63a47272f280cb39f72d2ada587411e95c488d402044df20072630a8b9f"),
     str2hex("e618578c471c0eae2a05121d8bbe4a67cccb53f9511286bb60d93c295afcd263"),
-    str2hex("f13ec23c48a494d98b10cd5144dd0e3d8e2619222921e72aa403a0cead44a296")};
+    str2hex(
+        "f13ec23c48a494d98b10cd5144dd0e3d8e2619222921e72aa403a0cead44a296")};
 
-TEST(NaiveMerkle, Tree4) {
+TEST(NaiveMerkle, Tree4_1block) {
   // should with size 4
   merkle::MerkleTree tree(4);
   for (size_t i = 0; i < 8; i++) {
@@ -194,6 +195,35 @@ TEST(NaiveMerkle, Tree4) {
     ASSERT_EQ(root, roots[i]);
   }
 }
+
+TEST(NaiveMerkle, Tree4_2blocks) {
+  // tree with size 4, which stores 2 blocks
+  merkle::MerkleTree tree(4, 2);
+  for (size_t i = 0; i < 8; i++) {
+    tree.push(h);
+    auto root = tree.root();
+    ASSERT_EQ(root, roots[i]) << "Expected root is different.";
+  }
+}
+
+TEST(NaiveMerkle, Tree4_1_Rollback) {
+  size_t items_total = 3;
+
+  merkle::MerkleTree tree(4);
+  for (size_t i = 0; i < items_total; i++) {
+    tree.push(h);
+    auto root = tree.root();
+    ASSERT_EQ(root, roots[i]) << "Expected root is different";
+  }
+
+  for (size_t steps = 1; steps < 3; steps++) {
+    tree.rollback(1);
+    auto root = tree.root();
+    ASSERT_EQ(root, roots[items_total - steps]) << "Rollback on " << steps
+                                                << " steps back failed";
+  }
+}
+
 
 TEST(NaiveMerkle, Tree128_100k_pushes) {
   merkle::MerkleTree tree(128);

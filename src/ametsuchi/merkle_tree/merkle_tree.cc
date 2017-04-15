@@ -42,37 +42,39 @@ static inline size_t ceil2(size_t x) {
   return l == x ? l : l + 1;
 }
 
-MerkleTree::MerkleTree(size_t leafs) : leafs_(0) {
+static inline size_t treesize(size_t leafs) { return leafs * 2 - 1; }
+
+MerkleTree::MerkleTree(size_t leafs, size_t blocks) : leafs_(0) {
+  if (blocks == 0) throw std::bad_alloc();
+
+  max_blocks_ = blocks;
+
   // round number of leafs to the power of 2
   leafs_ = ceil2(leafs);
 
   // full tree size
-  size_ = leafs_ * 2 - 1;
-  tree_.resize(size_);
+  size_ = treesize(leafs_);
+  trees_.push_back(tree_t(size_));
 
   i_current_ = leafs_ - 1;
   i_root_ = i_current_;
 }
 
-hash_t MerkleTree::root() { return tree_[i_root_]; }
+hash_t MerkleTree::root() { return trees_.back()[i_root_]; }
 
 void MerkleTree::push(const hash_t &item) {
+  tree_t &tree = trees_.back();
+
   if (i_current_ == leafs_ - 1) {
     // this is the very first push. just move item to the leftmost leaf
-    tree_[i_current_] = item;
+    tree[i_current_] = item;
     i_root_ = i_current_++;
     return;
   }
 
-  if (i_current_ == size_) {
-    // tree is complete, logically means creation of a NEW BLOCK
-    tree_[leafs_ - 1] = tree_[0];  // copy root to leftmost leaf
-    i_root_ = leafs_ - 1;          // change root pointer
-    i_current_ = leafs_;           // change pointer to current free cell
-  }
 
   // copy hash to current empty position
-  tree_[i_current_] = item;
+  tree[i_current_] = item;
 
   // find LCA(leftmost leaf, i_current_)
   // LCA is this many levels above:
@@ -84,9 +86,9 @@ void MerkleTree::push(const hash_t &item) {
     size_t right = this->right(subtree_root);
     if (current == left) {
       // no right child, just pass left child as hash to parent
-      tree_[subtree_root] = tree_[left];
+      tree[subtree_root] = tree[left];
     } else {
-      tree_[subtree_root] = hash(tree_[left], tree_[right]);
+      tree[subtree_root] = hash(tree[left], tree[right]);
     }
 
     // new root resides at this cell:
@@ -97,6 +99,41 @@ void MerkleTree::push(const hash_t &item) {
   }
 
   i_current_++;
+
+  // if current tree is full, allocate new tree
+  if (i_current_ == size_) {
+    // tree is complete, logically means creation of a NEW BLOCK
+
+    // allocate new tree
+    trees_.push_back(std::move(tree_t(size_)));
+    tree_t &last = trees_.back();
+
+    last[leafs_ - 1] = tree[0];  // copy root to leftmost leaf
+    i_root_ = leafs_ - 1;        // change root pointer
+    i_current_ = leafs_;         // change pointer to current free cell
+
+    // remove the least recently used tree
+    if (trees_.size() == max_blocks_ + 2) trees_.pop_front();
+
+    return;
+  }
+}
+
+void MerkleTree::rollback(size_t steps) {
+  // just do nothing
+  if (steps == 0) return;
+  // we can not rollback to more than this many steps:
+  if (steps / leafs_ >= max_blocks_) throw std::bad_exception();
+
+  while (steps / leafs_ > 0) {
+    steps /= leafs_;
+    trees_.pop_back();
+  }
+
+  tree_t &tree = trees_.back();
+
+  i_current_ = i_current_ - steps;
+  push(tree[i_current_ - 1]);
 }
 
 void MerkleTree::push(hash_t &&item) {
@@ -130,6 +167,7 @@ hash_t MerkleTree::hash(const std::vector<uint8_t> &data) {
   SHA3_256(output.data(), data.data(), data.size());
   return output;
 }
+
 
 }  // namespace merkle
 }  // namespace ametsuchi

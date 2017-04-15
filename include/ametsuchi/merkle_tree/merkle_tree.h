@@ -20,6 +20,7 @@
 
 #include <array>
 #include <cstdint>
+#include <list>
 #include <vector>
 
 extern "C" {
@@ -49,9 +50,11 @@ class MerkleTree {
  public:
   /**
    * Constructor
-   * @param leafs - a number of leaf nodes in a tree
+   * @param leafs - a number of leaf nodes in a tree.
+   * @param max_rollback - maximum steps on which you can rollback a tree.
+   * Default = \p leafs.
    */
-  explicit MerkleTree(size_t leafs);
+  explicit MerkleTree(size_t leafs, size_t blocks = 1);
 
   /**
    * Get Merkle root. O(1)
@@ -65,11 +68,16 @@ class MerkleTree {
   void push(const hash_t &item);
   void push(hash_t &&item);
 
+  void rollback(size_t steps);
+
   static hash_t hash(const hash_t &a, const hash_t &b);
   static hash_t hash(const std::vector<uint8_t> &data);
 
  private:
-  std::vector<hash_t> tree_;
+  using tree_t = std::vector<hash_t>;
+  std::list<tree_t> trees_;
+
+  size_t max_blocks_;
   size_t size_;       // total size of a tree (rightmost leaf index)
   size_t leafs_;      // leafs, total. Power of 2
   size_t i_current_;  // a pointer to the next free cell in leafs
