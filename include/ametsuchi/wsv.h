@@ -48,9 +48,9 @@ class WSV {
 
   // WSV queries:
   AM_val accountGetAsset(const flatbuffers::String *pubKey,
-                         const flatbuffers::String *ln,
-                         const flatbuffers::String *dn,
-                         const flatbuffers::String *an, bool uncommitted = true,
+                         const flatbuffers::String *ledger_name,
+                         const flatbuffers::String *domain_name,
+                         const flatbuffers::String *asset_name, bool uncommitted = true,
                          MDB_env *env = nullptr);
 
 

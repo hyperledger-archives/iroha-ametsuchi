@@ -66,7 +66,6 @@ struct AM_val {
 
 
 std::vector<std::pair<AM_val, AM_val>> read_all_records(MDB_cursor *cursor) {
-  //MDB_cursor *cursor = trees_.at(tree_name).second;
   MDB_val c_key, c_val;
   int res;
 

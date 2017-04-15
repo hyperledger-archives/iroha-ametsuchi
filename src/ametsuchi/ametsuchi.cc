@@ -186,11 +186,11 @@ std::vector<AM_val> Ametsuchi::accountGetAllAssets(
 
 
 AM_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
-                                  const flatbuffers::String *ln,
-                                  const flatbuffers::String *dn,
-                                  const flatbuffers::String *cn,
+                                  const flatbuffers::String *ledger_name,
+                                  const flatbuffers::String *domain_name,
+                                  const flatbuffers::String *asset_name,
                                   bool uncommitted) {
-  return wsv.accountGetAsset(pubKey, ln, dn, cn, uncommitted, env);
+  return wsv.accountGetAsset(pubKey, ledger_name, domain_name, asset_name, uncommitted, env);
 }
 
 

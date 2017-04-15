@@ -97,17 +97,17 @@ class Ametsuchi {
   /**
    * Returns specific asset, which belong to user with \p pubKey.
    * @param pubKey - account's public key
-   * @param ln - ledger name
-   * @param dn - domain name
-   * @param an - asset (currency) name
+   * @param ledger_name - ledger name
+   * @param domain_name - domain name
+   * @param asset_name - asset (currency) name
    * @param uncommitted - if true, include uncommitted changes to search.
  * Otherwise create new read-only TX
    * @return pair <pointer, size>, which are mmaped from disk
    */
   AM_val accountGetAsset(const flatbuffers::String *pubKey,
-                         const flatbuffers::String *ln,
-                         const flatbuffers::String *dn,
-                         const flatbuffers::String *cn,
+                         const flatbuffers::String *ledger_name,
+                         const flatbuffers::String *domain_name,
+                         const flatbuffers::String *asset_name,
                          bool uncommitted = false);
 
   std::vector<AM_val> getAssetTxByCreator(const flatbuffers::String *pubKey,
@@ -144,10 +144,6 @@ class Ametsuchi {
 
   void init_append_tx();
   void abort_append_tx();
-
-
-  // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
-  std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;
 
   merkle::MerkleTree tree;
 };

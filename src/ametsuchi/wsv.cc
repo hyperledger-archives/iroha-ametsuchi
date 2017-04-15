@@ -420,7 +420,7 @@ void WSV::peer_remove(const iroha::PeerRemove *command) {
 AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
                             const flatbuffers::String *ln,
                             const flatbuffers::String *dn,
-                            const flatbuffers::String *cn, bool uncommitted,
+                            const flatbuffers::String *an, bool uncommitted,
                             MDB_env *env) {
   MDB_val c_key, c_val;
   MDB_cursor *cursor;
@@ -430,7 +430,7 @@ AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
   std::string pk;
   pk += ln->data();
   pk += dn->data();
-  pk += cn->data();
+  pk += an->data();
 
   // if given asset exists, then we can get its blob, which consists of {ledger
   // name, domain name and asset name} to speedup read in DUP btree, because we
