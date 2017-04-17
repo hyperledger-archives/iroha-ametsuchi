@@ -19,6 +19,7 @@
 #define AMETSUCHI_EXCEPTION_H
 
 #include <string>
+#include <spdlog/spdlog.h>
 
 namespace ametsuchi {
 namespace exception {
@@ -52,6 +53,10 @@ class Exception : public std::exception {
    */
   virtual const char* what() const throw() { return msg_.c_str(); }
 
+
+
+
+
  protected:
   /** Error message.
    */
@@ -66,10 +71,20 @@ enum class InvalidTransaction {
   ASSET_NOT_FOUND,
   ACCOUNT_EXISTS,
   ACCOUNT_NOT_FOUND,
-  NOT_ENOUGH_ASSETS
+  NOT_ENOUGH_ASSETS,
+  WRONG_COMMAND
 };
 
 enum class InternalError { FATAL, NOT_IMPLEMENTED };
+
+#define AMETSUCHI_CRITICAL(res, err)                                      \
+    if (res == err) {                                                       \
+      console->critical("{}", mdb_strerror(res));                           \
+      console->critical("err in {} at #{} in file {}", __PRETTY_FUNCTION__, \
+                        __LINE__, __FILE__);                                \
+      throw exception::InternalError::FATAL;                                \
+    }
+
 }
 }
 

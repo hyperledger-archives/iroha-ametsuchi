@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
+
 #include <ametsuchi/ametsuchi.h>
 #include <ametsuchi/generated/transaction_generated.h>
-#include <gtest/gtest.h>
 #include <flatbuffers/flatbuffers.h>
-#include <lmdb.h>
+#include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
+#include "../generator/tx_generator.h"
 
 class Ametsuchi_Test : public ::testing::Test {
  protected:
@@ -34,39 +34,52 @@ class Ametsuchi_Test : public ::testing::Test {
 
 
 TEST_F(Ametsuchi_Test, AssetTest) {
-  // create command
-  flatbuffers::FlatBufferBuilder builder;
+ // ASSERT_NO_THROW({
+    flatbuffers::FlatBufferBuilder fbb(2048);
+    // Create asset dollar
+    auto blob = generator::random_transaction(
+        fbb, iroha::Command::AssetCreate,
+        generator::random_AssetCreate(fbb, "Dollar", "USA", "l1").Union());
+    flatbuffers::GetRoot<iroha::Transaction>(blob.data());
+    ametsuchi_.append(&blob);
 
-  auto asset_name = builder.CreateString("Dollar");
-  auto domain_name = builder.CreateString("USA");
-  auto ledger_name = builder.CreateString("ledger1");
-  auto creator_pub_key = builder.CreateString("1");
-  auto asset_create = iroha::CreateAssetCreate(builder, asset_name, domain_name,
-                                               ledger_name, creator_pub_key);
-  // create signature
-  uint8_t sign_data[] = {0x1, 0x2, 0x3};
-  auto signature_field = builder.CreateVector(sign_data, 3);
-  uint64_t timestamp = 123823;
-  auto signature = iroha::CreateSignature(builder, creator_pub_key,
-                                          signature_field, timestamp);
+    // Create account with id 1
+    blob = generator::random_transaction(
+        fbb, iroha::Command::AccountAdd,
+        generator::random_AccountAdd(fbb, generator::random_account("1")).Union()
+    );
+    flatbuffers::GetRoot<iroha::Transaction>(blob.data());
+    ametsuchi_.append(&blob);
 
-  // create transaction
-  std::vector<flatbuffers::Offset<iroha::Signature>> signatures_vector;
-  signatures_vector.push_back(signature);
-  auto signatures = builder.CreateVector(signatures_vector.data(), 1);
-  auto transaction = iroha::CreateTransaction(builder, creator_pub_key,
-                                              iroha::Command::AssetCreate,
-                                              asset_create.Union(), signatures);
+    // Create account with id 2
+    blob = generator::random_transaction(
+        fbb, iroha::Command::AccountAdd,
+        generator::random_AccountAdd(fbb, generator::random_account("2")).Union()
+    );
+    flatbuffers::GetRoot<iroha::Transaction>(blob.data());
+    ametsuchi_.append(&blob);
 
-  builder.Finish(transaction);
+    // Add currency to account 1
+    blob = generator::random_transaction(
+        fbb, iroha::Command::AssetAdd,
+        generator::random_AssetAdd(
+            fbb, "1",
+            generator::random_currency(200, 2, "Dollar", "USA", "l1")).Union()
+    );
+    flatbuffers::GetRoot<iroha::Transaction>(blob.data());
+    ametsuchi_.append(&blob);
 
-  uint8_t *buf = builder.GetBufferPointer();
-  int size = builder.GetSize();
+    // Transfer from 1 to 2
+    blob = generator::random_transaction(
+        fbb, iroha::Command::AssetTransfer,
+        generator::random_AssetTransfer(
+            fbb,
+            generator::random_currency(100, 2, "Dollar", "USA", "l1"),
+            "1", "2").Union()
+    );
+    flatbuffers::GetRoot<iroha::Transaction>(blob.data());
+    ametsuchi_.append(&blob);
+    ametsuchi_.commit();
 
-  //  auto transaction_object = flatbuffers::GetRoot<iroha::Transaction>(buf);
-  std::vector<uint8_t> transaction_vector{buf, buf + size};
-  flatbuffers::Vector<uint8_t>* v = (flatbuffers::Vector<uint8_t>*) transaction_vector.data();
-  ametsuchi_.append(v);
-  ametsuchi_.commit();
+  //});
 }
-*/
