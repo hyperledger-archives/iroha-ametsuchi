@@ -33,6 +33,9 @@ include(cmake/functions.cmake)
 
 set(AMETSUCHI_INCLUDE
   include/ametsuchi/ametsuchi.h
+  include/ametsuchi/tx_store.h
+  include/ametsuchi/wsv.h
+  include/ametsuchi/common.h
   include/ametsuchi/currency.h
   include/ametsuchi/exception.h
   include/ametsuchi/comparator.h
@@ -51,7 +54,10 @@ set(AMETSUCHI_INCLUDE
 
 set(AMETSUCHI_SRC
   src/ametsuchi/ametsuchi.cc
+  src/ametsuchi/tx_store.cc
+  src/ametsuchi/wsv.cc
   src/ametsuchi/currency.cc
+  src/ametsuchi/common.cc
   src/ametsuchi/merkle_tree/merkle_tree.cc
   )
 

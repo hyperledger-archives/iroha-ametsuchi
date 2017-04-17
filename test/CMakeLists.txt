@@ -12,8 +12,8 @@ target_link_libraries(module_lmdb PRIVATE LMDB spdlog ${LIBAMETSUCHI_NAME})
 AddTest(currency_test ametsuchi/currency_test.cc)
 target_link_libraries(currency_test PRIVATE ${LIBAMETSUCHI_NAME})
 
-#AddTest(ametsuchi_test ametsuchi/ametsuchi.cc)
-#target_link_libraries(ametsuchi_test PRIVATE ${LIBAMETSUCHI_NAME} spdlog)
+AddTest(ametsuchi_test ametsuchi/ametsuchi.cc)
+target_link_libraries(ametsuchi_test PRIVATE ${LIBAMETSUCHI_NAME} tx_generator)
 
 AddTest(merkle_test ametsuchi/merkle_test.cc)
 target_link_libraries(merkle_test PRIVATE ${LIBAMETSUCHI_NAME})

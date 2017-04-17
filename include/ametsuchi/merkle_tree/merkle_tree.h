@@ -30,7 +30,7 @@ extern "C" {
 namespace ametsuchi {
 namespace merkle {
 
-const size_t HASH_LEN = 32;
+const size_t HASH_LEN = 64;
 using hash_t = std::array<uint8_t, HASH_LEN>;
 
 /**

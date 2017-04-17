@@ -18,8 +18,11 @@
 #ifndef AMETSUCHI_DB_H
 #define AMETSUCHI_DB_H
 
+#include <ametsuchi/currency.h>
 #include <ametsuchi/generated/commands_generated.h>
 #include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <ametsuchi/tx_store.h>
+#include <ametsuchi/wsv.h>
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <cstdint>
@@ -28,7 +31,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include "currency.h"
 
 extern "C" {
 #include <SimpleFIPS202.h>
@@ -44,17 +46,6 @@ extern "C" {
 
 namespace ametsuchi {
 
-/**
- * Represents a value, readed from a database.
- * Used to restrict changing of mmaped data by pointer.
- */
-struct AM_val {
-  // pointer, which points to blob with data
-  const void *const data;
-  // size of the pointer
-  const size_t size;
-  explicit AM_val(const MDB_val &a) : data(a.mv_data), size(a.mv_size) {}
-};
 
 /**
  * Main class for the database.
@@ -75,8 +66,10 @@ class Ametsuchi {
    * @param tx root type Transaction (contents of TransactionWrapper->tx array)
    * @return new merkle root
    */
-  merkle::hash_t append(const flatbuffers::Vector<uint8_t> *tx);
-  merkle::hash_t append(const std::vector<flatbuffers::Vector<uint8_t> *> &batch);
+  //TODO make Flatbuffer vector
+  merkle::hash_t append(const std::vector<uint8_t> *tx);
+  merkle::hash_t append(
+      const std::vector<std::vector<uint8_t> *> &batch);
 
   /**
    * Commit appended data to database. Commit creates the latest 'checkpoint',
@@ -90,7 +83,8 @@ class Ametsuchi {
   void rollback();
 
   merkle::hash_t merkle_root();
-
+  // ********************
+  // Ametsuchi queries:
   /**
  * Returns all assets, which belong to user with \p pubKey.
  * @param pubKey - account's public key
@@ -98,24 +92,61 @@ class Ametsuchi {
  * Otherwise create new read-only TX
  * @return 0 or * pairs <pointer, size>, which are mmaped into memory.
  */
-  std::vector<AM_val> accountGetAssets(const flatbuffers::String *pubKey,
-                                       bool uncommitted = false);
+  std::vector<AM_val> accountGetAllAssets(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
 
   /**
    * Returns specific asset, which belong to user with \p pubKey.
    * @param pubKey - account's public key
-   * @param ln - ledger name
-   * @param dn - domain name
-   * @param an - asset (currency) name
+   * @param ledger_name - ledger name
+   * @param domain_name - domain name
+   * @param asset_name - asset (currency) name
    * @param uncommitted - if true, include uncommitted changes to search.
  * Otherwise create new read-only TX
    * @return pair <pointer, size>, which are mmaped from disk
    */
   AM_val accountGetAsset(const flatbuffers::String *pubKey,
-                         const flatbuffers::String *ln,
-                         const flatbuffers::String *dn,
-                         const flatbuffers::String *an,
+                         const flatbuffers::String *ledger_name,
+                         const flatbuffers::String *domain_name,
+                         const flatbuffers::String *asset_name,
                          bool uncommitted = false);
+
+  std::vector<AM_val> getAssetTransferBySender(const flatbuffers::String *senderKey,
+                                               bool uncommitted = false);
+
+  std::vector<AM_val> getAssetTransferByReceiver(const flatbuffers::String *receiverKey,
+                                                 bool uncommitted = false);
+
+  std::vector<AM_val> getAssetCreateByKey(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
+
+  std::vector<AM_val> getAssetAddByKey(const flatbuffers::String *pubKey,
+                                       bool uncommitted = false);
+  std::vector<AM_val> getAssetRemoveByKey(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
+  std::vector<AM_val> getAssetTransferByKey(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+  std::vector<AM_val> getAccountAddByKey(const flatbuffers::String *pubKey,
+                                         bool uncommitted = false);
+  std::vector<AM_val> getAccountAddSignByKey(const flatbuffers::String *pubKey,
+                                             bool uncommitted = false);
+  std::vector<AM_val> getAccountRemoveByKey(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+  std::vector<AM_val> getAccountRemoveSignByKey(const flatbuffers::String *pubKey,
+                                                bool uncommitted = false);
+  std::vector<AM_val> getAccountSetUseKeysByKey(const flatbuffers::String *pubKey,
+                                                bool uncommitted = false);
+  std::vector<AM_val> getPeerAddByKey(const flatbuffers::String *pubKey,
+                                      bool uncommitted = false);
+  std::vector<AM_val> getPeerChangeTrustByKey(const flatbuffers::String *pubKey,
+                                              bool uncommitted = false);
+  std::vector<AM_val> getPeerRemoveByKey(const flatbuffers::String *pubKey,
+                                         bool uncommitted = false);
+  std::vector<AM_val> getPeerSetActiveByKey(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+  std::vector<AM_val> getPeerSetTrustByKey(const flatbuffers::String *pubKey,
+                                           bool uncommitted = false);
+
 
  private:
   /* for internal use only */
@@ -124,40 +155,17 @@ class Ametsuchi {
   MDB_env *env;
   MDB_stat mst;
   MDB_txn *append_tx_;  // pointer to db transaction
-  std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
-  size_t tx_store_total;
+
+  TxStore tx_store;
+  WSV wsv;
+
+  uint32_t AMETSUCHI_TREES_TOTAL;
+
 
   void init();
-  void init_btree(const std::string &name, uint32_t flags,
-                  MDB_cmp_func *dupsort = NULL);
-  size_t tx_store_size();
+
   void init_append_tx();
   void abort_append_tx();
-  void read_created_assets();
-
-  // handlers for transactions
-  void account_add(const iroha::AccountAdd *command);
-  void account_remove(const iroha::AccountRemove *command);
-  void peer_add(const iroha::PeerAdd *command);
-  void peer_remove(const iroha::PeerRemove *command);
-  void asset_create(const iroha::AssetCreate *command);
-  void asset_add(const iroha::AssetAdd *command);
-  void asset_remove(const iroha::AssetRemove *command);
-  void asset_transfer(const iroha::AssetTransfer *command);
-
-  // manipulate with account's assets using these functions
-  void account_add_currency(const flatbuffers::String *acc_pub_key,
-                            const iroha::Currency *c, size_t c_size);
-  void account_remove_currency(const flatbuffers::String *acc_pub_key,
-                               const iroha::Currency *c);
-
-
-  // [ledger+domain+asset] => ComplexAsset/Currency flatbuffer (without amount)
-  std::unordered_map<std::string, std::vector<uint8_t>> created_assets_;
-
-  // reads all records in the given tree
-  std::vector<std::pair<AM_val, AM_val>> read_all_records(
-    const std::string &tree_name);
 
   merkle::MerkleTree tree;
 };
