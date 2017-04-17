@@ -36,9 +36,9 @@ std::string DOMAIN_ = "domain_default";
 /**
  * Standart lengths of cryptographic primitives
  */
-size_t HASH_SIZE_ = 64;
-size_t PUB_KEY_LENGTH_ = 44;
-size_t SIGNATURE_LENGTH_ = 88;
+size_t HASH_SIZE_ = 32;
+size_t PUB_KEY_LENGTH_ = 22;
+size_t SIGNATURE_LENGTH_ = 44;
 
 /**
  * Current state of random generators.

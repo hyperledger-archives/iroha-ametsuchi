@@ -45,9 +45,6 @@ Ametsuchi::~Ametsuchi() {
 merkle::hash_t Ametsuchi::append(const std::vector<uint8_t> *blob) {
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
 
-  MDB_val c_key, c_val;
-  int res;
-
   // 1. Append to TX_store
   tx_store.append(blob);
   // 2. Update WSV

@@ -31,7 +31,7 @@ extern "C" {
 namespace ametsuchi {
 namespace merkle {
 
-const size_t HASH_LEN = 64;
+const size_t HASH_LEN = 32;
 using hash_t = std::array<uint8_t, HASH_LEN>;
 
 /**
@@ -72,12 +72,15 @@ class MerkleTree {
 
   static hash_t hash(const hash_t &a, const hash_t &b);
   static hash_t hash(const std::vector<uint8_t> &data);
+  static hash_t hash(const uint8_t* data, size_t size);
 
   /**
    * for debug only
    */
-  void dump();
+  void dump(size_t amount = 2);
  private:
+  std::string printelement(std::vector<hash_t>& tree, size_t i, size_t amount);
+
   using tree_t = std::vector<hash_t>;
   std::list<tree_t> trees_;
 

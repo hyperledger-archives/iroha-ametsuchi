@@ -134,8 +134,11 @@ void MerkleTree::rollback(size_t steps) {
 
   tree_t &tree = trees_.back();
 
+  // what if the latest tree is the new tree with root in the leftmost element?
+  // TODO
+
   i_current_ = i_current_ - steps - 1;
-  push(tree[i_current_ - 1]);
+  push(tree[i_current_]);
 }
 
 void MerkleTree::push(hash_t &&item) {
@@ -170,28 +173,41 @@ hash_t MerkleTree::hash(const std::vector<uint8_t> &data) {
   return output;
 }
 
-void MerkleTree::dump() {
+hash_t MerkleTree::hash(const uint8_t *data, size_t size) {
+  hash_t output;
+  SHA3_256(output.data(), data, size);
+  return output;
+}
+
+std::string MerkleTree::printelement(std::vector<hash_t> &tree, size_t i,
+                                     size_t amount) {
+  std::string out;
+  if (i == i_root_) out += "\033[0;31m";     // root = red
+  if (i == i_current_) out += "\033[0;32m";  // current = yellow
+
+  if (tree[i][0] == 0 && tree[i][1] == 0) {
+    out += "0";
+  } else {
+    const char alph[] = "0123456789abcdef";
+    for (size_t j = 0; j < amount; j++) {
+      out += alph[(tree[i][j] / 16)];
+      out += alph[(tree[i][j] % 16)];
+    }
+  }
+
+  if (i == i_root_) out += "\033[0m";
+  if (i == i_current_) out += "\033[0m";
+
+  if (i != tree.size() - 1) out += ", ";
+  return out;
+}
+
+void MerkleTree::dump(size_t amount) {
   tree_t &tree = trees_.back();
 
   std::string out = "[";
   for (size_t i = 0; i < tree.size(); i++) {
-    if (i == i_root_) out += "\033[0;31m";     // root = red
-    if (i == i_current_) out += "\033[0;32m";  // current = yellow
-
-    if (tree[i][0] == 0 && tree[i][1] == 0) {
-      out += "0";
-    } else {
-      const char alph[] = "0123456789abcdef";
-      for (size_t j = 0; j < 2; j++) {
-        out += alph[(tree[i][j] / 16)];
-        out += alph[(tree[i][j] % 16)];
-      }
-    }
-
-    if (i == i_root_) out += "\033[0m";
-    if (i == i_current_) out += "\033[0m";
-
-    if (i != tree.size() - 1) out += ", ";
+    out += printelement(tree, i, amount);
   }
 
   out += "]";

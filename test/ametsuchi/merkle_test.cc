@@ -186,6 +186,7 @@ std::vector<hash_t> roots = {
     str2hex(
         "f13ec23c48a494d98b10cd5144dd0e3d8e2619222921e72aa403a0cead44a296")};
 
+
 TEST(NaiveMerkle, Tree4_1block) {
   // should with size 4
   merkle::MerkleTree tree(4);
@@ -206,25 +207,59 @@ TEST(NaiveMerkle, Tree4_2blocks) {
   }
 }
 
-TEST(NaiveMerkle, Tree4_1_Rollback) {
-  size_t items_total = 3;
+//TEST(NaiveMerkle, Tree4_1_step_Rollback) {
+//  size_t items_total = 3;
+//
+//  merkle::MerkleTree tree(4);
+//  tree.dump();
+//  for (size_t i = 0; i < items_total; i++) {
+//    tree.push(h);
+//    auto root = tree.root();
+//    ASSERT_EQ(root, roots[i]) << "Expected root is different";
+//  }
+//
+//  for (size_t steps = 1; steps < 3; steps++) {
+//    tree.rollback(1);
+//    auto root = tree.root();
+//    EXPECT_EQ(root, roots[items_total - steps - 1]) << "Rollback on " << steps
+//                                                    << " steps back failed";
+//  }
+//}
 
-  merkle::MerkleTree tree(4);
-  tree.dump();
-  for (size_t i = 0; i < items_total; i++) {
-    tree.push(h);
+TEST(NaiveMerkle, Tree128_1_step_rollback) {
+  printf("\n");
+  size_t iterations = 7 ;
+
+  std::list<hash_t> history;
+
+  merkle::MerkleTree tree(8, 1);
+  for (size_t i = 0; i < iterations; i++) {
+    uint8_t *ptr = reinterpret_cast<uint8_t *>(&i);
+    tree.push(tree.hash(ptr, sizeof(i)));
+    history.push_back(tree.root());
+    printf("%d: ", i);
     tree.dump();
-    auto root = tree.root();
-    ASSERT_EQ(root, roots[i]) << "Expected root is different";
   }
 
+  auto rbegin = history.rbegin();
+  auto rend = history.rend();
+
   printf("\n");
-  for (size_t steps = 1; steps < 3; steps++) {
-    tree.rollback(1);
+  // iterate in reverse direction
+  size_t steps = 0;
+  for(auto it = rbegin; it != rend; ++it){
+    const hash_t &expected_root = *it;
+    const hash_t &actual_root = tree.root();
+
+    printf("%d: ", steps);
     tree.dump();
-    auto root = tree.root();
-    EXPECT_EQ(root, roots[items_total - steps - 1]) << "Rollback on " << steps
-                                                << " steps back failed";
+
+    ASSERT_EQ(expected_root, actual_root) << "Roots are different after " << steps << " rollbacks.";
+
+    steps++;
+
+    // rollback on single step
+    tree.rollback(1);
   }
 }
 
