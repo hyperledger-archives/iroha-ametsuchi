@@ -69,6 +69,7 @@ class MerkleTree {
   void push(hash_t &&item);
 
   void rollback(size_t steps);
+  size_t max_rollback();
 
   static hash_t hash(const hash_t &a, const hash_t &b);
   static hash_t hash(const std::vector<uint8_t> &data);

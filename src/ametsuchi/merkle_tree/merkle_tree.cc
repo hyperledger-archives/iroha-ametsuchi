@@ -16,6 +16,7 @@
  */
 
 #include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
 
@@ -124,18 +125,29 @@ void MerkleTree::push(const hash_t &item) {
 void MerkleTree::rollback(size_t steps) {
   // just do nothing
   if (steps == 0) return;
-  // we can not rollback to more than this many steps:
-  if (steps / leafs_ >= max_blocks_) throw std::bad_exception();
 
-  while (steps / leafs_ > 0) {
-    steps /= leafs_;
+  // total number of available "rollback" steps
+  size_t max_steps = max_rollback();
+
+  // we can not rollback to more than this many steps:
+  if (steps > max_steps) throw std::bad_exception();
+
+  // rollback to more than one tree
+  while (steps >= leafs_) {
+    steps -= (leafs_ - 1);
     trees_.pop_back();
   }
 
-  tree_t &tree = trees_.back();
+  if (i_current_ - steps < leafs_) {
+    // rollback to more than one tree
+    steps -= i_current_ - leafs_;
+    trees_.pop_back();
 
-  // what if the latest tree is the new tree with root in the leftmost element?
-  // TODO
+    i_current_ = size_;
+    i_root_ = 0;
+  }
+
+  tree_t &tree = trees_.back();
 
   i_current_ = i_current_ - steps - 1;
   push(tree[i_current_]);
@@ -186,7 +198,7 @@ std::string MerkleTree::printelement(std::vector<hash_t> &tree, size_t i,
   if (i == i_current_) out += "\033[0;32m";  // current = yellow
 
   if (tree[i][0] == 0 && tree[i][1] == 0) {
-    out += "0";
+    std::generate_n(std::back_inserter(out), amount * 2, []() { return '0'; });
   } else {
     const char alph[] = "0123456789abcdef";
     for (size_t j = 0; j < amount; j++) {
@@ -213,6 +225,10 @@ void MerkleTree::dump(size_t amount) {
   out += "]";
 
   printf("%s\n", out.c_str());
+}
+
+size_t MerkleTree::max_rollback() {
+  return (trees_.size() - 1) * (leafs_ - 1) + (i_current_ - leafs_);
 }
 
 }  // namespace merkle

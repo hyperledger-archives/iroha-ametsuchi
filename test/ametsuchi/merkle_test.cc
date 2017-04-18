@@ -16,145 +16,10 @@
  */
 
 #include <ametsuchi/merkle_tree/merkle_tree.h>
-#include <ametsuchi/merkle_tree/narrow_merkle_tree.h>
 #include <gtest/gtest.h>
 
 namespace ametsuchi {
 namespace merkle {
-
-constexpr size_t size = 10;
-
-TEST(Merkle, Creation) {
-  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; });
-}
-
-TEST(Merkle, Addition) {
-  NarrowMerkleTree<size_t> tree([](auto i, auto j) { return i + j; });
-  /*
-   *                              55
-   *              28                           27
-   *       6              22              27
-   *   1       5       9      13      17       10
-   * 0   1   2   3   4   5   6   7   8   9   10
-   */
-  for (size_t i = 0, sum = 0; i < size * size; ++i, sum += i) {
-    tree.add(i);
-    ASSERT_EQ(tree.get_root(), sum);
-  }
-}
-
-TEST(Merkle, Dropping) {
-  NarrowMerkleTree<size_t> tree([](auto i, auto j) { return i + j; });
-  for (size_t i = 0; i < size; ++i) tree.add(i);
-  tree.drop(6);
-  /*
-   * data[3]:(0+1 + 2+3  +  4+5 + 6+7)
-   * data[2]:(0+1 + 2+3)   (4+5 + 6+7)
-   * data[1]:                    (6+7) (8+9)
-   * data[0]:                           8 9
-   *   ||
-   *   v
-   * data[3]:
-   * data[2]:(0+1 + 2+3)
-   * data[1]:
-   * data[0]:
-   */
-  ASSERT_EQ(tree.size(), 4);
-  ASSERT_EQ(tree.get_root(), 3 * 4 / 2);
-
-  for (size_t i = 4; i < size; i++) tree.add(i);
-  ASSERT_EQ(tree.size(), size);
-  ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
-
-  tree.drop(8);
-  /*
-   * data[3]:(0+1 + 2+3  +  4+5 + 6+7)
-   * data[2]:(0+1 + 2+3)   (4+5 + 6+7)
-   * data[1]:                    (6+7)
-   * data[0]:
-   */
-  ASSERT_EQ(tree.size(), 8);
-  ASSERT_EQ(tree.get_root(), 7 * 8 / 2);
-
-  for (size_t i = 8; i < size; i++) tree.add(i);
-  ASSERT_EQ(tree.size(), size);
-  ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
-
-  tree.drop(0);
-  ASSERT_EQ(tree.size(), 0);
-}
-
-TEST(Merkle, Hegiht) {
-  {
-    constexpr size_t heights[] = {
-        0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5,
-        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
-    constexpr auto elems = sizeof(heights) / sizeof(heights[0]);
-    NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 2);
-    for (size_t i = 0; i < elems; ++i) {
-      ASSERT_EQ(tree.height(i), heights[i]);
-    }
-  }
-  {
-    constexpr size_t heights[] = {0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-                                  2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
-    constexpr auto elems = sizeof(heights) / sizeof(heights[0]);
-    NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 4);
-    for (size_t i = 0; i < elems; ++i) {
-      ASSERT_EQ(tree.height(i), heights[i]);
-    }
-  }
-}
-
-TEST(Merkle, Statics) {
-  {
-    constexpr size_t diffs[] = {0, 0, 1, 0, 2, 1, 2, 0, 3,
-                                2, 3, 1, 3, 2, 3, 0, 4};
-    constexpr auto elems = sizeof(diffs) / sizeof(diffs[0]);
-    for (size_t i = 0; i < elems; ++i) {
-      ASSERT_EQ(NarrowMerkleTree<uint64_t>::path_diff(i), diffs[i]) << i;
-    }
-  }
-}
-
-TEST(Merkle, ExtendAddition) {
-  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 8);
-  /*
-   *                              55
-   *              28                           27
-   *       6              22              27
-   *   1       5       9      13      17       10
-   * 0   1   2   3   4   5   6   7   8   9   10
-   */
-  for (size_t i = 0, sum = 0; i < size * size; ++i, sum += i) {
-    tree.add(i);
-    ASSERT_EQ(tree.get_root(), sum);
-  }
-}
-
-TEST(Merkle, ExtendDropping) {
-  NarrowMerkleTree<uint64_t> tree([](auto i, auto j) { return i + j; }, 8);
-  for (size_t i = 0; i < size; ++i) tree.add(i);
-  tree.drop(6);
-  ASSERT_EQ(tree.size(), 6);
-  ASSERT_EQ(tree.get_root(), 5 * 6 / 2);
-
-  for (size_t i = 6; i < size; i++) tree.add(i);
-  ASSERT_EQ(tree.size(), size);
-  ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
-
-  tree.drop(8);
-  ASSERT_EQ(tree.size(), 8);
-  ASSERT_EQ(tree.get_root(), 7 * 8 / 2);
-
-  for (size_t i = 8; i < size; i++) tree.add(i);
-  ASSERT_EQ(tree.size(), size);
-  ASSERT_EQ(tree.get_root(), 9 * 10 / 2);
-
-  tree.drop(0);
-  ASSERT_EQ(tree.size(), 0);
-}
 
 auto str2hex = [](const std::string &hex) {
   const std::string alp = "0123456789abcdef";
@@ -207,60 +72,77 @@ TEST(NaiveMerkle, Tree4_2blocks) {
   }
 }
 
-//TEST(NaiveMerkle, Tree4_1_step_Rollback) {
-//  size_t items_total = 3;
-//
-//  merkle::MerkleTree tree(4);
-//  tree.dump();
-//  for (size_t i = 0; i < items_total; i++) {
-//    tree.push(h);
-//    auto root = tree.root();
-//    ASSERT_EQ(root, roots[i]) << "Expected root is different";
-//  }
-//
-//  for (size_t steps = 1; steps < 3; steps++) {
-//    tree.rollback(1);
-//    auto root = tree.root();
-//    EXPECT_EQ(root, roots[items_total - steps - 1]) << "Rollback on " << steps
-//                                                    << " steps back failed";
-//  }
-//}
 
 TEST(NaiveMerkle, Tree128_1_step_rollback) {
-  printf("\n");
-  size_t iterations = 7 ;
+  size_t iterations = 10000;
 
   std::list<hash_t> history;
 
-  merkle::MerkleTree tree(8, 1);
+  merkle::MerkleTree tree(128);
   for (size_t i = 0; i < iterations; i++) {
     uint8_t *ptr = reinterpret_cast<uint8_t *>(&i);
     tree.push(tree.hash(ptr, sizeof(i)));
     history.push_back(tree.root());
-    printf("%d: ", i);
+    /* // for debug
+    printf("%ld: ", i);
     tree.dump();
+     */
   }
 
   auto rbegin = history.rbegin();
   auto rend = history.rend();
 
-  printf("\n");
   // iterate in reverse direction
   size_t steps = 0;
-  for(auto it = rbegin; it != rend; ++it){
+  for (auto it = rbegin; it != rend; ++it) {
     const hash_t &expected_root = *it;
     const hash_t &actual_root = tree.root();
 
-    printf("%d: ", steps);
-    tree.dump();
+    size_t max_rollback = tree.max_rollback();
 
-    ASSERT_EQ(expected_root, actual_root) << "Roots are different after " << steps << " rollbacks.";
+    /* // for debug
+    printf("[%ld] ", max_rollback);
+    printf("%ld: ", iterations - 1 - steps);
+    tree.dump();
+    */
+
+    ASSERT_EQ(expected_root, actual_root) << "Roots are different after "
+                                          << steps << " rollbacks.";
 
     steps++;
 
     // rollback on single step
-    tree.rollback(1);
+    if (max_rollback == 0) {
+      // correct behavior: tree throws std::bad_exception if max_rollback is 0
+      ASSERT_THROW(tree.rollback(1), std::bad_exception)
+          << "tree should have thrown an exception!";
+      SUCCEED();
+      break;  // end this loop
+    } else {
+      ASSERT_NO_THROW(tree.rollback(1));
+    }
   }
+}
+
+
+TEST(NaiveMerkle, Tree128_single_max_rollback) {
+  size_t iterations = 10000;
+
+  std::list<hash_t> history;
+
+  merkle::MerkleTree tree(128, 10);
+  for (size_t i = 0; i < iterations; i++) {
+    uint8_t *ptr = reinterpret_cast<uint8_t *>(&i);
+    tree.push(tree.hash(ptr, sizeof(i)));
+    history.push_back(tree.root());
+  }
+
+  size_t max_ = tree.max_rollback();
+  auto ptr = history.rend();
+  for (size_t i = 0; i <= max_; i++) ++ptr;
+
+  tree.rollback(max_);
+  ASSERT_EQ(tree.root(), *ptr);
 }
 
 
@@ -271,6 +153,9 @@ TEST(NaiveMerkle, Tree128_100k_pushes) {
   }
   SUCCEED();
 }
+
+// TODO(@warchant): add more tests, which use different combinations of block
+// size and number of trees. Add more tests for rollback.
 
 }  // namespace merkle
 }  // namespace ametsuchi
