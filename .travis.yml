@@ -59,3 +59,6 @@ script:
   - export CC=$COMPILERCC; export CXX=$COMPILERCXX
   - cmake .. && make
   - ctest --verbose --output-on-failure
+  
+notifications:
+  webhooks: https://chat.hyperledger.org/hooks/BG3PeSerMSWRDSceE/GPCnCSqxMoyfqaTvLePSGudWjoCBwAcCT6bAKYRjK2sKSCM9
