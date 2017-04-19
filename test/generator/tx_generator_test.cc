@@ -65,7 +65,7 @@ TEST(Generator, RandomBase64String) {
 TEST(Generator, RandomPublicKey) {
   std::string s;
   ASSERT_NO_THROW(s = generator::random_public_key());
-  ASSERT_EQ(s.size(), generator::PUB_KEY_LENGTH_);
+  ASSERT_EQ(s.size(), generator::PUB_KEY_LENGTH_STR_);
 }
 
 #define TEST_COMMAND(CMD)                                                  \

@@ -36,9 +36,9 @@ std::string DOMAIN_ = "domain_default";
 /**
  * Standart lengths of cryptographic primitives
  */
-size_t HASH_SIZE_ = 32;
-size_t PUB_KEY_LENGTH_ = 22;
-size_t SIGNATURE_LENGTH_ = 44;
+size_t HASH_SIZE_BLOB_ = 32;
+size_t PUB_KEY_LENGTH_STR_ = 44;
+size_t SIGNATURE_LENGTH_BLOB_ = 44;
 
 /**
  * Current state of random generators.
@@ -87,7 +87,7 @@ std::string random_base64_string(size_t length) {
 
 
 std::string random_public_key() {
-  return random_base64_string(PUB_KEY_LENGTH_);
+  return random_base64_string(PUB_KEY_LENGTH_STR_);
 }
 
 
@@ -169,7 +169,7 @@ std::vector<uint8_t> random_currency(
 flatbuffers::Offset<iroha::Signature> random_signature(
     flatbuffers::FlatBufferBuilder& fbb,
     const std::string pubk = random_public_key(),
-    const std::vector<uint8_t> signature = random_blob(SIGNATURE_LENGTH_),
+    const std::vector<uint8_t> signature = random_blob(SIGNATURE_LENGTH_BLOB_),
     uint64_t timestamp = (uint64_t)random_number(0, 1 << 30)) {
   return iroha::CreateSignature(fbb, fbb.CreateString(pubk),
                                 fbb.CreateVector(signature), timestamp);
@@ -258,7 +258,7 @@ std::vector<uint8_t> random_transaction(
     flatbuffers::FlatBufferBuilder& fbb, iroha::Command cmd_type,
     flatbuffers::Offset<void> command, const size_t signatures = 5,
     std::string creator = random_public_key(),
-    std::vector<uint8_t> hash = random_blob(HASH_SIZE_)) {
+    std::vector<uint8_t> hash = random_blob(HASH_SIZE_BLOB_)) {
   std::vector<flatbuffers::Offset<iroha::Signature>> sigs(signatures);
   std::generate_n(sigs.begin(), signatures,
                   [&fbb]() { return random_signature(fbb); });
