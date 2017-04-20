@@ -68,18 +68,18 @@ TEST_F(Ametsuchi_Test, AssetTest) {
     );
     flatbuffers::GetRoot<iroha::Transaction>(blob.data());
     ametsuchi_.append(&blob);
-/*
+
     // Transfer from 1 to 2
     blob = generator::random_transaction(
         fbb, iroha::Command::AssetTransfer,
         generator::random_AssetTransfer(
             fbb,
-            generator::random_currency(100, 2, "Dollar", "USA", "l1"),
+            generator::random_asset_wrapper_currency(100, 2, "Dollar", "USA", "l1"),
             "1", "2").Union()
     );
     flatbuffers::GetRoot<iroha::Transaction>(blob.data());
     ametsuchi_.append(&blob);
     ametsuchi_.commit();
-*/
+
   //});
 }

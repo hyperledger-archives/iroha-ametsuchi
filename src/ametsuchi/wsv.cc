@@ -160,6 +160,7 @@ void WSV::asset_create(const iroha::AssetCreate *command) {
 }
 
 void WSV::asset_add(const iroha::AssetAdd *command) {
+
   // Now only Currency is supported
   if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency) {
     //TODO: How to check the asset_type?
@@ -168,7 +169,7 @@ void WSV::asset_add(const iroha::AssetAdd *command) {
   }
 
   account_add_currency(command->accPubKey(),
-                       (iroha::Currency *)command->asset()->data(),
+                       command->asset_nested_root()->asset_as_Currency(),
                        command->asset()->size());
 }
 
@@ -179,15 +180,16 @@ void WSV::asset_remove(const iroha::AssetRemove *command) {
     throw exception::InternalError::NOT_IMPLEMENTED;
 
   this->account_remove_currency(command->accPubKey(),
-                                (iroha::Currency *)command->asset()->data());
+                                command->asset_nested_root()->asset_as_Currency());
 }
 
 void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
                                const iroha::Currency *c, size_t c_size) {
   int res;
   MDB_val c_key, c_val;
-  auto cursor = trees_.at("wsv_pubkey_assets").second;
   std::vector<uint8_t> copy;
+  MDB_cursor* cursor = trees_.at("wsv_pubkey_assets").second;
+  bool create_new_asset = false;
 
   try {
     // may throw ASSET_NOT_FOUND
@@ -214,6 +216,7 @@ void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
   } catch (exception::InvalidTransaction e) {
     // Create new Asset
     if (e == exception::InvalidTransaction::ASSET_NOT_FOUND) {
+      create_new_asset = true;
       copy = {(char *)c, (char *)c + c_size};
     } else {
       throw;
@@ -228,9 +231,14 @@ void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
 
   // cursor is at the correct asset, just replace with a copy of FB and flag
   // MDB_CURRENT
-  // TODO: Check if this works for a new Asset (It may replace some random old
-  // asset)
-  if ((res = mdb_cursor_put(cursor, &c_key, &c_val, MDB_CURRENT))) {
+  if (create_new_asset) {
+    if((res = mdb_cursor_put(cursor, &c_key, &c_val, 0))) {
+      AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
+      AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
+      AMETSUCHI_CRITICAL(res, EACCES);
+      AMETSUCHI_CRITICAL(res, EINVAL);
+    }
+  } else if ((res = mdb_cursor_put(cursor, &c_key, &c_val, MDB_CURRENT))) {
     AMETSUCHI_CRITICAL(res, MDB_KEYEXIST);
     AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
     AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
@@ -288,8 +296,7 @@ void WSV::asset_transfer(const iroha::AssetTransfer *command) {
   if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency)
     throw exception::InternalError::NOT_IMPLEMENTED;
 
-  auto asset_fb = flatbuffers::GetRoot<iroha::Asset>(command->asset());
-  auto currency = asset_fb->asset_as_Currency();
+  auto currency = command->asset_nested_root()->asset_as_Currency();
 
   this->account_remove_currency(command->sender(), currency);
   this->account_add_currency(command->receiver(), currency,
@@ -431,6 +438,7 @@ AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
   int res;
 
   std::string pk;
+
   pk += ln->data();
   pk += dn->data();
   pk += an->data();
@@ -471,8 +479,13 @@ AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
   c_key.mv_data = (void *)pubKey->data();
   c_key.mv_size = pubKey->size();
 
+  printf("before mdb_cursor_get\n");
+  fflush(stdout);
+
   // if sender has no such asset, then it is incorrect transaction
   if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_GET_BOTH))) {
+    printf("mdb_cursor_get_result: %d\n",res);
+    fflush(stdout);
     if (res == MDB_NOTFOUND)
       throw exception::InvalidTransaction::ASSET_NOT_FOUND;
     AMETSUCHI_CRITICAL(res, EINVAL);
@@ -509,7 +522,7 @@ std::vector<AM_val> WSV::accountGetAllAssets(const flatbuffers::String *pubKey,
       AMETSUCHI_CRITICAL(res, ENOMEM);
     }
 
-    if ((res ==
+    if ((res =
          mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
