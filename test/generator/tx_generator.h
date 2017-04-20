@@ -170,9 +170,16 @@ std::vector<uint8_t> random_asset_wrapper_currency(
     uint8_t precision = (uint8_t)random_number(0, 3),
     std::string currency_name = random_string(6),
     std::string domain_name = DOMAIN_, std::string ledger_name = LEDGER_,
-    std::string description = random_string((size_t)random_number(5, 100))) {
+    std::string description = random_string(0)) {
   flatbuffers::FlatBufferBuilder fbb(2048);
 
+  // May be erased commen :
+  /*
+   * Even though that two asset has same currency_name and domain_name and ledgername,
+   * not necessary two asset same size.
+   */
+  //printf("in rando gen\n");
+  //printf("%d %d %s %s %s %s\n",amount,precision,currency_name.c_str(),domain_name.c_str(),ledger_name.c_str(),description.c_str());
   auto asset = iroha::CreateAsset(
       fbb,
       iroha::AnyAsset::Currency,
@@ -184,6 +191,8 @@ std::vector<uint8_t> random_asset_wrapper_currency(
   fbb.Finish(asset);
 
   uint8_t* ptr = fbb.GetBufferPointer();
+  //printf("random_asset_wrapper_currency size: %d\n",fbb.GetSize());
+  //fflush(stdout);
   return {ptr, ptr + fbb.GetSize()};
 }
 
