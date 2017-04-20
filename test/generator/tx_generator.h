@@ -165,6 +165,28 @@ std::vector<uint8_t> random_currency(
   return {ptr, ptr + fbb.GetSize()};
 }
 
+std::vector<uint8_t> random_asset_wrapper_currency(
+    uint64_t amount = (uint64_t)random_number(1, 50),
+    uint8_t precision = (uint8_t)random_number(0, 3),
+    std::string currency_name = random_string(6),
+    std::string domain_name = DOMAIN_, std::string ledger_name = LEDGER_,
+    std::string description = random_string((size_t)random_number(5, 100))) {
+  flatbuffers::FlatBufferBuilder fbb(2048);
+
+  auto asset = iroha::CreateAsset(
+      fbb,
+      iroha::AnyAsset::Currency,
+      iroha::CreateCurrency(
+          fbb, fbb.CreateString(currency_name), fbb.CreateString(domain_name),
+          fbb.CreateString(ledger_name), fbb.CreateString(description), amount,
+          precision).Union());
+
+  fbb.Finish(asset);
+
+  uint8_t* ptr = fbb.GetBufferPointer();
+  return {ptr, ptr + fbb.GetSize()};
+}
+
 
 flatbuffers::Offset<iroha::Signature> random_signature(
     flatbuffers::FlatBufferBuilder& fbb,
@@ -193,7 +215,7 @@ flatbuffers::Offset<iroha::AccountRemove> random_AccountRemove(
 flatbuffers::Offset<iroha::AssetAdd> random_AssetAdd(
     flatbuffers::FlatBufferBuilder& fbb,
     std::string accPubKey = random_public_key(),
-    std::vector<uint8_t> asset = random_currency()) {
+    std::vector<uint8_t> asset = random_asset_wrapper_currency()) {
   return iroha::CreateAssetAdd(fbb, fbb.CreateString(accPubKey),
                                fbb.CreateVector(asset));
 }
@@ -202,7 +224,7 @@ flatbuffers::Offset<iroha::AssetAdd> random_AssetAdd(
 flatbuffers::Offset<iroha::AssetRemove> random_AssetRemove(
     flatbuffers::FlatBufferBuilder& fbb,
     std::string accPubKey = random_public_key(),
-    std::vector<uint8_t> asset = random_currency()) {
+    std::vector<uint8_t> asset = random_asset_wrapper_currency()) {
   return iroha::CreateAssetRemove(fbb, fbb.CreateString(accPubKey),
                                   fbb.CreateVector(asset));
 }
@@ -220,7 +242,7 @@ flatbuffers::Offset<iroha::AssetCreate> random_AssetCreate(
 
 flatbuffers::Offset<iroha::AssetTransfer> random_AssetTransfer(
     flatbuffers::FlatBufferBuilder& fbb,
-    std::vector<uint8_t> asset = random_currency(),
+    std::vector<uint8_t> asset = random_asset_wrapper_currency(),
     std::string sender = random_public_key(),
     std::string receiver = random_public_key()) {
   return iroha::CreateAssetTransfer(fbb, fbb.CreateVector(asset),

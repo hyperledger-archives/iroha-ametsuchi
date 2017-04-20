@@ -34,7 +34,7 @@ class Ametsuchi_Test : public ::testing::Test {
 
 
 TEST_F(Ametsuchi_Test, AssetTest) {
- // ASSERT_NO_THROW({
+    // ASSERT_NO_THROW({
     flatbuffers::FlatBufferBuilder fbb(2048);
     // Create asset dollar
     auto blob = generator::random_transaction(
@@ -64,11 +64,11 @@ TEST_F(Ametsuchi_Test, AssetTest) {
         fbb, iroha::Command::AssetAdd,
         generator::random_AssetAdd(
             fbb, "1",
-            generator::random_currency(200, 2, "Dollar", "USA", "l1")).Union()
+            generator::random_asset_wrapper_currency(200, 2, "Dollar", "USA", "l1")).Union()
     );
     flatbuffers::GetRoot<iroha::Transaction>(blob.data());
     ametsuchi_.append(&blob);
-
+/*
     // Transfer from 1 to 2
     blob = generator::random_transaction(
         fbb, iroha::Command::AssetTransfer,
@@ -80,6 +80,6 @@ TEST_F(Ametsuchi_Test, AssetTest) {
     flatbuffers::GetRoot<iroha::Transaction>(blob.data());
     ametsuchi_.append(&blob);
     ametsuchi_.commit();
-
+*/
   //});
 }
