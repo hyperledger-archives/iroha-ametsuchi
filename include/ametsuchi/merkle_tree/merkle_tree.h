@@ -21,6 +21,7 @@
 #include <array>
 #include <cstdint>
 #include <list>
+#include <string>
 #include <vector>
 
 extern "C" {
@@ -31,6 +32,7 @@ extern "C" {
 namespace ametsuchi {
 namespace merkle {
 
+// all tests are written for 32 byte hashes, do not change!
 const size_t HASH_LEN = 32;
 using hash_t = std::array<uint8_t, HASH_LEN>;
 
@@ -41,18 +43,18 @@ using hash_t = std::array<uint8_t, HASH_LEN>;
  * - size * HASH_LEN bytes memory total
  * - get root in O(1)
  * - push in O(log2( size ))
- * - very convenient to store in file and mmap it, since its size does not
- * change
  * - number of leafs should be a power of 2
  * - if a number of leafs is not power of 2, it will ceil it to power of 2
+ * - a possibility to rollback a state of a tree up to `max_rollback()` steps.
  */
 class MerkleTree {
  public:
   /**
    * Constructor
    * @param leafs - a number of leaf nodes in a tree.
-   * @param max_rollback - maximum steps on which you can rollback a tree.
-   * Default = \p leafs.
+   * @param blocks - store \p blocks trees. Rollback to more than a single block
+   * depends on this parameter. For 2 blocks and 4 leafs it is possible to
+   * rollback up to 1 * 3 + 3 = 6 steps.
    */
   explicit MerkleTree(size_t leafs, size_t blocks = 1);
 
@@ -68,19 +70,32 @@ class MerkleTree {
   void push(const hash_t &item);
   void push(hash_t &&item);
 
-  void rollback(size_t steps);
+  /**
+   * Rollback state of a tree on \p n steps back. O(n).
+   * @param n - a number of steps
+   */
+  void rollback(size_t n);
+
+  /**
+   * Returns maximum possible rollback steps.
+   * @return
+   */
   size_t max_rollback();
 
   static hash_t hash(const hash_t &a, const hash_t &b);
   static hash_t hash(const std::vector<uint8_t> &data);
-  static hash_t hash(const uint8_t* data, size_t size);
+  static hash_t hash(const uint8_t *data, size_t size);
 
   /**
    * for debug only
    */
   void dump(size_t amount = 2);
+
+  const tree_t const last_block() const;
+
  private:
-  std::string printelement(std::vector<hash_t>& tree, size_t i, size_t amount);
+  std::string printelement(const std::vector<hash_t> &tree, size_t i,
+                           size_t amount);
 
   using tree_t = std::vector<hash_t>;
   std::list<tree_t> trees_;

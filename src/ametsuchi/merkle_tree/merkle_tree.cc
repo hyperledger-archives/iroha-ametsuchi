@@ -15,10 +15,12 @@
  * limitations under the License.
  */
 
+#include <ametsuchi/exception.h>
 #include <ametsuchi/merkle_tree/merkle_tree.h>
 #include <algorithm>
 #include <iomanip>
-#include <sstream>
+
+extern std::shared_ptr<spdlog::logger> console;
 
 namespace ametsuchi {
 namespace merkle {
@@ -191,11 +193,11 @@ hash_t MerkleTree::hash(const uint8_t *data, size_t size) {
   return output;
 }
 
-std::string MerkleTree::printelement(std::vector<hash_t> &tree, size_t i,
+std::string MerkleTree::printelement(const std::vector<hash_t> &tree, size_t i,
                                      size_t amount) {
   std::string out;
   if (i == i_root_) out += "\033[0;31m";     // root = red
-  if (i == i_current_) out += "\033[0;32m";  // current = yellow
+  if (i == i_current_) out += "\033[0;32m";  // current = yellow/green
 
   if (tree[i][0] == 0 && tree[i][1] == 0) {
     std::generate_n(std::back_inserter(out), amount * 2, []() { return '0'; });
@@ -223,12 +225,18 @@ void MerkleTree::dump(size_t amount) {
   }
 
   out += "]";
-
   printf("%s\n", out.c_str());
 }
 
 size_t MerkleTree::max_rollback() {
   return (trees_.size() - 1) * (leafs_ - 1) + (i_current_ - leafs_);
+}
+
+const MerkleTree::tree_t MerkleTree::last_block() const {
+  if (trees_.size() > 0)
+    return trees_.back();
+  else
+    throw exception::Exception("empty tree");
 }
 
 }  // namespace merkle

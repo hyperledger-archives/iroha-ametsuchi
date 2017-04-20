@@ -120,6 +120,8 @@ class TxStore {
                                  const flatbuffers::String *pubKey,
                                  bool uncommitted = true,
                                  MDB_env *env = nullptr);
+
+  void merkleTree_store();
 };
 }
 

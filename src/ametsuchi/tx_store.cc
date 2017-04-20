@@ -142,15 +142,18 @@ void TxStore::init(MDB_txn *append_tx) {
 
   // autoincrement_key => tx (NODUP)
   create_new_tree(append_tx_, "tx_store", MDB_CREATE | MDB_INTEGERKEY);
+  create_new_tree(append_tx_, "merkle_tree", MDB_CREATE | MDB_INTEGERKEY);
 
-  auto name_set = {"index_asset_create",         "index_asset_add",
-                   "index_asset_remove",         "index_asset_transfer",
-                   "index_transfer_sender",      "index_transfer_receiver",
-                   "index_account_add",          "index_account_add_sign",
-                   "index_account_remove",       "index_account_remove_sign",
-                   "index_account_set_use_keys", "index_peer_add",
-                   "index_peer_change_trust",    "index_peer_remove",
-                   "index_peer_set_active",      "index_peer_set_trust"};
+  auto name_set = {
+      "index_asset_create",         "index_asset_add",
+      "index_asset_remove",         "index_asset_transfer",
+      "index_transfer_sender",      "index_transfer_receiver",
+      "index_account_add",          "index_account_add_sign",
+      "index_account_remove",       "index_account_remove_sign",
+      "index_account_set_use_keys", "index_peer_add",
+      "index_peer_change_trust",    "index_peer_remove",
+      "index_peer_set_active",      "index_peer_set_trust",
+  };
 
   // TxStore trees: [pubkey] => [autoincrement_key] (DUP)
   for (auto name : name_set) {
@@ -268,6 +271,7 @@ std::vector<AM_val> TxStore::getTxByKey(const std::string &tree_name,
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
+
   do {
     tx_key = c_val;
     if ((res = mdb_cursor_get(tx_cursor, &tx_key, &tx_val, MDB_FIRST))) {
@@ -280,6 +284,7 @@ std::vector<AM_val> TxStore::getTxByKey(const std::string &tree_name,
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   } while (res == 0);
+
   if (!uncommitted) {
     mdb_cursor_close(cursor);
     mdb_cursor_close(tx_cursor);
@@ -289,6 +294,10 @@ std::vector<AM_val> TxStore::getTxByKey(const std::string &tree_name,
   return ret;
 }
 
+
+void TxStore::merkleTree_store() {
+
+}
 
 
 void TxStore::create_new_tree(MDB_txn *append_tx, const std::string &name,
@@ -300,46 +309,57 @@ std::vector<AM_val> TxStore::getAssetTransferBySender(
     const flatbuffers::String *senderKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_transfer_sender", senderKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAssetTransferByReceiver(
     const flatbuffers::String *receiverKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_transfer_receiver", receiverKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAssetCreateByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_asset_create", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAssetAddByKey(const flatbuffers::String *pubKey,
                                               bool uncommitted, MDB_env *env) {
   return getTxByKey("index_asset_add", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAssetRemoveByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_asset_remove", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAssetTransferByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_asset_transfer", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAccountAddByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_account_add", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAccountAddSignByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_account_add_sign", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAccountRemoveByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_account_remove", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAccountRemoveSignByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_account_remove_sign", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getAccountSetUseKeysByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_account_set_use_keys", pubKey, uncommitted, env);
 }
+
 std::vector<AM_val> TxStore::getPeerAddByKey(const flatbuffers::String *pubKey,
                                              bool uncommitted, MDB_env *env) {
   return getTxByKey("index_peer_add", pubKey, uncommitted, env);

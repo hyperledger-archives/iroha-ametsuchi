@@ -147,7 +147,6 @@ class Ametsuchi {
   std::vector<AM_val> getPeerSetTrustByKey(const flatbuffers::String *pubKey,
                                            bool uncommitted = false);
 
-
  private:
   /* for internal use only */
 
