@@ -223,6 +223,7 @@ void WSV::account_update_currency(const flatbuffers::String *acc_pub_key,
 
     // update the copy
     auto copy_fb = flatbuffers::GetMutableRoot<iroha::Asset>(copy.data());
+    auto copy_cur = flatbuffers::GetMutableRoot<iroha::Currency>(copy_fb->mutable_asset());
 
     Currency current(copy_fb->asset_as_Currency()->amount(), copy_fb->asset_as_Currency()->precision());
     Currency delta(c->amount(), c->precision());
@@ -233,20 +234,8 @@ void WSV::account_update_currency(const flatbuffers::String *acc_pub_key,
       case ACCOUNT_UPDATE_STATE::SUB:
         current = current + delta;
     }
-
-    flatbuffers::FlatBufferBuilder fbb;
-    auto new_asset = iroha::CreateAsset(
-        fbb,
-        iroha::AnyAsset::Currency,
-        iroha::CreateCurrencyDirect(fbb,
-                                    c->currency_name()->data(),
-                                    c->domain_name()->data(),
-                                    c->ledger_name()->data(),
-                                    c->description()->data(),
-                                    current.get_amount(),
-                                    current.get_precision()).Union());
-    fbb.Finish( new_asset );
-    copy = {fbb.GetBufferPointer(),fbb.GetBufferPointer()+fbb.GetSize()};
+    copy_cur->mutate_amount(current.get_amount());
+      
   } catch (exception::InvalidTransaction e) {
     // Create new Asset
     if (e == exception::InvalidTransaction::ASSET_NOT_FOUND) {
