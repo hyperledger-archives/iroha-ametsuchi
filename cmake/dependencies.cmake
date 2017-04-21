@@ -167,12 +167,12 @@ endif()
 ###########################
 #         LMDB            #
 ###########################
-find_package(LMDB)
+#find_package(LMDB)
 
 if(NOT LMDB_FOUND)
   ExternalProject_Add(lmdb_LMDB
     GIT_REPOSITORY    "https://github.com/LMDB/lmdb.git"
-    GIT_TAG           "mdb.master"
+    GIT_TAG           "LMDB_0.9.19"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE   1
     BUILD_COMMAND     cd libraries/liblmdb && $(MAKE) liblmdb.a CC="${CMAKE_C_COMPILER}"

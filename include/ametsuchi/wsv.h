@@ -31,11 +31,6 @@ class WSV {
   WSV();
   ~WSV();
 
-  enum ACCOUNT_UPDATE_STATE {
-    ADD,
-    SUB
-  };
-
   void update(const std::vector<uint8_t> *blob);
 
   void init(MDB_txn *append_tx);
@@ -55,7 +50,7 @@ class WSV {
   AM_val accountGetAsset(const flatbuffers::String *pubKey,
                          const flatbuffers::String *ledger_name,
                          const flatbuffers::String *domain_name,
-                         const flatbuffers::String *asset_name, bool uncommitted = true,
+                         const flatbuffers::String *asset_name, bool uncommitted = false,
                          MDB_env *env = nullptr);
 
 
@@ -87,15 +82,11 @@ class WSV {
   void account_remove(const iroha::AccountRemove *command);
   void peer_add(const iroha::PeerAdd *command);
   void peer_remove(const iroha::PeerRemove *command);
-  // manipulate with account's assets using these function
-  void account_update_currency(const flatbuffers::String *acc_pub_key,
-                               const iroha::Asset *asset,
-                               const flatbuffers::Vector<uint8_t> *,
-                               ACCOUNT_UPDATE_STATE state);
+  // manipulate with account's assets using these functions
   void account_add_currency(const flatbuffers::String *acc_pub_key,
-                            const iroha::Currency *c, size_t c_size);
+                              const flatbuffers::Vector<uint8_t> *asset_fb);
   void account_remove_currency(const flatbuffers::String *acc_pub_key,
-                               const iroha::Currency *c);
+                               const flatbuffers::Vector<uint8_t> *asset_fb);
 };
 }
 
