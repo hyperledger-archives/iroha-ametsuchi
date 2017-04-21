@@ -22,7 +22,10 @@
 #include <ametsuchi/generated/commands_generated.h>
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
+#include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace ametsuchi {
 
@@ -43,15 +46,15 @@ class WSV {
   /**
   * Close every dbi used in wsv
   */
-  void close_dbi(MDB_env* env);
+  void close_dbi(MDB_env *env);
 
 
   // WSV queries:
   AM_val accountGetAsset(const flatbuffers::String *pubKey,
                          const flatbuffers::String *ledger_name,
                          const flatbuffers::String *domain_name,
-                         const flatbuffers::String *asset_name, bool uncommitted = false,
-                         MDB_env *env = nullptr);
+                         const flatbuffers::String *asset_name,
+                         bool uncommitted = false, MDB_env *env = nullptr);
 
 
   std::vector<AM_val> accountGetAllAssets(const flatbuffers::String *pubKey,
@@ -84,7 +87,7 @@ class WSV {
   void peer_remove(const iroha::PeerRemove *command);
   // manipulate with account's assets using these functions
   void account_add_currency(const flatbuffers::String *acc_pub_key,
-                              const flatbuffers::Vector<uint8_t> *asset_fb);
+                            const flatbuffers::Vector<uint8_t> *asset_fb);
   void account_remove_currency(const flatbuffers::String *acc_pub_key,
                                const flatbuffers::Vector<uint8_t> *asset_fb);
 };

@@ -36,7 +36,7 @@ void TxStore::append(const std::vector<uint8_t> *blob) {
     c_val.mv_size = blob->size();
 
     if ((res = mdb_cursor_put(trees_.at("tx_store").second, &c_key, &c_val,
-                              MDB_NOOVERWRITE | MDB_APPEND))) {
+                              MDB_NOOVERWRITE | MDB_APPEND)) != 0) {
       AMETSUCHI_CRITICAL(res, MDB_KEYEXIST);
       AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
       AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
@@ -116,7 +116,7 @@ void TxStore::append(const std::vector<uint8_t> *blob) {
     c_key.mv_size = cmd->sender()->size();
 
     if ((res = mdb_cursor_put(trees_.at("index_transfer_sender").second, &c_key,
-                              &c_val, 0))) {
+                              &c_val, 0)) != 0) {
       AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
       AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
       AMETSUCHI_CRITICAL(res, EACCES);
@@ -128,7 +128,7 @@ void TxStore::append(const std::vector<uint8_t> *blob) {
     c_key.mv_size = cmd->receiver()->size();
 
     if ((res = mdb_cursor_put(trees_.at("index_transfer_receiver").second,
-                              &c_key, &c_val, 0))) {
+                              &c_key, &c_val, 0)) != 0) {
       AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
       AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
       AMETSUCHI_CRITICAL(res, EACCES);
@@ -167,13 +167,15 @@ void TxStore::init(MDB_txn *append_tx) {
 void TxStore::close_cursors() {
   for (auto &&e : trees_) {
     MDB_cursor *cursor = e.second.second;
-    if (cursor) mdb_cursor_close(cursor);
+    if (cursor != nullptr) {
+      mdb_cursor_close(cursor);
+    }
   }
 }
 
 TxStore::TxStore() {}
 
-TxStore::~TxStore() {}
+TxStore::~TxStore() = default;
 
 void TxStore::set_tx_total() {
   MDB_val c_key, c_val;
@@ -181,7 +183,7 @@ void TxStore::set_tx_total() {
 
   MDB_cursor *cursor = trees_.at("tx_store").second;
 
-  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_LAST))) {
+  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_LAST)) != 0) {
     if (res == MDB_NOTFOUND) {
       tx_store_total = 0u;
     }
@@ -213,7 +215,7 @@ void TxStore::put_tx_into_tree_by_key(MDB_cursor *cursor,
   c_val.mv_data = &tx_store_total;
   c_val.mv_size = sizeof(tx_store_total);
 
-  if ((res = mdb_cursor_put(cursor, &c_key, &c_val, 0))) {
+  if ((res = mdb_cursor_put(cursor, &c_key, &c_val, 0)) != 0) {
     AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
     AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
     AMETSUCHI_CRITICAL(res, EACCES);
@@ -239,21 +241,23 @@ std::vector<AM_val> TxStore::getTxByKey(const std::string &tree_name,
     tx = append_tx_;
   } else {
     // create read-only transaction, create new RO cursor
-    if ((res = mdb_txn_begin(env, NULL, MDB_RDONLY, &tx))) {
+    if ((res = mdb_txn_begin(env, nullptr, MDB_RDONLY, &tx)) != 0) {
       AMETSUCHI_CRITICAL(res, MDB_PANIC);
       AMETSUCHI_CRITICAL(res, MDB_MAP_RESIZED);
       AMETSUCHI_CRITICAL(res, MDB_READERS_FULL);
       AMETSUCHI_CRITICAL(res, ENOMEM);
     }
 
-    if ((res = mdb_cursor_open(tx, trees_.at(tree_name).first, &cursor))) {
+    if ((res = mdb_cursor_open(tx, trees_.at(tree_name).first, &cursor)) != 0) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
 
   // if sender has no such tx, then it is pub_key
-  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET))) {
-    if (res == MDB_NOTFOUND) return std::vector<AM_val>{};
+  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET)) != 0) {
+    if (res == MDB_NOTFOUND) {
+      return std::vector<AM_val>{};
+    }
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
@@ -267,20 +271,23 @@ std::vector<AM_val> TxStore::getTxByKey(const std::string &tree_name,
   if (uncommitted) {
     tx_cursor = trees_.at("tx_store").second;
   } else {
-    if ((res = mdb_cursor_open(tx, trees_.at("tx_store").first, &tx_cursor))) {
+    if ((res = mdb_cursor_open(tx, trees_.at("tx_store").first, &tx_cursor)) !=
+        0) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
 
   do {
     tx_key = c_val;
-    if ((res = mdb_cursor_get(tx_cursor, &tx_key, &tx_val, MDB_FIRST))) {
+    if ((res = mdb_cursor_get(tx_cursor, &tx_key, &tx_val, MDB_FIRST)) != 0) {
       AMETSUCHI_CRITICAL(res, MDB_NOTFOUND);
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
     ret.push_back(AM_val(tx_val));
-    if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT_DUP))) {
-      if (res == MDB_NOTFOUND) break;
+    if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT_DUP)) != 0) {
+      if (res == MDB_NOTFOUND) {
+        break;
+      }
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   } while (res == 0);
@@ -295,9 +302,7 @@ std::vector<AM_val> TxStore::getTxByKey(const std::string &tree_name,
 }
 
 
-void TxStore::merkleTree_store() {
-
-}
+void TxStore::merkleTree_store() {}
 
 
 void TxStore::create_new_tree(MDB_txn *append_tx, const std::string &name,

@@ -66,10 +66,9 @@ class Ametsuchi {
    * @param tx root type Transaction (contents of TransactionWrapper->tx array)
    * @return new merkle root
    */
-  //TODO make Flatbuffer vector
+  // TODO make Flatbuffer vector
   merkle::hash_t append(const std::vector<uint8_t> *tx);
-  merkle::hash_t append(
-      const std::vector<std::vector<uint8_t> *> &batch);
+  merkle::hash_t append(const std::vector<std::vector<uint8_t> *> &batch);
 
   /**
    * Commit appended data to database. Commit creates the latest 'checkpoint',
@@ -83,6 +82,7 @@ class Ametsuchi {
   void rollback();
 
   merkle::hash_t merkle_root();
+
   // ********************
   // Ametsuchi queries:
   /**
@@ -111,11 +111,11 @@ class Ametsuchi {
                          const flatbuffers::String *asset_name,
                          bool uncommitted = false);
 
-  std::vector<AM_val> getAssetTransferBySender(const flatbuffers::String *senderKey,
-                                               bool uncommitted = false);
+  std::vector<AM_val> getAssetTransferBySender(
+      const flatbuffers::String *senderKey, bool uncommitted = false);
 
-  std::vector<AM_val> getAssetTransferByReceiver(const flatbuffers::String *receiverKey,
-                                                 bool uncommitted = false);
+  std::vector<AM_val> getAssetTransferByReceiver(
+      const flatbuffers::String *receiverKey, bool uncommitted = false);
 
   std::vector<AM_val> getAssetCreateByKey(const flatbuffers::String *pubKey,
                                           bool uncommitted = false);
@@ -132,10 +132,10 @@ class Ametsuchi {
                                              bool uncommitted = false);
   std::vector<AM_val> getAccountRemoveByKey(const flatbuffers::String *pubKey,
                                             bool uncommitted = false);
-  std::vector<AM_val> getAccountRemoveSignByKey(const flatbuffers::String *pubKey,
-                                                bool uncommitted = false);
-  std::vector<AM_val> getAccountSetUseKeysByKey(const flatbuffers::String *pubKey,
-                                                bool uncommitted = false);
+  std::vector<AM_val> getAccountRemoveSignByKey(
+      const flatbuffers::String *pubKey, bool uncommitted = false);
+  std::vector<AM_val> getAccountSetUseKeysByKey(
+      const flatbuffers::String *pubKey, bool uncommitted = false);
   std::vector<AM_val> getPeerAddByKey(const flatbuffers::String *pubKey,
                                       bool uncommitted = false);
   std::vector<AM_val> getPeerChangeTrustByKey(const flatbuffers::String *pubKey,

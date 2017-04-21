@@ -22,6 +22,7 @@
 #include <ametsuchi/exception.h>
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -31,22 +32,22 @@ extern std::shared_ptr<spdlog::logger> console;
 
 inline std::pair<MDB_dbi, MDB_cursor *> init_btree(
     MDB_txn *append_tx, const std::string &name, uint32_t flags,
-    MDB_cmp_func *dupsort = NULL) {
+    MDB_cmp_func *dupsort = nullptr) {
   int res;
   MDB_dbi dbi;
   MDB_cursor *cursor;
-  if ((res = mdb_dbi_open(append_tx, name.c_str(), flags, &dbi))) {
+  if ((res = mdb_dbi_open(append_tx, name.c_str(), flags, &dbi)) != 0) {
     AMETSUCHI_CRITICAL(res, MDB_NOTFOUND);
     AMETSUCHI_CRITICAL(res, MDB_DBS_FULL);
   }
 
-  if ((res = mdb_cursor_open(append_tx, dbi, &cursor))) {
+  if ((res = mdb_cursor_open(append_tx, dbi, &cursor)) != 0) {
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
   // set comparator for dupsort keys in btree
-  if (dupsort) {
-    if ((res = mdb_set_dupsort(append_tx, dbi, dupsort))) {
+  if (dupsort != nullptr) {
+    if ((res = mdb_set_dupsort(append_tx, dbi, dupsort)) != 0) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
@@ -72,8 +73,10 @@ inline std::vector<std::pair<AM_val, AM_val>> read_all_records(
   MDB_val c_key, c_val;
   int res;
 
-  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_FIRST))) {
-    if (res == MDB_NOTFOUND) return std::vector<std::pair<AM_val, AM_val>>{};
+  if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_FIRST)) != 0) {
+    if (res == MDB_NOTFOUND) {
+      return std::vector<std::pair<AM_val, AM_val>>{};
+    }
     AMETSUCHI_CRITICAL(res, EINVAL);
   }
 
@@ -83,8 +86,10 @@ inline std::vector<std::pair<AM_val, AM_val>> read_all_records(
     AM_val val(c_val);
     ret.push_back({key, val});
 
-    if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT))) {
-      if (res == MDB_NOTFOUND) return ret;
+    if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_NEXT)) != 0) {
+      if (res == MDB_NOTFOUND) {
+        return ret;
+      }
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   } while (res == 0);

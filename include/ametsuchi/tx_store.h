@@ -50,57 +50,57 @@ class TxStore {
 
   // TxStore queries:
 
-  std::vector<AM_val> getAssetTransferBySender(const flatbuffers::String *senderKey,
-                                         bool uncommitted = true,
-                                         MDB_env *env = nullptr);
+  std::vector<AM_val> getAssetTransferBySender(
+      const flatbuffers::String *senderKey, bool uncommitted = true,
+      MDB_env *env = nullptr);
 
-  std::vector<AM_val> getAssetTransferByReceiver(const flatbuffers::String *receiverKey,
-                                           bool uncommitted = true,
-                                           MDB_env *env = nullptr);
+  std::vector<AM_val> getAssetTransferByReceiver(
+      const flatbuffers::String *receiverKey, bool uncommitted = true,
+      MDB_env *env = nullptr);
 
   std::vector<AM_val> getAssetCreateByKey(const flatbuffers::String *pubKey,
                                           bool uncommitted = true,
                                           MDB_env *env = nullptr);
 
   std::vector<AM_val> getAssetAddByKey(const flatbuffers::String *pubKey,
+                                       bool uncommitted = true,
+                                       MDB_env *env = nullptr);
+  std::vector<AM_val> getAssetRemoveByKey(const flatbuffers::String *pubKey,
                                           bool uncommitted = true,
                                           MDB_env *env = nullptr);
-  std::vector<AM_val> getAssetRemoveByKey(const flatbuffers::String *pubKey,
-                                       bool uncommitted = true,
-                                       MDB_env *env = nullptr);
   std::vector<AM_val> getAssetTransferByKey(const flatbuffers::String *pubKey,
-                                       bool uncommitted = true,
-                                       MDB_env *env = nullptr);
+                                            bool uncommitted = true,
+                                            MDB_env *env = nullptr);
   std::vector<AM_val> getAccountAddByKey(const flatbuffers::String *pubKey,
-                                       bool uncommitted = true,
-                                       MDB_env *env = nullptr);
+                                         bool uncommitted = true,
+                                         MDB_env *env = nullptr);
   std::vector<AM_val> getAccountAddSignByKey(const flatbuffers::String *pubKey,
-                                       bool uncommitted = true,
-                                       MDB_env *env = nullptr);
+                                             bool uncommitted = true,
+                                             MDB_env *env = nullptr);
   std::vector<AM_val> getAccountRemoveByKey(const flatbuffers::String *pubKey,
-                                       bool uncommitted = true,
-                                       MDB_env *env = nullptr);
-  std::vector<AM_val> getAccountRemoveSignByKey(const flatbuffers::String *pubKey,
                                             bool uncommitted = true,
                                             MDB_env *env = nullptr);
-  std::vector<AM_val> getAccountSetUseKeysByKey(const flatbuffers::String *pubKey,
-                                            bool uncommitted = true,
-                                            MDB_env *env = nullptr);
+  std::vector<AM_val> getAccountRemoveSignByKey(
+      const flatbuffers::String *pubKey, bool uncommitted = true,
+      MDB_env *env = nullptr);
+  std::vector<AM_val> getAccountSetUseKeysByKey(
+      const flatbuffers::String *pubKey, bool uncommitted = true,
+      MDB_env *env = nullptr);
   std::vector<AM_val> getPeerAddByKey(const flatbuffers::String *pubKey,
-                                                bool uncommitted = true,
-                                                MDB_env *env = nullptr);
+                                      bool uncommitted = true,
+                                      MDB_env *env = nullptr);
   std::vector<AM_val> getPeerChangeTrustByKey(const flatbuffers::String *pubKey,
-                                                bool uncommitted = true,
-                                                MDB_env *env = nullptr);
+                                              bool uncommitted = true,
+                                              MDB_env *env = nullptr);
   std::vector<AM_val> getPeerRemoveByKey(const flatbuffers::String *pubKey,
-                                              bool uncommitted = true,
-                                              MDB_env *env = nullptr);
+                                         bool uncommitted = true,
+                                         MDB_env *env = nullptr);
   std::vector<AM_val> getPeerSetActiveByKey(const flatbuffers::String *pubKey,
-                                              bool uncommitted = true,
-                                              MDB_env *env = nullptr);
-  std::vector<AM_val> getPeerSetTrustByKey(const flatbuffers::String *pubKey,
                                             bool uncommitted = true,
                                             MDB_env *env = nullptr);
+  std::vector<AM_val> getPeerSetTrustByKey(const flatbuffers::String *pubKey,
+                                           bool uncommitted = true,
+                                           MDB_env *env = nullptr);
 
  private:
   size_t tx_store_total;
@@ -112,8 +112,8 @@ class TxStore {
                                const flatbuffers::String *acc_pub_key,
                                size_t &tx_store_total);
 
-  void create_new_tree(MDB_txn* append_tx, const std::string &name, uint32_t flags,
-                       MDB_cmp_func *dupsort = NULL);
+  void create_new_tree(MDB_txn *append_tx, const std::string &name,
+                       uint32_t flags, MDB_cmp_func *dupsort = nullptr);
 
 
   std::vector<AM_val> getTxByKey(const std::string &tree_name,
