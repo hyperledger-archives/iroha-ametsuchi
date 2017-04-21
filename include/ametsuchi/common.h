@@ -55,8 +55,8 @@ inline std::pair<MDB_dbi, MDB_cursor *> init_btree(
 }
 
 /**
- * Represents a value, readed from a database.
- * Used to restrict changing of mmaped data by pointer.
+ * Represents a value read from a database.
+ * Used to prohibit changes of mmaped data by pointer.
  */
 struct AM_val {
   // pointer, which points to blob with data

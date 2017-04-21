@@ -132,9 +132,12 @@ void WSV::asset_create(const iroha::AssetCreate *command) {
   pk += an->data();
 
   // create Asset
+  // TODO: Now only Currency is supported, not supporte ComplexAsset
   flatbuffers::FlatBufferBuilder fbb;
-  auto asset =
-      iroha::CreateCurrencyDirect(fbb, an->data(), dn->data(), ln->data());
+  auto asset = iroha::CreateAsset(
+      fbb,
+      iroha::AnyAsset::Currency,
+      iroha::CreateCurrencyDirect(fbb, an->data(), dn->data(), ln->data()).Union());
   fbb.Finish(asset);
 
   auto ptr = fbb.GetBufferPointer();
@@ -160,6 +163,7 @@ void WSV::asset_create(const iroha::AssetCreate *command) {
 }
 
 void WSV::asset_add(const iroha::AssetAdd *command) {
+
   // Now only Currency is supported
   if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency) {
     //TODO: How to check the asset_type?
@@ -167,34 +171,33 @@ void WSV::asset_add(const iroha::AssetAdd *command) {
     throw exception::InternalError::NOT_IMPLEMENTED;
   }
 
-  account_add_currency(command->accPubKey(),
-                       (iroha::Currency *)command->asset()->data(),
-                       command->asset()->size());
+  account_add_currency(command->accPubKey(), command->asset());
 }
-
 
 void WSV::asset_remove(const iroha::AssetRemove *command) {
   // Now only Currency is supported
   if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency)
     throw exception::InternalError::NOT_IMPLEMENTED;
 
-  this->account_remove_currency(command->accPubKey(),
-                                (iroha::Currency *)command->asset()->data());
+  account_remove_currency(command->accPubKey(), command->asset());
 }
 
 void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
-                               const iroha::Currency *c, size_t c_size) {
+                               const flatbuffers::Vector<uint8_t> *asset_fb) {
   int res;
   MDB_val c_key, c_val;
   auto cursor = trees_.at("wsv_pubkey_assets").second;
   std::vector<uint8_t> copy;
+  const iroha::Currency *currency =
+      flatbuffers::GetRoot<iroha::Asset>(asset_fb->Data())->asset_as_Currency();
 
   try {
     // may throw ASSET_NOT_FOUND
     AM_val account_asset = accountGetAsset(
-        acc_pub_key, c->ledger_name(), c->domain_name(), c->currency_name());
+        acc_pub_key, currency->ledger_name(), currency->domain_name(),
+        currency->currency_name(), true);
 
-    assert(c_size == account_asset.size);
+    assert(asset_fb->size() == account_asset.size);
 
     // asset exists, change it:
 
@@ -202,53 +205,70 @@ void WSV::account_add_currency(const flatbuffers::String *acc_pub_key,
             (char *)account_asset.data + account_asset.size};
 
     // update the copy
-    auto copy_fb = flatbuffers::GetMutableRoot<iroha::Currency>(copy.data());
+    auto copy_fb = flatbuffers::GetMutableRoot<iroha::Asset>(copy.data());
+    auto copy_cur =
+        static_cast<iroha::Currency*>(copy_fb->mutable_asset());
 
-    Currency current(copy_fb->amount(), copy_fb->precision());
-    Currency delta(c->amount(), c->precision());
-    Currency new_state = current + delta;
+    Currency current(copy_cur->amount(), copy_cur->precision());
+    Currency delta(currency->amount(), currency->precision());
+    current = current + delta;
 
-    copy_fb->mutate_amount(new_state.get_amount());
-    copy_fb->mutate_precision(new_state.get_precision());
+    copy_cur->mutate_amount(current.get_amount());
+    copy_cur->mutate_precision(current.get_precision());
+
+    // write to tree
+    c_key.mv_data = (void *)acc_pub_key->data();
+    c_key.mv_size = acc_pub_key->size();
+    c_val.mv_data = (void *)copy.data();
+    c_val.mv_size = copy.size();
+
+    // cursor is at the correct asset, just replace with a copy of FB and flag
+    // MDB_CURRENT
+
+    if ((res = mdb_cursor_put(cursor, &c_key, &c_val, MDB_CURRENT))) {
+      AMETSUCHI_CRITICAL(res, MDB_KEYEXIST);
+      AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
+      AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
+      AMETSUCHI_CRITICAL(res, EACCES);
+      AMETSUCHI_CRITICAL(res, EINVAL);
+    }
 
   } catch (exception::InvalidTransaction e) {
     // Create new Asset
     if (e == exception::InvalidTransaction::ASSET_NOT_FOUND) {
-      copy = {(char *)c, (char *)c + c_size};
+      // write to tree
+      c_key.mv_data = (void *)acc_pub_key->data();
+      c_key.mv_size = acc_pub_key->size();
+      c_val.mv_data = (void *)asset_fb->Data();
+      c_val.mv_size = asset_fb->size();
+
+      if ((res = mdb_cursor_put(cursor, &c_key, &c_val, 0))) {
+        AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
+        AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
+        AMETSUCHI_CRITICAL(res, EACCES);
+        AMETSUCHI_CRITICAL(res, EINVAL);
+      }
     } else {
       throw;
     }
   }
-
-  // write to tree
-  c_key.mv_data = (void *)acc_pub_key->data();
-  c_key.mv_size = acc_pub_key->size();
-  c_val.mv_data = (void *)copy.data();
-  c_val.mv_size = copy.size();
-
-  // cursor is at the correct asset, just replace with a copy of FB and flag
-  // MDB_CURRENT
-  // TODO: Check if this works for a new Asset (It may replace some random old
-  // asset)
-  if ((res = mdb_cursor_put(cursor, &c_key, &c_val, MDB_CURRENT))) {
-    AMETSUCHI_CRITICAL(res, MDB_KEYEXIST);
-    AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
-    AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
-    AMETSUCHI_CRITICAL(res, EACCES);
-    AMETSUCHI_CRITICAL(res, EINVAL);
-  }
 }
 
 void WSV::account_remove_currency(const flatbuffers::String *acc_pub_key,
-                                  const iroha::Currency *c) {
+                                  const flatbuffers::Vector<uint8_t> *asset_fb) {
   int res;
   MDB_val c_key, c_val;
   auto cursor = trees_.at("wsv_pubkey_assets").second;
   std::vector<uint8_t> copy;
+  const iroha::Currency *currency =
+      flatbuffers::GetRoot<iroha::Asset>(asset_fb->Data())->asset_as_Currency();
 
   // may throw ASSET_NOT_FOUND
-  AM_val account_asset = accountGetAsset(acc_pub_key, c->ledger_name(),
-                                         c->domain_name(), c->currency_name());
+  AM_val account_asset = accountGetAsset(
+      acc_pub_key, currency->ledger_name(), currency->domain_name(),
+      currency->currency_name(), true);
+
+  assert(asset_fb->size() == account_asset.size);
 
   // asset exists, change it:
 
@@ -256,15 +276,16 @@ void WSV::account_remove_currency(const flatbuffers::String *acc_pub_key,
           (char *)account_asset.data + account_asset.size};
 
   // update the copy
-  auto copy_fb = flatbuffers::GetMutableRoot<iroha::Currency>(copy.data());
+  auto copy_fb = flatbuffers::GetMutableRoot<iroha::Asset>(copy.data());
+  auto copy_cur = static_cast<iroha::Currency*>(copy_fb->mutable_asset());
 
-  Currency current(copy_fb->amount(), copy_fb->precision());
-  Currency delta(c->amount(), c->precision());
+  Currency current(copy_cur->amount(), copy_cur->precision());
+  Currency delta(currency->amount(), currency->precision());
   if (current < delta) throw exception::InvalidTransaction::NOT_ENOUGH_ASSETS;
-  Currency new_state = current - delta;
+  current = current - delta;
 
-  copy_fb->mutate_amount(new_state.get_amount());
-  copy_fb->mutate_precision(new_state.get_precision());
+  copy_cur->mutate_amount(current.get_amount());
+  copy_cur->mutate_precision(current.get_precision());
 
   // write to tree
   c_key.mv_data = (void *)acc_pub_key->data();
@@ -288,12 +309,9 @@ void WSV::asset_transfer(const iroha::AssetTransfer *command) {
   if (command->asset_nested_root()->asset_type() != iroha::AnyAsset::Currency)
     throw exception::InternalError::NOT_IMPLEMENTED;
 
-  auto asset_fb = flatbuffers::GetRoot<iroha::Asset>(command->asset());
-  auto currency = asset_fb->asset_as_Currency();
-
-  this->account_remove_currency(command->sender(), currency);
-  this->account_add_currency(command->receiver(), currency,
-                             command->asset()->size());
+  // TODO: it may write exeption when can't transfer becouse of sender has not asset.
+  this->account_remove_currency(command->sender(), command->asset());
+  this->account_add_currency(command->receiver(), command->asset());
 }
 
 void WSV::account_add(const iroha::AccountAdd *command) {
@@ -431,6 +449,7 @@ AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
   int res;
 
   std::string pk;
+
   pk += ln->data();
   pk += dn->data();
   pk += an->data();
@@ -461,8 +480,7 @@ AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
       AMETSUCHI_CRITICAL(res, ENOMEM);
     }
 
-    if ((res ==
-        mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
+    if ((res = mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
@@ -470,6 +488,16 @@ AM_val WSV::accountGetAsset(const flatbuffers::String *pubKey,
   // query asset by public key
   c_key.mv_data = (void *)pubKey->data();
   c_key.mv_size = pubKey->size();
+
+  // May be erase commen: check cast currency
+  /*
+  if( flatbuffers::GetRoot<iroha::Asset>(c_val.mv_data)->asset_as_Currency() ){
+    printf("ok c_val as Currency\n");
+    printf("size is : %d\n",c_val.mv_size);
+  } else
+    printf("dame c_val as Currency\n");
+  fflush(stdout);
+  */
 
   // if sender has no such asset, then it is incorrect transaction
   if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_GET_BOTH))) {
@@ -509,7 +537,7 @@ std::vector<AM_val> WSV::accountGetAllAssets(const flatbuffers::String *pubKey,
       AMETSUCHI_CRITICAL(res, ENOMEM);
     }
 
-    if ((res ==
+    if ((res =
          mdb_cursor_open(tx, trees_.at("wsv_pubkey_assets").first, &cursor))) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
