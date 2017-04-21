@@ -197,7 +197,7 @@ void TxStore::close_dbi(MDB_env *env) {
   }
 }
 uint32_t TxStore::get_trees_total() {
-  TX_STORE_TREES_TOTAL = 17;
+  TX_STORE_TREES_TOTAL = 18;
   return TX_STORE_TREES_TOTAL;
 }
 

@@ -48,6 +48,8 @@ using hash_t = std::array<uint8_t, HASH_LEN>;
  * - a possibility to rollback a state of a tree up to `max_rollback()` steps.
  */
 class MerkleTree {
+  using tree_t = std::vector<hash_t>;
+
  public:
   /**
    * Constructor
@@ -91,13 +93,12 @@ class MerkleTree {
    */
   void dump(size_t amount = 2);
 
-  const tree_t const last_block() const;
+  const tree_t last_block() const;
 
  private:
   std::string printelement(const std::vector<hash_t> &tree, size_t i,
                            size_t amount);
 
-  using tree_t = std::vector<hash_t>;
   std::list<tree_t> trees_;
 
   size_t max_blocks_;
