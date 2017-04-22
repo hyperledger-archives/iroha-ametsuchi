@@ -81,8 +81,6 @@ class Ametsuchi {
    */
   void rollback();
 
-  merkle::hash_t merkle_root();
-
   // ********************
   // Ametsuchi queries:
   /**
@@ -165,8 +163,6 @@ class Ametsuchi {
 
   void init_append_tx();
   void abort_append_tx();
-
-  merkle::MerkleTree tree;
 };
 
 }  // namespace ametsuchi

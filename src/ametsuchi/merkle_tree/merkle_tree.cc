@@ -238,6 +238,12 @@ const MerkleTree::tree_t MerkleTree::last_block() const {
   else
     throw exception::Exception("empty tree");
 }
+size_t MerkleTree::last_block_begin() const {
+  return leafs_ - 1;
+}
+size_t MerkleTree::last_block_end() const {
+  return i_current_;
+}
 
 }  // namespace merkle
 }  // namespace ametsuchi

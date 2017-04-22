@@ -21,16 +21,23 @@
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <unordered_map>
+#include <ametsuchi/merkle_tree/merkle_tree.h>
 #include "common.h"
 
 namespace ametsuchi {
 
 class TxStore {
  public:
-  TxStore();
+  TxStore(size_t merkle_leaves);
   ~TxStore();
 
-  void append(const std::vector<uint8_t> *blob);
+  void commit();
+
+  void init_merkle_tree();
+
+  merkle::hash_t merkle_root();
+
+  merkle::hash_t append(const std::vector<uint8_t> *blob);
   void init(MDB_txn *append_tx);
 
   /**
@@ -105,6 +112,9 @@ class TxStore {
  private:
   size_t tx_store_total;
   std::unordered_map<std::string, std::pair<MDB_dbi, MDB_cursor *>> trees_;
+
+  merkle::MerkleTree merkleTree_;
+
   MDB_txn *append_tx_;
   void set_tx_total();
   uint32_t TX_STORE_TREES_TOTAL;
@@ -120,8 +130,6 @@ class TxStore {
                                  const flatbuffers::String *pubKey,
                                  bool uncommitted = true,
                                  MDB_env *env = nullptr);
-
-  void merkleTree_store();
 };
 }
 
