@@ -23,7 +23,7 @@
 namespace ametsuchi {
 
 
-void TxStore::append(const std::vector<uint8_t> *blob) {
+merkle::hash_t TxStore::append(const std::vector<uint8_t> *blob) {
   auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
 
   MDB_val c_key, c_val;
@@ -135,6 +135,13 @@ void TxStore::append(const std::vector<uint8_t> *blob) {
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
   }
+
+  // 4. Push to merkle tree
+  merkle::hash_t h;
+  assert(tx->hash()->size() == merkle::HASH_LEN);
+  std::copy(tx->hash()->begin(), tx->hash()->end(), &h[0]);
+  merkleTree_.push(h);
+  return merkleTree_.root();
 }
 
 void TxStore::init(MDB_txn *append_tx) {
@@ -173,7 +180,7 @@ void TxStore::close_cursors() {
   }
 }
 
-TxStore::TxStore() {}
+TxStore::TxStore(size_t merkle_leaves) : merkleTree_(merkle_leaves) {}
 
 TxStore::~TxStore() = default;
 
@@ -301,10 +308,6 @@ std::vector<AM_val> TxStore::getTxByKey(const std::string &tree_name,
   return ret;
 }
 
-
-void TxStore::merkleTree_store() {}
-
-
 void TxStore::create_new_tree(MDB_txn *append_tx, const std::string &name,
                               uint32_t flags, MDB_cmp_func *dupsort) {
   trees_[name] = init_btree(append_tx, name, flags, dupsort);
@@ -384,5 +387,50 @@ std::vector<AM_val> TxStore::getPeerSetActiveByKey(
 std::vector<AM_val> TxStore::getPeerSetTrustByKey(
     const flatbuffers::String *pubKey, bool uncommitted, MDB_env *env) {
   return getTxByKey("index_peer_set_trust", pubKey, uncommitted, env);
+}
+merkle::hash_t TxStore::merkle_root() {
+  return merkleTree_.root();
+}
+
+void TxStore::commit() {
+  int res;
+  MDB_val c_key, c_val;
+//  MDB_cursor *cursor;
+
+  /*mdb_cursor_close(trees_.at("merkle_tree").second);
+
+  // Clear old hashes
+  if ((res = mdb_drop(append_tx_, trees_.at("merkle_tree").first, 0))){
+    AMETSUCHI_CRITICAL(res, EINVAL);
+    AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
+    AMETSUCHI_CRITICAL(res, EACCES);
+  }
+
+  //auto cursor = trees_.at("merkle_tree").second;
+  if ((res=mdb_cursor_open(append_tx_, trees_.at("merkle_tree").first,
+                           &cursor)))
+  {
+    AMETSUCHI_CRITICAL(res, EINVAL);
+    AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
+    AMETSUCHI_CRITICAL(res, EACCES);
+  }*/
+
+  auto last_block = merkleTree_.last_block();
+  auto begin = merkleTree_.last_block_begin(),
+      end = merkleTree_.last_block_end();
+
+  for (; begin < end; ++begin){
+    c_key.mv_data = (void *) &begin;
+    c_key.mv_size = sizeof(begin);
+    c_val.mv_data = (void *)last_block.at(begin).data();
+    c_val.mv_size = merkle::HASH_LEN;
+
+    if ((res = mdb_cursor_put(trees_.at("merkle_tree").second, &c_key, &c_val, MDB_APPEND))) { // ???
+      AMETSUCHI_CRITICAL(res, MDB_MAP_FULL);
+      AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
+      AMETSUCHI_CRITICAL(res, EACCES);
+      AMETSUCHI_CRITICAL(res, EINVAL);
+    }
+  }
 }
 }

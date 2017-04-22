@@ -25,7 +25,7 @@ namespace ametsuchi {
 
 
 Ametsuchi::Ametsuchi(const std::string &db_folder)
-    : path_(db_folder), tree(AMETSUCHI_BLOCK_SIZE), tx_store(), wsv() {
+    : path_(db_folder), tx_store(AMETSUCHI_BLOCK_SIZE), wsv() {
   // initialize database:
   // create folder, create all handles and btrees
   // in case of any errors print error to stdout and exit
@@ -43,39 +43,29 @@ Ametsuchi::~Ametsuchi() {
 
 
 merkle::hash_t Ametsuchi::append(const std::vector<uint8_t> *blob) {
-  auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
+//  auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
 
   // 1. Append to TX_store
-  tx_store.append(blob);
+  auto mt_root = tx_store.append(blob);
   // 2. Update WSV
   wsv.update(blob);
 
-  merkle::hash_t h;
-  assert(tx->hash()->size() == merkle::HASH_LEN);
-  std::copy(tx->hash()->begin(), tx->hash()->end(), &h[0]);
-  tree.push(h);
-  return tree.root();
+  return mt_root;
 }
 
 merkle::hash_t Ametsuchi::append(
     const std::vector<std::vector<uint8_t> *> &batch) {
   for (auto t : batch) {
     append(t);
-
-    auto tx = flatbuffers::GetRoot<iroha::Transaction>(t);
-
-    merkle::hash_t h;
-    assert(tx->hash()->size() == merkle::HASH_LEN);
-    std::copy(tx->hash()->begin(), tx->hash()->end(), &h[0]);
-
-    tree.push(h);
   }
 
-  return tree.root();
+  return tx_store.merkle_root();
 }
 
 
 void Ametsuchi::commit() {
+  // commit merkle tree
+  tx_store.commit();
   // commit old transaction
   tx_store.close_cursors();
   wsv.close_cursors();
@@ -190,10 +180,6 @@ AM_val Ametsuchi::accountGetAsset(const flatbuffers::String *pubKey,
   return wsv.accountGetAsset(pubKey, ledger_name, domain_name, asset_name,
                              uncommitted, env);
 }
-
-
-merkle::hash_t Ametsuchi::merkle_root() { return tree.root(); }
-
 
 std::vector<AM_val> Ametsuchi::getAssetTransferBySender(
     const flatbuffers::String *senderKey, bool uncommitted) {

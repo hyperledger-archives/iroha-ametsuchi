@@ -95,6 +95,10 @@ class MerkleTree {
 
   const tree_t last_block() const;
 
+  size_t last_block_begin() const;
+
+  size_t last_block_end() const;
+
  private:
   std::string printelement(const std::vector<hash_t> &tree, size_t i,
                            size_t amount);
