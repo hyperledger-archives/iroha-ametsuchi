@@ -9,3 +9,5 @@ external/
 include/ametsuchi/generated/*
 .idea
 .vscode
+.sonarlint
+.scannerwork
