@@ -395,25 +395,11 @@ merkle::hash_t TxStore::merkle_root() {
 void TxStore::commit() {
   int res;
   MDB_val c_key, c_val;
-//  MDB_cursor *cursor;
-
-  /*mdb_cursor_close(trees_.at("merkle_tree").second);
 
   // Clear old hashes
   if ((res = mdb_drop(append_tx_, trees_.at("merkle_tree").first, 0))){
     AMETSUCHI_CRITICAL(res, EINVAL);
-    AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
-    AMETSUCHI_CRITICAL(res, EACCES);
   }
-
-  //auto cursor = trees_.at("merkle_tree").second;
-  if ((res=mdb_cursor_open(append_tx_, trees_.at("merkle_tree").first,
-                           &cursor)))
-  {
-    AMETSUCHI_CRITICAL(res, EINVAL);
-    AMETSUCHI_CRITICAL(res, MDB_TXN_FULL);
-    AMETSUCHI_CRITICAL(res, EACCES);
-  }*/
 
   auto last_block = merkleTree_.last_block();
   auto begin = merkleTree_.last_block_begin(),
@@ -431,6 +417,17 @@ void TxStore::commit() {
       AMETSUCHI_CRITICAL(res, EACCES);
       AMETSUCHI_CRITICAL(res, EINVAL);
     }
+  }
+}
+void TxStore::init_merkle_tree() {
+  auto records = read_all_records(trees_.at("merkle_tree").second);
+  for (auto &record : records) {
+    merkle::hash_t hash;
+    assert(record.second.size == merkle::HASH_LEN);
+    std::copy(static_cast<const uint8_t *>(record.second.data),
+              static_cast<const uint8_t *>(record.second.data) + record.second.size, hash.data());
+    merkleTree_.push(hash);
+    assert((merkleTree_.last_block_end() - 1) == *(size_t*)record.first.data);
   }
 }
 }

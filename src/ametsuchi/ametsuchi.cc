@@ -43,7 +43,6 @@ Ametsuchi::~Ametsuchi() {
 
 
 merkle::hash_t Ametsuchi::append(const std::vector<uint8_t> *blob) {
-//  auto tx = flatbuffers::GetRoot<iroha::Transaction>(blob->data());
 
   // 1. Append to TX_store
   auto mt_root = tx_store.append(blob);
@@ -144,6 +143,8 @@ void Ametsuchi::init() {
 
   // initialize
   init_append_tx();
+
+  tx_store.init_merkle_tree();
 }
 
 

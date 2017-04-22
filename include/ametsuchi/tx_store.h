@@ -33,6 +33,8 @@ class TxStore {
 
   void commit();
 
+  void init_merkle_tree();
+
   merkle::hash_t merkle_root();
 
   merkle::hash_t append(const std::vector<uint8_t> *blob);
