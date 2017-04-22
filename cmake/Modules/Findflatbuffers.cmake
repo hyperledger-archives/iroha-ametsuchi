@@ -10,16 +10,14 @@ endif()
 
 find_library(flatbuffers_LIBRARIES flatbuffers)
 
-if(flatbuffers_FIND_REQUIRED_flatc)
-  find_program(flatc_EXECUTABLE flatc)
-  if(flatc_EXECUTABLE)
-    set(flatbuffers_flatc_FOUND TRUE)
-  endif()
+find_program(flatc_EXECUTABLE flatc)
+if(flatc_EXECUTABLE)
+  set(flatbuffers_flatc_FOUND TRUE)
 endif()
 
 find_package(PackageHandleStandardArgs REQUIRED)
 find_package_handle_standard_args(flatbuffers
-  REQUIRED_VARS flatbuffers_INCLUDE_DIRS flatbuffers_LIBRARIES
+  REQUIRED_VARS flatbuffers_INCLUDE_DIRS flatbuffers_LIBRARIES flatc_EXECUTABLE
   VERSION_VAR flatbuffers_VERSION
   HANDLE_COMPONENTS
   )

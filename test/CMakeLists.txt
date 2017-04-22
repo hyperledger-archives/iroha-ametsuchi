@@ -1,21 +1,25 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin)
 
-AddTest(cache_test ametsuchi/cache_test.cc)
+add_library(tx_generator generator/tx_generator.h)
+set_target_properties(tx_generator PROPERTIES LINKER_LANGUAGE CXX)
 
-AddTest(serialize_test ametsuchi/serialize_test.cc)
-target_link_libraries(serialize_test PRIVATE spdlog)
+AddTest(tx_generator_test generator/tx_generator_test.cc)
+target_link_libraries(tx_generator_test PRIVATE tx_generator flatbuffers)
 
-AddTest(comparator_test ametsuchi/comparator_test.cc)
-target_link_libraries(comparator_test PRIVATE spdlog)
+AddTest(module_lmdb module/lmdb_test.cc)
+target_link_libraries(module_lmdb PRIVATE LMDB spdlog ${LIBAMETSUCHI_NAME})
 
-AddTest(module_keccak module/keccak_test.cc)
-target_link_libraries(module_keccak PRIVATE keccak)
+AddTest(currency_test ametsuchi/currency_test.cc)
+target_link_libraries(currency_test PRIVATE ${LIBAMETSUCHI_NAME})
 
-AddTest(file_test ametsuchi/file/file_test.cc)
-target_link_libraries(file_test PRIVATE ${LIBAMETSUCHI_NAME})
+AddTest(ametsuchi_test ametsuchi/ametsuchi.cc)
+target_link_libraries(ametsuchi_test PRIVATE ${LIBAMETSUCHI_NAME} tx_generator)
 
-AddTest(rw_file_safe_test ametsuchi/file/rw_file_safe_test.cc)
-target_link_libraries(rw_file_safe_test PRIVATE ${LIBAMETSUCHI_NAME})
+AddTest(merkle_test ametsuchi/merkle_test.cc)
+target_link_libraries(merkle_test PRIVATE ${LIBAMETSUCHI_NAME})
 
-AddTest(module_sqlite module/sqlite_test.cc)
-target_link_libraries(module_sqlite PRIVATE sqlite)
+AddTest(circular_stack_iter_test ametsuchi/circular_stack_iter_test.cc)
+target_link_libraries(circular_stack_iter_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+AddTest(circular_stack_test ametsuchi/circular_stack_test.cc)
+target_link_libraries(circular_stack_test PRIVATE ${LIBAMETSUCHI_NAME})

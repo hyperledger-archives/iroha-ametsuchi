@@ -18,26 +18,153 @@
 #ifndef AMETSUCHI_DB_H
 #define AMETSUCHI_DB_H
 
-#include <ametsuchi/env.h>
-#include <ametsuchi/globals.h>
-#include <ametsuchi/table/fixed_table.h>
+#include <ametsuchi/currency.h>
+#include <ametsuchi/generated/commands_generated.h>
+#include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <ametsuchi/tx_store.h>
+#include <ametsuchi/wsv.h>
+#include <flatbuffers/flatbuffers.h>
+#include <lmdb.h>
+#include <cstdint>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+extern "C" {
+#include <SimpleFIPS202.h>
+}
+
+#ifndef AMETSUCHI_MAX_DB_SIZE
+#define AMETSUCHI_MAX_DB_SIZE (8L * 1024 * 1024 * 1024)  // 8 GB
+#endif
+
+#ifndef AMETSUCHI_BLOCK_SIZE
+#define AMETSUCHI_BLOCK_SIZE (1024)  // the number of leafs in merkle tree
+#endif
 
 namespace ametsuchi {
 
+
 /**
- * Interface to tx_store and world_state
- * @tparam T - flatbuffers, protobuf, any serializable structure
+ * Main class for the database.
+ *  - single Ametsuchi instance for the single database
+ *  - single writer thread
+ *  - multiple readers threads, new read-only transaction for each thread
+ *  - all data is stored as root flatbuffers
  */
-template <typename T>
 class Ametsuchi {
  public:
-  void open(std::shared_ptr<Env> env) {
-    // ENV is declared in "globals.h"
-    ENV = env;
-  }
-  void close();
+  explicit Ametsuchi(const std::string &db_folder);
+  ~Ametsuchi();
+
+  /**
+   * Append root flatbuffer Transaction to the Ametsuchi database.
+   * @throw exception::InvalidTransaction with the reason (one of enum values)
+   * @throw exception::InternalError with the reason (one of enum values)
+   * @param tx root type Transaction (contents of TransactionWrapper->tx array)
+   * @return new merkle root
+   */
+  // TODO make Flatbuffer vector
+  merkle::hash_t append(const std::vector<uint8_t> *tx);
+  merkle::hash_t append(const std::vector<std::vector<uint8_t> *> &batch);
+
+  /**
+   * Commit appended data to database. Commit creates the latest 'checkpoint',
+   * when you can not rollback.
+   */
+  void commit();
+
+  /**
+   * You can rollback appended transaction(s) to previous commit.
+   */
+  void rollback();
+
+  // ********************
+  // Ametsuchi queries:
+  /**
+ * Returns all assets, which belong to user with \p pubKey.
+ * @param pubKey - account's public key
+ * @param uncommitted - if true, include uncommitted changes to search.
+ * Otherwise create new read-only TX
+ * @return 0 or * pairs <pointer, size>, which are mmaped into memory.
+ */
+  std::vector<AM_val> accountGetAllAssets(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
+
+  /**
+   * Returns specific asset, which belong to user with \p pubKey.
+   * @param pubKey - account's public key
+   * @param ledger_name - ledger name
+   * @param domain_name - domain name
+   * @param asset_name - asset (currency) name
+   * @param uncommitted - if true, include uncommitted changes to search.
+ * Otherwise create new read-only TX
+   * @return pair <pointer, size>, which are mmaped from disk
+   */
+  AM_val accountGetAsset(const flatbuffers::String *pubKey,
+                         const flatbuffers::String *ledger_name,
+                         const flatbuffers::String *domain_name,
+                         const flatbuffers::String *asset_name,
+                         bool uncommitted = false);
+
+  std::vector<AM_val> getAssetTransferBySender(
+      const flatbuffers::String *senderKey, bool uncommitted = false);
+
+  std::vector<AM_val> getAssetTransferByReceiver(
+      const flatbuffers::String *receiverKey, bool uncommitted = false);
+
+  std::vector<AM_val> getAssetCreateByKey(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
+
+  std::vector<AM_val> getAssetAddByKey(const flatbuffers::String *pubKey,
+                                       bool uncommitted = false);
+  std::vector<AM_val> getAssetRemoveByKey(const flatbuffers::String *pubKey,
+                                          bool uncommitted = false);
+  std::vector<AM_val> getAssetTransferByKey(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+  std::vector<AM_val> getAccountAddByKey(const flatbuffers::String *pubKey,
+                                         bool uncommitted = false);
+  std::vector<AM_val> getAccountAddSignByKey(const flatbuffers::String *pubKey,
+                                             bool uncommitted = false);
+  std::vector<AM_val> getAccountRemoveByKey(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+  std::vector<AM_val> getAccountRemoveSignByKey(
+      const flatbuffers::String *pubKey, bool uncommitted = false);
+  std::vector<AM_val> getAccountSetUseKeysByKey(
+      const flatbuffers::String *pubKey, bool uncommitted = false);
+  std::vector<AM_val> getPeerAddByKey(const flatbuffers::String *pubKey,
+                                      bool uncommitted = false);
+  std::vector<AM_val> getPeerChangeTrustByKey(const flatbuffers::String *pubKey,
+                                              bool uncommitted = false);
+  std::vector<AM_val> getPeerRemoveByKey(const flatbuffers::String *pubKey,
+                                         bool uncommitted = false);
+  std::vector<AM_val> getPeerSetActiveByKey(const flatbuffers::String *pubKey,
+                                            bool uncommitted = false);
+  std::vector<AM_val> getPeerSetTrustByKey(const flatbuffers::String *pubKey,
+                                           bool uncommitted = false);
+
+ private:
+  /* for internal use only */
+
+  std::string path_;
+  MDB_env *env;
+  MDB_stat mst;
+  MDB_txn *append_tx_;  // pointer to db transaction
+
+  TxStore tx_store;
+  WSV wsv;
+
+  uint32_t AMETSUCHI_TREES_TOTAL;
+
+
+  void init();
+
+  void init_append_tx();
+  void abort_append_tx();
 };
-}
+
+}  // namespace ametsuchi
 
 #endif  // AMETSUCHI_DB_H

@@ -5,4 +5,7 @@
 # CMake
 build/
 external/
-/.gtm/
+.gtm/
+include/ametsuchi/generated/*
+.idea
+.vscode

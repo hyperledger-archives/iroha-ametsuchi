@@ -15,23 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_GLOBALS_H_
-#define AMETSUCHI_GLOBALS_H_
-
-#include <ametsuchi/env.h>
-#include <ametsuchi/exception.h>
-#include <cstdint>
-#include <cstdlib>
-#include <cassert>
-#include <memory>
-#include <string>
-#include <vector>
+#include <ametsuchi/common.h>
 
 namespace ametsuchi {
-
-using byte_t = uint8_t;
-using ByteArray = std::vector<byte_t>;
-
+std::shared_ptr<spdlog::logger> console = spdlog::stdout_color_mt("ametsuchi");
 }
-
-#endif  // AMETSUCHI_GLOBALS_H_

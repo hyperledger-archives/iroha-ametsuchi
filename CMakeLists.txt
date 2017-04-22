@@ -32,26 +32,33 @@ include(cmake/functions.cmake)
 
 
 set(AMETSUCHI_INCLUDE
-  include/ametsuchi/file/file.h
-  include/ametsuchi/file/rw_file.h
-  include/ametsuchi/file/rw_file_safe.h
-
   include/ametsuchi/ametsuchi.h
-  include/ametsuchi/cache.h
-  include/ametsuchi/comparator.h
-  include/ametsuchi/env.h
+  include/ametsuchi/tx_store.h
+  include/ametsuchi/wsv.h
+  include/ametsuchi/common.h
+  include/ametsuchi/currency.h
   include/ametsuchi/exception.h
-  include/ametsuchi/globals.h
-  include/ametsuchi/serializer.h
-  include/ametsuchi/status.h
+  include/ametsuchi/comparator.h
+  include/ametsuchi/merkle_tree/narrow_merkle_tree.h
+  include/ametsuchi/merkle_tree/circular_stack.h
+  include/ametsuchi/merkle_tree/merkle_tree.h
+
+  # needed to compile fbs automatically
+  include/ametsuchi/generated/account_generated.h
+  include/ametsuchi/generated/asset_generated.h
+  include/ametsuchi/generated/commands_generated.h
+  include/ametsuchi/generated/main_generated.h
+  include/ametsuchi/generated/primitives_generated.h
+  include/ametsuchi/generated/transaction_generated.h
   )
 
 set(AMETSUCHI_SRC
-  src/ametsuchi/file/file.cc
-  src/ametsuchi/file/rw_file.cc
-  src/ametsuchi/file/rw_file_safe.cc
-
-  src/ametsuchi/env.cc
+  src/ametsuchi/ametsuchi.cc
+  src/ametsuchi/tx_store.cc
+  src/ametsuchi/wsv.cc
+  src/ametsuchi/currency.cc
+  src/ametsuchi/common.cc
+  src/ametsuchi/merkle_tree/merkle_tree.cc
   )
 
 # Library.
@@ -61,9 +68,10 @@ add_library(${LIBAMETSUCHI_NAME}
   ${AMETSUCHI_SRC}
 )
 target_link_libraries(${LIBAMETSUCHI_NAME}
-  flatbuffers
   spdlog
-#  keccak
+  LMDB
+  flatbuffers
+  keccak
   )
 StrictMode(${LIBAMETSUCHI_NAME})
 
@@ -85,26 +93,6 @@ if(DOCS)
     VERBATIM
   )
 endif(DOCS)
-
-
-# set variable AMETSUCHI_COMPILE_SCHEMA to the path of fbs file
-if (EXISTS ${AMETSUCHI_COMPILE_SCHEMA})
-  message(STATUS "Compiling ${AMETSUCHI_COMPILE_SCHEMA} schema.")
-  message(STATUS "Output will be: ${PROJECT_SOURCE_DIR}/include/ametsuchi/api_generated.h")
-
-  add_custom_command(
-    OUTPUT  api_generated.h
-    COMMAND ${flatc_EXECUTABLE} --cpp --scoped-enums ${AMETSUCHI_COMPILE_SCHEMA}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/include/ametsuchi # includes will be in this directory
-    COMMENT "Compiling schema ${AMETSUCHI_COMPILE_SCHEMA}"
-  )
-
-  add_custom_target(compileSchema
-    DEPENDS api_generated.h
-    COMMENT "Generating header file to include/ametsuchi/api_generated.h")
-
-  add_dependencies(${LIBAMETSUCHI_NAME} compileSchema)
-endif()
 
 
 if(TESTING)
