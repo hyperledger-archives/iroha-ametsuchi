@@ -18,3 +18,35 @@ jobs:
           name: run tests
           command: ctest
 
+      - run:
+          name: analyze source code with cppcheck, valgrind and sonarqube
+          command: |
+            cppcheck --enable=all --inconclusive --xml --xml-version=2 -Iinclude src test benchmark  2>/tmp/cppcheck.xml || true
+            
+            # run valgrind for tests
+            VALGRIND_XML=
+            mkdir -p valgrind_report
+            for test in $(ls test_bin); do
+              xml=valgrind_report/$test.xml
+              bin=test_bin/$test
+              valgrind --xml=yes --xml-file=$xml --trace-children=yes --demangle=yes --leak-check=full $bin || true
+
+              if [ -z "$VALGRIND_XML" ]; then
+                VALGRIND_XML=$xml
+              else
+                VALGRIND_XML=$xml,$VALGRIND_XML
+              fi
+            done
+
+            # sonarqube is at /opt/sonar-scanner in warchantua/iroha-dev
+            /opt/sonar-scanner/bin/sonar-scanner \
+              -Dsonar.sourceEncoding=UTF-8 \
+              -Dsonar.sources=benchmark,include,src,test \
+              -Dsonar.host.url=https://sonar.innoctf.com \
+              -Dsonar.projectKey=hyperledger:iroha-ametsuchi \
+              -Dsonar.projectName="Ametsuchi" \
+              -Dsonar.projectVersion="$CIRCLE_BUILD_NUM" \
+              -Dsonar.login="$SONAR_TOKEN" \
+              -Dsonar.cxx.valgrind.reportPath="$VALGRIND_XML" \
+              -Dsonar.cxx.cppcheck.reportPath=/tmp/cppcheck.xml || true
+
