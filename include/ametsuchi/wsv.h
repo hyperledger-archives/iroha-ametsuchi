@@ -19,7 +19,7 @@
 
 
 #include <ametsuchi/common.h>
-#include <ametsuchi/generated/commands_generated.h>
+#include <commands_generated.h>
 #include <flatbuffers/flatbuffers.h>
 #include <lmdb.h>
 #include <string>

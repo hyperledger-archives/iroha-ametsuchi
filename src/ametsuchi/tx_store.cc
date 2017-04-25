@@ -16,8 +16,8 @@
  */
 
 #include <ametsuchi/exception.h>
-#include <ametsuchi/generated/asset_generated.h>
-#include <ametsuchi/generated/transaction_generated.h>
+#include <asset_generated.h>
+#include <transaction_generated.h>
 #include <ametsuchi/tx_store.h>
 
 namespace ametsuchi {

@@ -16,7 +16,7 @@
  */
 
 #include <ametsuchi/ametsuchi.h>
-#include <ametsuchi/generated/transaction_generated.h>
+#include <transaction_generated.h>
 
 // static auto console = spdlog::stdout_color_mt("ametsuchi");
 

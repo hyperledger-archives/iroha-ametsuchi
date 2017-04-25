@@ -19,7 +19,7 @@
 #define AMETSUCHI_COMPARATOR_H
 
 #include <ametsuchi/exception.h>
-#include <ametsuchi/generated/asset_generated.h>
+#include <asset_generated.h>
 #include <lmdb.h>
 #include <string>
 
