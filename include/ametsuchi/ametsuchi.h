@@ -19,7 +19,7 @@
 #define AMETSUCHI_DB_H
 
 #include <ametsuchi/currency.h>
-#include <ametsuchi/generated/commands_generated.h>
+#include <commands_generated.h>
 #include <ametsuchi/merkle_tree/merkle_tree.h>
 #include <ametsuchi/tx_store.h>
 #include <ametsuchi/wsv.h>
@@ -37,7 +37,7 @@ extern "C" {
 }
 
 #ifndef AMETSUCHI_MAX_DB_SIZE
-#define AMETSUCHI_MAX_DB_SIZE (8L * 1024 * 1024 * 1024)  // 8 GB
+#define AMETSUCHI_MAX_DB_SIZE (1024L * 1024 * 1024 * 1024)  // 1 TB
 #endif
 
 #ifndef AMETSUCHI_BLOCK_SIZE

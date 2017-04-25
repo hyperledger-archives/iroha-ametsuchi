@@ -11,9 +11,9 @@ find_package(Threads REQUIRED)
 ################################
 #         flatbuffers          #
 ################################
-find_package(flatbuffers 1.6.0)
+#find_package(flatbuffers 1.6.0)
 
-if(NOT flatbuffers_FOUND)
+#if(NOT flatbuffers_FOUND)
   set(flatbuffers_CMAKE_ARGS
     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -23,7 +23,6 @@ if(NOT flatbuffers_FOUND)
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DFLATBUFFERS_BUILD_FLATC=ON
     )
-endif ()
 ExternalProject_Add(google_flatbuffers
   GIT_REPOSITORY    "https://github.com/google/flatbuffers.git"
   CMAKE_ARGS        ${flatbuffers_CMAKE_ARGS}
@@ -35,8 +34,9 @@ ExternalProject_Get_Property(google_flatbuffers source_dir binary_dir)
 set(flatbuffers_INCLUDE_DIRS ${source_dir}/include)
 set(flatbuffers_LIBRARIES ${binary_dir}/libflatbuffers.a)
 set(flatc_EXECUTABLE ${binary_dir}/flatc)
-file(MAKE_DIRECTORY ${flatbuffers_INCLUDE_DIRS}/generated)
+file(MAKE_DIRECTORY ${flatbuffers_INCLUDE_DIRS})
 
+#endif ()
 
 add_library(flatbuffers STATIC IMPORTED)
 set_target_properties(flatbuffers PROPERTIES
@@ -47,11 +47,10 @@ set_target_properties(flatbuffers PROPERTIES
 function(compile_fbs_to_cpp FBS)
   string(REGEX REPLACE "\\.fbs$" "_generated.h" GEN_HEADER ${FBS})
   add_custom_command(
-    OUTPUT ${PROJECT_SOURCE_DIR}/include/ametsuchi/generated/${GEN_HEADER}
+    OUTPUT ${IROHA_SCHEMA_DIR}/${GEN_HEADER}
     COMMAND "${flatc_EXECUTABLE}" -c --scoped-enums --no-prefix --gen-mutable
-      -o "${PROJECT_SOURCE_DIR}/include/ametsuchi/generated"
-      "${PROJECT_SOURCE_DIR}/schema/${FBS}"
-    DEPENDS flatbuffers)
+  -o ${IROHA_SCHEMA_DIR} ${IROHA_SCHEMA_DIR}/${FBS}
+    DEPENDS flatbuffers google_flatbuffers)
 endfunction()
 
 compile_fbs_to_cpp(account.fbs)
@@ -113,7 +112,7 @@ if(NOT keccak_FOUND)
     GIT_REPOSITORY    "https://github.com/gvanas/KeccakCodePackage.git"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE   1
-    BUILD_COMMAND     $(MAKE) generic64/libkeccak.a CC="${CMAKE_C_COMPILER}"
+    BUILD_COMMAND     CFLAGS="-fPIC" $(MAKE) generic64/libkeccak.a CC="${CMAKE_C_COMPILER}"
     INSTALL_COMMAND   "" # remove install step
     TEST_COMMAND      "" # remove test step
     UPDATE_COMMAND    "" # remove update step
@@ -136,32 +135,6 @@ if(NOT keccak_FOUND)
 endif()
 
 
-##############################
-##          SQLite           #
-##############################
-#ExternalProject_Add(sqlite_sqlite
-#  URL               "https://www.sqlite.org/2017/sqlite-autoconf-3170000.tar.gz"
-#  # Build static library without libdl
-#  CONFIGURE_COMMAND ./configure --disable-shared --disable-dynamic-extensions CC=${CMAKE_C_COMPILER}
-#  BUILD_IN_SOURCE   1
-#  BUILD_COMMAND     $(MAKE) libsqlite3.la
-#  INSTALL_COMMAND   "" # remove install step
-#  TEST_COMMAND      "" # remove test step
-#  UPDATE_COMMAND    "" # remove update step
-#  )
-#ExternalProject_Get_Property(sqlite_sqlite source_dir)
-#set(sqlite_INCLUDE_DIRS ${source_dir})
-#set(sqlite_LIBRARIES ${source_dir}/.libs/libsqlite3.a)
-#file(MAKE_DIRECTORY ${sqlite_INCLUDE_DIRS})
-#
-#add_library(sqlite STATIC IMPORTED)
-#set_target_properties(sqlite PROPERTIES
-#INTERFACE_INCLUDE_DIRECTORIES ${sqlite_INCLUDE_DIRS}
-#IMPORTED_LOCATION ${sqlite_LIBRARIES}
-#IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-#)
-#
-#add_dependencies(sqlite sqlite_sqlite)
 
 
 ###########################
@@ -175,7 +148,7 @@ if(NOT LMDB_FOUND)
     GIT_TAG           "LMDB_0.9.19"
     CONFIGURE_COMMAND ""
     BUILD_IN_SOURCE   1
-    BUILD_COMMAND     cd libraries/liblmdb && $(MAKE) liblmdb.a CC="${CMAKE_C_COMPILER}"
+    BUILD_COMMAND     cd libraries/liblmdb && $(MAKE) liblmdb.a  CC="${CMAKE_C_COMPILER}" "OPT=-fPIC -O3"
     INSTALL_COMMAND   "" # remove install step
     TEST_COMMAND      "" # remove test step
     UPDATE_COMMAND    "" # remove update step

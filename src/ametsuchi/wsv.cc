@@ -17,7 +17,7 @@
 
 #include <ametsuchi/comparator.h>
 #include <ametsuchi/currency.h>
-#include <ametsuchi/generated/transaction_generated.h>
+#include <transaction_generated.h>
 #include <ametsuchi/wsv.h>
 
 namespace ametsuchi {
