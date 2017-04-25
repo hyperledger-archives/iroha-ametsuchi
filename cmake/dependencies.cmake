@@ -34,6 +34,8 @@ ExternalProject_Get_Property(google_flatbuffers source_dir binary_dir)
 set(flatbuffers_INCLUDE_DIRS ${source_dir}/include)
 set(flatbuffers_LIBRARIES ${binary_dir}/libflatbuffers.a)
 set(flatc_EXECUTABLE ${binary_dir}/flatc)
+file(MAKE_DIRECTORY ${flatbuffers_INCLUDE_DIRS})
+
 #endif ()
 
 add_library(flatbuffers STATIC IMPORTED)
