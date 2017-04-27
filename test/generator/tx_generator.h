@@ -269,8 +269,8 @@ flatbuffers::Offset<iroha::PeerAdd> random_PeerAdd(
 
 flatbuffers::Offset<iroha::PeerRemove> random_PeerRemove(
     flatbuffers::FlatBufferBuilder& fbb,
-    std::vector<uint8_t> peer = random_peer()) {
-  return iroha::CreatePeerRemove(fbb, fbb.CreateVector(peer));
+    std::string pubkey = random_string(10)) {
+  return iroha::CreatePeerRemove(fbb, fbb.CreateString(pubkey));
 }
 
 /**

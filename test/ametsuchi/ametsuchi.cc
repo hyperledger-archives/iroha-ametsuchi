@@ -224,3 +224,6 @@ TEST_F(Ametsuchi_Test, AssetTest) {
   }
   //});
 }
+
+TEST_F(Ametsuchi_Test, PeerTest) {
+}

@@ -39,7 +39,7 @@ void WSV::init(MDB_txn *append_tx) {
       init_btree(append_tx_, "wsv_assetid_asset", MDB_CREATE);
 
   // [ip] => peer (NODUP)
-  trees_["wsv_ip_peer"] = init_btree(append_tx_, "wsv_ip_peer", MDB_CREATE);
+  trees_["wsv_pubkey_peer"] = init_btree(append_tx_, "wsv_pubkey_peer", MDB_CREATE);
 
   // we should know created assets, so read entire table in memory
   read_created_assets();
@@ -381,17 +381,17 @@ void WSV::account_remove(const iroha::AccountRemove *command) {
 }
 
 void WSV::peer_add(const iroha::PeerAdd *command) {
-  MDB_cursor *cursor = trees_.at("wsv_ip_peer").second;
+  MDB_cursor *cursor = trees_.at("wsv_pubkey_peer").second;
   MDB_val c_key, c_val;
   int res;
 
   auto peer = flatbuffers::GetRoot<iroha::Peer>(command->peer()->data());
-  auto ip = peer->ip();
+  auto pubkey = peer->publicKey();
 
   flatbuffers::GetRoot<iroha::Peer>(peer);
 
-  c_key.mv_data = (void *)(ip->data());
-  c_key.mv_size = ip->size();
+  c_key.mv_data = (void *)(pubkey->data());
+  c_key.mv_size = pubkey->size();
   c_val.mv_data = (void *)command->peer()->data();
   c_val.mv_size = command->peer()->size();
 
@@ -409,19 +409,14 @@ void WSV::peer_add(const iroha::PeerAdd *command) {
 
 
 void WSV::peer_remove(const iroha::PeerRemove *command) {
-  auto cursor = trees_.at("wsv_ip_peer").second;
+  auto cursor = trees_.at("wsv_pubkey_peer").second;
   MDB_val c_key, c_val;
   int res;
 
-  auto peer = flatbuffers::GetRoot<iroha::Peer>(command->peer()->data());
-  auto ip = peer->ip();
+  auto pubkey = command->peerPubKey();
 
-  flatbuffers::GetRoot<iroha::Peer>(peer);
-
-  c_key.mv_data = (void *)(ip->data());
-  c_key.mv_size = ip->size();
-  c_val.mv_data = (void *)command->peer()->data();
-  c_val.mv_size = command->peer()->size();
+  c_key.mv_data = (void *)(pubkey->data());
+  c_key.mv_size = pubkey->size();
 
   if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET))) {
     if (res == MDB_NOTFOUND) {
