@@ -109,6 +109,9 @@ class Ametsuchi {
                          const flatbuffers::String *asset_name,
                          bool uncommitted = false);
 
+  AM_val pubKeyGetPeer(const flatbuffers::String *pubKey,
+                       bool uncommitted = false);
+
   std::vector<AM_val> getAssetTransferBySender(
       const flatbuffers::String *senderKey, bool uncommitted = false);
 

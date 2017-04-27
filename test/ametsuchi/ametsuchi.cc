@@ -263,6 +263,35 @@ TEST_F(Ametsuchi_Test, PeerTest) {
     ametsuchi_.append(&blob);
   }
 
+  { // Check Peer1
+    flatbuffers::FlatBufferBuilder fbb(256);
+    auto tmp_pubkey = fbb.CreateString(pubkey1);
+    fbb.Finish(tmp_pubkey);
+    auto query_pubkey = flatbuffers::GetRoot<flatbuffers::String>(fbb.GetBufferPointer());
+
+    auto cur = flatbuffers::GetRoot<iroha::Peer>(
+        ametsuchi_
+            .pubKeyGetPeer(query_pubkey,true)
+            .data);
+
+    ASSERT_TRUE(cur->publicKey()->str() == pubkey1);
+    ASSERT_TRUE(cur->ip()->str() ==  ip1);
+  }
+
+  { // Check Peer2
+    flatbuffers::FlatBufferBuilder fbb(256);
+    auto tmp_pubkey = fbb.CreateString(pubkey2);
+    fbb.Finish(tmp_pubkey);
+    auto query_pubkey = flatbuffers::GetRoot<flatbuffers::String>(fbb.GetBufferPointer());
+
+    auto cur = flatbuffers::GetRoot<iroha::Peer>(
+        ametsuchi_
+            .pubKeyGetPeer(query_pubkey,true)
+            .data);
+
+    ASSERT_TRUE(cur->publicKey()->str() == pubkey2);
+    ASSERT_TRUE(cur->ip()->str() ==  ip2);
+  }
 
   {  // Remove peer1
     flatbuffers::FlatBufferBuilder fbb(2048);
@@ -272,12 +301,42 @@ TEST_F(Ametsuchi_Test, PeerTest) {
     ametsuchi_.append(&blob);
   }
 
-  {  // Remove peer1
+  { // Check Peer1
+    flatbuffers::FlatBufferBuilder fbb(256);
+    auto tmp_pubkey = fbb.CreateString(pubkey1);
+    fbb.Finish(tmp_pubkey);
+    auto query_pubkey = flatbuffers::GetRoot<flatbuffers::String>(fbb.GetBufferPointer());
+
+    bool exception_flag = false;
+    try {
+        ametsuchi_.pubKeyGetPeer(query_pubkey, true);
+    } catch ( ... ) {
+      exception_flag = true;
+    }
+    ASSERT_TRUE( exception_flag );
+  }
+
+  {  // Remove peer2
     flatbuffers::FlatBufferBuilder fbb(2048);
     auto blob = generator::random_transaction(
         fbb, iroha::Command::PeerRemove,
         generator::random_PeerRemove(fbb, pubkey2).Union());
     ametsuchi_.append(&blob);
+  }
+
+  { // Check Peer2
+    flatbuffers::FlatBufferBuilder fbb(256);
+    auto tmp_pubkey = fbb.CreateString(pubkey2);
+    fbb.Finish(tmp_pubkey);
+    auto query_pubkey = flatbuffers::GetRoot<flatbuffers::String>(fbb.GetBufferPointer());
+
+    bool exception_flag = false;
+    try {
+      ametsuchi_.pubKeyGetPeer(query_pubkey, true);
+    } catch ( ... ) {
+      exception_flag = true;
+    }
+    ASSERT_TRUE( exception_flag );
   }
 
   ametsuchi_.commit();
