@@ -19,6 +19,7 @@
 #include <ametsuchi/currency.h>
 #include <transaction_generated.h>
 #include <ametsuchi/wsv.h>
+#include <iostream>
 
 namespace ametsuchi {
 
@@ -418,8 +419,12 @@ void WSV::peer_remove(const iroha::PeerRemove *command) {
   c_key.mv_data = (void *)(pubkey->data());
   c_key.mv_size = pubkey->size();
 
+
+  std::cout << "WSV::peer_remove!" << std::endl;
+
   if ((res = mdb_cursor_get(cursor, &c_key, &c_val, MDB_SET))) {
     if (res == MDB_NOTFOUND) {
+      std::cout << "WSV::MDB_NOTFOUND" << std::endl;
       throw exception::InvalidTransaction::PEER_NOT_FOUND;
     }
 
