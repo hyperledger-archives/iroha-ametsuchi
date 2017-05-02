@@ -18,10 +18,9 @@ table ComplexAsset {
 
 table ComplexAssetLogic {
   add:      Chaincode;
-  remove:   Chaincode;
+  subtract:   Chaincode;
   transfer: Chaincode;
 }
-
 
 // currency is a simple asset, like USD.
 table Currency {
@@ -32,7 +31,7 @@ table Currency {
   description: string;
 
   // 100.39 => amount = 10039, precision = 2
-  amount:    ulong;
+  amount:    string;
   precision: ubyte;
 }
 
