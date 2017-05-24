@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/cmake-build-debug/CMakeFiles/cylix_cpp_redis"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/cmake-build-debug/CMakeFiles/cylix_cpp_redis.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/cmake-build-debug/CMakeFiles/cylix_cpp_redis-complete.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/external/src/cylix_cpp_redis-stamp/cylix_cpp_redis-install.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/external/src/cylix_cpp_redis-stamp/cylix_cpp_redis-mkdir.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/external/src/cylix_cpp_redis-stamp/cylix_cpp_redis-download.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/external/src/cylix_cpp_redis-stamp/cylix_cpp_redis-update.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/external/src/cylix_cpp_redis-stamp/cylix_cpp_redis-patch.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/external/src/cylix_cpp_redis-stamp/cylix_cpp_redis-configure.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/external/src/cylix_cpp_redis-stamp/cylix_cpp_redis-build.rule"
+		},
+		{
+			"file" : "/home/kamilsa/dev/iroha-ametsuchi/external/src/cylix_cpp_redis-stamp/cylix_cpp_redis-test.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"cylix_cpp_redis"
+		],
+		"name" : "cylix_cpp_redis"
+	}
+}
