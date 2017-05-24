@@ -5,9 +5,3 @@
 # CMake
 build/
 external/
-.gtm/
-.idea
-.vscode
-.sonarlint
-.scannerwork
-schema/*.h

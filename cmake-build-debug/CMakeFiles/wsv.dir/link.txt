@@ -1,2 +1,0 @@
-/usr/bin/ar qc lib/libwsv.a  CMakeFiles/wsv.dir/src/wsv/wsv_redis.cc.o
-/usr/bin/ranlib lib/libwsv.a
