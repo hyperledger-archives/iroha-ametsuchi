@@ -30,11 +30,12 @@ include(cmake/functions.cmake)
 set(AMETSUCHI_INCLUDE
         include/wsv/wsv.h
         include/wsv/wsv_redis.h
+        include/tx_store/tx_redis.h
         )
 
 set(AMETSUCHI_SRC
         src/wsv/wsv_redis.cc
-        )
+        src/tx_store/tx_redis.cc)
 
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
