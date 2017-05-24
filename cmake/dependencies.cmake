@@ -44,10 +44,13 @@ if(TESTING)
 
 endif(TESTING)
 
+
+##########################
+#       cpp_redis        #
+##########################
 ExternalProject_Add(cylix_cpp_redis
         GIT_REPOSITORY "https://github.com/Cylix/cpp_redis.git"
-        CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         INSTALL_COMMAND "" # remove install step
         UPDATE_COMMAND "" # remove update step
@@ -67,3 +70,31 @@ set_target_properties(cpp_redis PROPERTIES
         )
 
 add_dependencies(cpp_redis cylix_cpp_redis)
+
+
+##########################
+#         NuDB           #
+##########################
+find_package(Boost 1.58.0 REQUIRED COMPONENTS filesystem program_options system thread)
+
+ExternalProject_Add(vinniefalco_NuDB
+  GIT_REPOSITORY "https://github.com/vinniefalco/NuDB.git"
+  CONFIGURE_COMMAND "" # remove configure step
+  BUILD_COMMAND     "" # remove build step
+  INSTALL_COMMAND   "" # remove install step
+  TEST_COMMAND      "" # remove test step
+  UPDATE_COMMAND "" # remove update step
+  )
+ExternalProject_Get_Property(vinniefalco_NuDB source_dir)
+set(NuDB_INCLUDE_DIRS ${source_dir}/include)
+file(MAKE_DIRECTORY ${NuDB_INCLUDE_DIRS})
+
+message(STATUS "${NuDB_INCLUDE_DIRS}")
+
+add_library(NuDB INTERFACE IMPORTED)
+set_target_properties(NuDB PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${NuDB_INCLUDE_DIRS}
+  INTERFACE_LINK_LIBRARIES "${Boost_LIBRARIES}"
+  )
+
+add_dependencies(NuDB vinniefalco_NuDB)

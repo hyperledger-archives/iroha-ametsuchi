@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.3.0 FATAL_ERROR)
 # we need both C and CXX, without C pthread won't be compiled, causing build error
-project(WSV LANGUAGES C CXX)
+project(ametsuchi LANGUAGES C CXX)
 
 SET(CMAKE_CXX_FLAGS         "-std=c++1y -Wall -fPIC")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
@@ -27,26 +27,25 @@ include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
 
-set(WSV_INCLUDE
+set(AMETSUCHI_INCLUDE
         include/wsv/wsv.h
         include/wsv/wsv_redis.h
         )
 
-set(WSV_SRC
+set(AMETSUCHI_SRC
         src/wsv/wsv_redis.cc
         )
 
 # Library.
-set(LIBWSV_NAME wsv)
-add_library(${LIBWSV_NAME} STATIC
-        ${WSV_INCLUDE}
-        ${WSV_SRC}
+set(LIBAMETSUCHI_NAME ametsuchi)
+add_library(${LIBAMETSUCHI_NAME} STATIC
+        ${AMETSUCHI_INCLUDE}
+        ${AMETSUCHI_SRC}
         )
-#add_subdirectory(cpp_redis)
-target_link_libraries(${LIBWSV_NAME}
+target_link_libraries(${LIBAMETSUCHI_NAME}
         cpp_redis
         )
-StrictMode(${LIBWSV_NAME})
+StrictMode(${LIBAMETSUCHI_NAME})
 
 
 if(TESTING)
