@@ -78,7 +78,7 @@ add_dependencies(cpp_redis cylix_cpp_redis)
 find_package(Boost 1.58.0 REQUIRED COMPONENTS filesystem program_options system thread)
 
 ExternalProject_Add(vinniefalco_NuDB
-  GIT_REPOSITORY "https://github.com/vinniefalco/NuDB.git"
+  URL https://github.com/vinniefalco/NuDB/archive/1.0.0.tar.gz
   CONFIGURE_COMMAND "" # remove configure step
   BUILD_COMMAND     "" # remove build step
   INSTALL_COMMAND   "" # remove install step
