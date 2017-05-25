@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <wsv/wsv_redis.h>
+#include <ametsuchi/wsv/wsv_redis.h>
 
 namespace ametsuchi {
 

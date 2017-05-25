@@ -23,7 +23,7 @@ namespace util {
 
 class BlockParser {
  public:
-  BlockParser(string raw);
+  BlockParser(std::string raw);
   size_t get_id();
   std::vector<std::string > get_transactions();
 

@@ -16,38 +16,48 @@
  */
 
 #include <ametsuchi/block_store/block_store_nudb.h>
+namespace ametsuchi {
 
-namespace blockstore {
+namespace block_store {
 
-void TxStoreNuDB::append(const std::vector<uint8_t> &tx, int res) {
+void BlockStoreNuDB::append(const std::vector<uint8_t> &tx) {
   nudb::error_code ec;
   db_.insert(&size_, tx.data(), tx.size(), ec);
   ++size_;
 }
 
-std::vector<uint8_t> TxStoreNuDB::get(size_t index, int res) {
+std::vector<uint8_t> BlockStoreNuDB::get(size_t index) {
   nudb::error_code ec;
   std::vector<uint8_t> tx;
-  db_.fetch(&index, [&](void const* buffer, std::size_t size){
-    tx = {(uint8_t*)buffer, (uint8_t*)buffer + size};
+  db_.fetch(&index, [&](void const *buffer, std::size_t size) {
+    tx = {(uint8_t *) buffer, (uint8_t *) buffer + size};
   }, ec);
   return tx;
 }
 
-TxStoreNuDB::TxStoreNuDB() {
-  const auto dat_file = "nudb.dat", key_file = "nudb.key", log_file = "nudb.log";
+BlockStoreNuDB::BlockStoreNuDB() {
+  const auto dat_file = "nudb.dat", key_file = "nudb.key",
+    log_file = "nudb.log";
   const auto load_factor = .5f;
   nudb::error_code ec;
-  nudb::create<nudb::xxhasher>(dat_file, key_file, log_file, 1, nudb::make_salt(),
-               sizeof(size_t), nudb::block_size("."), load_factor, ec);
+  nudb::create<nudb::xxhasher>(dat_file,
+                               key_file,
+                               log_file,
+                               1,
+                               nudb::make_salt(),
+                               sizeof(size_t),
+                               nudb::block_size("."),
+                               load_factor,
+                               ec);
   db_.open(dat_file, key_file, log_file, ec);
   nudb::native_file df;
   df.open(nudb::file_mode::scan, dat_file, ec);
   size_ = df.size(ec);
   df.close();
 }
-TxStoreNuDB::~TxStoreNuDB() {
+BlockStoreNuDB::~BlockStoreNuDB() {
   nudb::error_code ec;
   db_.close(ec);
+}
 }
 }

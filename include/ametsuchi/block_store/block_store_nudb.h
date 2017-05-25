@@ -24,8 +24,8 @@ namespace block_store {
 class BlockStoreNuDB : public BlockStore {
  public:
   BlockStoreNuDB();
-  void append(const std::vector<uint8_t> &tx, int res) override;
-  std::vector<uint8_t> get(size_t index, int res) override;
+  void append(const std::vector<uint8_t> &tx) override;
+  std::vector<uint8_t> get(size_t index) override;
   ~BlockStoreNuDB();
  private:
   nudb::store db_;

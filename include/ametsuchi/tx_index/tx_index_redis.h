@@ -20,7 +20,7 @@
 #include <cpp_redis/redis_client.hpp>
 namespace ametsuchi {
 
-namespace tx_store{
+namespace tx_index{
 
 class TXRedis{
  public:

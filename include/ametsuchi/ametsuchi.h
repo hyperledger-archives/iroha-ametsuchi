@@ -19,8 +19,8 @@
 #ifndef AMETSUCHI_AMETSUCHI_H
 #define AMETSUCHI_AMETSUCHI_H
 
-#include <ametsuchi/tx_store/tx_redis.h>
-#include <ametsuchi/tx_store/wsv.h>
+#include <ametsuchi/tx_index/tx_index_redis.h>
+#include <ametsuchi/wsv/wsv.h>
 
 namespace ametsuchi {
 

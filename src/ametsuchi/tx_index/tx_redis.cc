@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-#include <blockstore/tx_redis.h>
+#include <ametsuchi/tx_index/tx_index_redis.h>
+namespace ametsuchi {
 
-namespace blockstore{
+namespace tx_index {
 
 TXRedis::~TXRedis() {
   client_.disconnect();
@@ -31,26 +32,34 @@ bool TXRedis::add_id(std::string hash, size_t id) {
 
 bool TXRedis::add_timestamp(size_t id, size_t timestamp) {
   std::string string_id = "id" + std::to_string(id);
-  std::vector<std::string> arr;
-  client_.sadd(string_id, std::vector<std::string >{std::to_string(timestamp)});
+  std::vector <std::string> arr;
+  client_.sadd(string_id,
+               std::vector < std::string > {std::to_string(timestamp)});
   client_.sync_commit();
 }
 
 size_t TXRedis::get_id_by_hash(std::string hash) {
   size_t res;
-  client_.get("hash:" + hash, [&res](cpp_redis::reply& reply) {res = std::stoul(reply.as_string());});
+  client_.get("hash:" + hash,
+              [&res](cpp_redis::reply &reply) {
+                res = std::stoul(reply.as_string());
+              });
   client_.sync_commit();
   return res;
 }
 
-std::vector<size_t > TXRedis::get_ids_by_timestamp(size_t timestamp) {
-  std::vector<cpp_redis::reply > replies;
-  client_.smembers("id:"+std::to_string(timestamp), [&replies](cpp_redis::reply& reply) {replies = reply.as_array();});
-  std::vector<size_t > res;
-  for (auto i = replies.begin(); i < replies.end(); ++i){
+std::vector <size_t> TXRedis::get_ids_by_timestamp(size_t timestamp) {
+  std::vector <cpp_redis::reply> replies;
+  client_.smembers("id:" + std::to_string(timestamp),
+                   [&replies](cpp_redis::reply &reply) {
+                     replies = reply.as_array();
+                   });
+  std::vector <size_t> res;
+  for (auto i = replies.begin(); i < replies.end(); ++i) {
     res.push_back(std::stoul((*i).as_string()));
   }
   return res;
 }
 
+}
 }
