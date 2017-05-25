@@ -15,24 +15,23 @@
  * limitations under the License.
  */
 
-#ifndef WSV_H
-#define WSV_H
+#ifndef AMETSUCHI_TX_STORE_NUDB_H
+#define AMETSUCHI_TX_STORE_NUDB_H
 
-#include <cpp_redis/redis_client.hpp>
-namespace wsv {
+#include <nudb/nudb.hpp>
+#include "blockstore.h"
 
-class WSV {
+namespace blockstore {
+class TxStoreNuDB : public TxStore {
  public:
-  // adds/removes
-  virtual bool add_account(uint64_t account_id, std::string name) = 0;
-  //  virtual bool add_country(uint64_t account_id, std::string country) = 0;
-  virtual bool add_balance(uint64_t account_id, std::uint64_t amount) = 0;
-  //  virtual bool remove_balance(uint64_t account_id, std::uint64_t amount) =
-  //  0;
-
-  // gets
-  virtual std::string get_account_by_id(uint64_t account_id) = 0;
-  virtual uint64_t get_balance_by_account_id(uint64_t account_id) = 0;
+  TxStoreNuDB();
+  void append(const std::vector<uint8_t> &tx, int res) override;
+  std::vector<uint8_t> get(size_t index, int res) override;
+  ~TxStoreNuDB();
+ private:
+  nudb::store db_;
+  size_t size_;
 };
 }
-#endif  // WSV_H
+
+#endif  // AMETSUCHI_TX_STORE_NUDB_H

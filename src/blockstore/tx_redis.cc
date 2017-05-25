@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
-#include <tx_store/tx_redis.h>
+#include <blockstore/tx_redis.h>
 
-namespace tx_store{
+namespace blockstore{
 
 TXRedis::~TXRedis() {
   client_.disconnect();

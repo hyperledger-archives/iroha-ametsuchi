@@ -15,33 +15,17 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_TX_REDIS_H
-#define AMETSUCHI_TX_REDIS_H
+#ifndef TX_STORE_H
+#define TX_STORE_H
 
-#include <cpp_redis/redis_client.hpp>
+#include <vector>
 
-namespace tx_store{
-
-class TXRedis{
+namespace blockstore {
+class TxStore {
  public:
-  TXRedis(std::string host, size_t port) : host_(host), port_(port){
-    client_.connect(host_, port_);
-  }
-
-  ~TXRedis();
-
-  bool add_id(std::string hash, size_t id);
-  bool add_timestamp(size_t id, size_t timestamp);
-
-  size_t get_id_by_hash(std::string hash);
-  std::vector<size_t > get_ids_by_timestamp(size_t timestamp);
-
- private:
-  cpp_redis::redis_client client_;
-  std::string host_;
-  size_t port_;
+  virtual void append(const std::vector<uint8_t> &tx, int ec) = 0;
+  virtual std::vector<uint8_t> get(size_t index, int ec) = 0;
 };
-
 }
 
-#endif //AMETSUCHI_TX_REDIS_H
+#endif  // TX_STORE_H

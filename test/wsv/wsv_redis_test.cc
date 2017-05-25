@@ -19,7 +19,7 @@
 #include <wsv/wsv_redis.h>
 
 TEST(WSV_TEST, GET_TEST){
-  wsv::WSVRedis wsvRedis("127.0.0.1", 6379);
+  wsv::WSVRedis wsvRedis("10.90.130.160", 6379);
 
   wsvRedis.add_account(1, "Ivan");
 
