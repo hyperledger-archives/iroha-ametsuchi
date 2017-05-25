@@ -14,25 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include <nudb/nudb.hpp>
-#include "block_store.h"
+#include <gtest/gtest.h>
+#include <ametsuchi/block_store/block_store_nudb.h>
 
-namespace ametsuchi {
-namespace block_store{
+namespace ametsuchi{
+namespace block_store {
 
-class BlockStoreNuDB : public BlockStore {
- public:
-  BlockStoreNuDB();
-  void append(size_t index, const std::string &block) override;
-  std::string get(size_t index) override;
-  ~BlockStoreNuDB();
- private:
-  nudb::store db_;
-  size_t size_;
-};
+TEST(block_store_nudb_test, sample_test) {
+  BlockStoreNuDB bs;
+  auto str = std::string{0, 1, 2, 3};
+  bs.append(0, str);
+  ASSERT_EQ(bs.get(0), str);
+}
 
 }
 }
-

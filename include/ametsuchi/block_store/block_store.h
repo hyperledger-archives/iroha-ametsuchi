@@ -15,19 +15,18 @@
  * limitations under the License.
  */
 
-#ifndef TX_STORE_H
-#define TX_STORE_H
+#pragma once
 
-#include <vector>
+#include <string>
 
 namespace ametsuchi {
-namespace block_store {
+namespace block_store{
+
 class BlockStore {
  public:
-  virtual void append(const std::vector<uint8_t> &block) = 0;
-  virtual std::vector<uint8_t> get(size_t index) = 0;
+  virtual void append(size_t index, const std::string &block) = 0;
+  virtual std::string get(size_t index) = 0;
 };
-}
-}
 
-#endif  // TX_STORE_H
+}
+}

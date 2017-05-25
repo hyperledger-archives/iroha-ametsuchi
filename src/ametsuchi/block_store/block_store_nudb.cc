@@ -16,23 +16,26 @@
  */
 
 #include <ametsuchi/block_store/block_store_nudb.h>
-namespace ametsuchi {
+#include <iostream>
 
+namespace ametsuchi {
 namespace block_store {
 
-void BlockStoreNuDB::append(const std::vector<uint8_t> &tx) {
+void BlockStoreNuDB::append(size_t index, const std::string &block) {
   nudb::error_code ec;
-  db_.insert(&size_, tx.data(), tx.size(), ec);
+  db_.insert(&size_, block.data(), block.size(), ec);
   ++size_;
 }
 
-std::vector<uint8_t> BlockStoreNuDB::get(size_t index) {
+std::string BlockStoreNuDB::get(size_t index) {
   nudb::error_code ec;
-  std::vector<uint8_t> tx;
-  db_.fetch(&index, [&](void const *buffer, std::size_t size) {
-    tx = {(uint8_t *) buffer, (uint8_t *) buffer + size};
-  }, ec);
-  return tx;
+  std::string block;
+  db_.fetch(&index,
+            [&](void const *buffer, std::size_t size) {
+              block = {(uint8_t *) buffer, (uint8_t *) buffer + size};
+            },
+            ec);
+  return block;
 }
 
 BlockStoreNuDB::BlockStoreNuDB() {
@@ -40,24 +43,24 @@ BlockStoreNuDB::BlockStoreNuDB() {
     log_file = "nudb.log";
   const auto load_factor = .5f;
   nudb::error_code ec;
-  nudb::create<nudb::xxhasher>(dat_file,
-                               key_file,
-                               log_file,
-                               1,
-                               nudb::make_salt(),
-                               sizeof(size_t),
-                               nudb::block_size("."),
-                               load_factor,
-                               ec);
+  nudb::create<nudb::xxhasher>(dat_file, key_file, log_file, 1,
+                               nudb::make_salt(), sizeof(size_t),
+                               nudb::block_size("."), load_factor, ec);
+  if (ec == nudb::errc::file_exists) {
+    ec = {};
+  }
   db_.open(dat_file, key_file, log_file, ec);
-  nudb::native_file df;
-  df.open(nudb::file_mode::scan, dat_file, ec);
-  size_ = df.size(ec);
-  df.close();
+  nudb::visit(dat_file, [&](void const* key, std::size_t keySize,
+                            void const* data, std::size_t dataSize,
+                            nudb::error_code& code)  {
+    ++size_;
+  }, nudb::no_progress{}, ec);
 }
+
 BlockStoreNuDB::~BlockStoreNuDB() {
   nudb::error_code ec;
   db_.close(ec);
 }
+
 }
 }
