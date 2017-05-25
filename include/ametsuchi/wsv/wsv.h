@@ -19,6 +19,7 @@
 #define WSV_H
 
 #include <cpp_redis/redis_client.hpp>
+namespace ametsuchi {
 namespace wsv {
 
 class WSV {
@@ -34,5 +35,7 @@ class WSV {
   virtual std::string get_account_by_id(uint64_t account_id) = 0;
   virtual uint64_t get_balance_by_account_id(uint64_t account_id) = 0;
 };
+
+}
 }
 #endif  // WSV_H

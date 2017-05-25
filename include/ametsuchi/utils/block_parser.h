@@ -15,7 +15,22 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_AMETSUCHI_H
-#define AMETSUCHI_AMETSUCHI_H
 
-#endif //AMETSUCHI_AMETSUCHI_H
+#ifndef AMETSUCHI_BLOCK_PARSER_H
+#define AMETSUCHI_BLOCK_PARSER_H
+namespace ametsuchi {
+namespace util {
+
+class BlockParser {
+ public:
+  BlockParser(string raw);
+  size_t get_id();
+  std::vector<std::string > get_transactions();
+
+};
+
+}
+}
+
+
+#endif //AMETSUCHI_BLOCK_PARSER_H

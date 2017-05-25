@@ -15,23 +15,36 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_TX_STORE_NUDB_H
-#define AMETSUCHI_TX_STORE_NUDB_H
+#ifndef WSV_REDIS_H
+#define WSV_REDIS_H
 
-#include <nudb/nudb.hpp>
-#include "blockstore.h"
+#include <ametsuchi/wsv/wsv.h>
+namespace ametsuchi {
+namespace wsv{
 
-namespace blockstore {
-class TxStoreNuDB : public TxStore {
+class WSVRedis : public WSV{
  public:
-  TxStoreNuDB();
-  void append(const std::vector<uint8_t> &tx, int res) override;
-  std::vector<uint8_t> get(size_t index, int res) override;
-  ~TxStoreNuDB();
+  WSVRedis(std::string host, size_t port) : host_(host), port_(port){
+    client_.connect(host_, port_);
+  }
+  ~WSVRedis();
+
+  bool add_account(uint64_t account_id, std::string name);
+  bool add_balance(uint64_t account_id, std::uint64_t amount);
+
+
+  std::string get_account_by_id(uint64_t account_id);
+  uint64_t get_balance_by_account_id(uint64_t account_id);
+  void flush_all();
+
+
  private:
-  nudb::store db_;
-  size_t size_;
+  cpp_redis::redis_client client_;
+  std::string host_;
+  size_t port_;
 };
+
+}
 }
 
-#endif  // AMETSUCHI_TX_STORE_NUDB_H
+#endif //WSV_REDIS_H

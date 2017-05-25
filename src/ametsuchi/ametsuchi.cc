@@ -15,33 +15,36 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_TX_REDIS_H
-#define AMETSUCHI_TX_REDIS_H
+#include <ametsuchi/ametsuchi.h>
+#include <ametsuchi/utils/block_parser.h>
 
-#include <cpp_redis/redis_client.hpp>
+namespace ametsuchi {
 
-namespace blockstore{
+void Ametsuchi::append(const std::string block) {
+  //Block store append
 
-class TXRedis{
- public:
-  TXRedis(std::string host, size_t port) : host_(host), port_(port){
-    client_.connect(host_, port_);
+  // Block Parser - meta, vector of strings (Transaction)
+
+
+  // Block Index - pass meta and block
+
+
+  // for each Transaction
+  {
+    // do Transaction parser - return meta and vector of strings (Actions)
+    // Append  meta of transaction and transaction blob to tx index
+
+    // Send to WSV [Actions]
+
+    // For each action in Actions :
+    {
+      // Parse Action - get table name, key(account_id), value(name, balance)
+      // Put to wsv
+    }
   }
 
-  ~TXRedis();
 
-  bool add_id(std::string hash, size_t id);
-  bool add_timestamp(size_t id, size_t timestamp);
-
-  size_t get_id_by_hash(std::string hash);
-  std::vector<size_t > get_ids_by_timestamp(size_t timestamp);
-
- private:
-  cpp_redis::redis_client client_;
-  std::string host_;
-  size_t port_;
-};
 
 }
 
-#endif //AMETSUCHI_TX_REDIS_H
+}

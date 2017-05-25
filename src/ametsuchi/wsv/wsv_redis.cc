@@ -17,6 +17,8 @@
 
 #include <wsv/wsv_redis.h>
 
+namespace ametsuchi {
+
 namespace wsv {
 
 WSVRedis::~WSVRedis() { client_.disconnect(); }
@@ -54,4 +56,5 @@ uint64_t WSVRedis::get_balance_by_account_id(uint64_t account_id) {
 }
 
 void WSVRedis::flush_all() { client_.flushall(); }
+}
 }

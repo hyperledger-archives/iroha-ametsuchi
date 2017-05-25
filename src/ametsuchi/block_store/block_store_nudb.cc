@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include <blockstore/blockstore_nudb.h>
+#include <ametsuchi/block_store/block_store_nudb.h>
 
 namespace blockstore {
 

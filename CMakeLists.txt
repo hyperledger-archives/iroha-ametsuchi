@@ -19,36 +19,44 @@ endif ()
 message(STATUS "-DTESTING=${TESTING}")
 
 include_directories(
-  # Library headers.
-  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    # Library headers.
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
 set(AMETSUCHI_INCLUDE
-  include/wsv/wsv.h
-  include/wsv/wsv_redis.h
-  include/blockstore/tx_redis.h
-  include/blockstore/blockstore.h
-  include/blockstore/blockstore_nudb.h
-  )
+    include/ametsuchi/block_index/block_index.h
+    include/ametsuchi/block_index/block_index_redis.h
+    include/ametsuchi/block_store/block_store.h
+    include/ametsuchi/block_store/block_store_nudb.h
+    include/ametsuchi/tx_index/tx_index.h
+    include/ametsuchi/tx_index/tx_index_redis.h
+    include/ametsuchi/utils/action_parser.h
+    include/ametsuchi/utils/block_parser.h
+    include/ametsuchi/utils/transaction_parser.h
+    include/ametsuchi/wsv/wsv.h
+    include/ametsuchi/wsv/wsv_redis.h
+    include/ametsuchi/ametsuchi.h
+    )
 
 set(AMETSUCHI_SRC
-  src/wsv/wsv_redis.cc
-  src/blockstore/tx_redis.cc
-  src/blockstore/blockstore_nudb.cc
-  )
+    src/ametsuchi/ametsuchi.cc
+    src/ametsuchi/wsv/wsv_redis.cc
+    src/ametsuchi/tx_index/tx_redis.cc
+    src/ametsuchi/block_store/block_store_nudb.cc
+    )
 
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
 add_library(${LIBAMETSUCHI_NAME} STATIC
-  ${AMETSUCHI_INCLUDE}
-  ${AMETSUCHI_SRC}
-  )
+    ${AMETSUCHI_INCLUDE}
+    ${AMETSUCHI_SRC}
+    )
 target_link_libraries(${LIBAMETSUCHI_NAME}
-  cpp_redis
-  NuDB
-  )
+    cpp_redis
+    NuDB
+    )
 StrictMode(${LIBAMETSUCHI_NAME})
 
 if (TESTING)

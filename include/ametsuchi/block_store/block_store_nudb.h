@@ -14,36 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#ifndef WSV_REDIS_H
-#define WSV_REDIS_H
+#include <nudb/nudb.hpp>
+#include "block_store.h"
 
-#include <wsv/wsv.h>
-
-namespace wsv{
-
-class WSVRedis : public WSV{
+namespace ametsuchi {
+namespace block_store {
+class BlockStoreNuDB : public BlockStore {
  public:
-  WSVRedis(std::string host, size_t port) : host_(host), port_(port){
-    client_.connect(host_, port_);
-  }
-  ~WSVRedis();
-
-  bool add_account(uint64_t account_id, std::string name);
-  bool add_balance(uint64_t account_id, std::uint64_t amount);
-
-
-  std::string get_account_by_id(uint64_t account_id);
-  uint64_t get_balance_by_account_id(uint64_t account_id);
-  void flush_all();
-
-
+  BlockStoreNuDB();
+  void append(const std::vector<uint8_t> &tx, int res) override;
+  std::vector<uint8_t> get(size_t index, int res) override;
+  ~BlockStoreNuDB();
  private:
-  cpp_redis::redis_client client_;
-  std::string host_;
-  size_t port_;
+  nudb::store db_;
+  size_t size_;
 };
-
 }
-
-#endif //WSV_REDIS_H
+}

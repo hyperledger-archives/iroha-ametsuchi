@@ -20,12 +20,14 @@
 
 #include <vector>
 
-namespace blockstore {
-class TxStore {
+namespace ametsuchi {
+namespace block_store {
+class BlockStore {
  public:
-  virtual void append(const std::vector<uint8_t> &tx, int ec) = 0;
-  virtual std::vector<uint8_t> get(size_t index, int ec) = 0;
+  virtual void append(const std::vector<uint8_t> &block) = 0;
+  virtual std::vector<uint8_t> get(size_t index) = 0;
 };
+}
 }
 
 #endif  // TX_STORE_H
