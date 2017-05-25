@@ -18,23 +18,23 @@
 #pragma once
 
 #include <cpp_redis/redis_client.hpp>
+#include "tx_index.h"
+
 namespace ametsuchi {
 
 namespace tx_index{
 
-class TXRedis{
+class TxIndexRedis: public TxIndex{
  public:
-  TXRedis(std::string host, size_t port) : host_(host), port_(port){
-    client_.connect(host_, port_);
+  TxIndexRedis(std::string host, size_t port): host_(host), port_(port){
+    client_.connect(host, port);
   }
 
-  ~TXRedis();
+  bool add_txhash_blockid_txid(std::string txhash, size_t blockid, size_t txid);
+  size_t get_txid_by_txhash(std::string txhash);
+  size_t get_blockid_by_txhash(std::string txhash);
 
-  bool add_id(std::string hash, size_t id);
-  bool add_timestamp(size_t id, size_t timestamp);
-
-  size_t get_id_by_hash(std::string hash);
-  std::vector<size_t > get_ids_by_timestamp(size_t timestamp);
+  ~TxIndexRedis();
 
  private:
   cpp_redis::redis_client client_;

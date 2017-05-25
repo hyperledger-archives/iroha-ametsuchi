@@ -43,9 +43,9 @@ set(AMETSUCHI_INCLUDE
 set(AMETSUCHI_SRC
     src/ametsuchi/ametsuchi.cc
     src/ametsuchi/wsv/wsv_redis.cc
-    src/ametsuchi/tx_index/tx_redis.cc
+    src/ametsuchi/tx_index/tx_index_redis.cc
     src/ametsuchi/block_store/block_store_nudb.cc
-    )
+    src/ametsuchi/block_index/block_index_redis.cc)
 
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
