@@ -19,6 +19,7 @@
 #define WSV_REDIS_H
 
 #include <ametsuchi/wsv/wsv.h>
+#include <cpp_redis/redis_client.hpp>
 namespace ametsuchi {
 namespace wsv{
 

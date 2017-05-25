@@ -18,7 +18,9 @@
 #ifndef WSV_H
 #define WSV_H
 
-#include <cpp_redis/redis_client.hpp>
+#include <cstdint>
+#include <string>
+
 namespace ametsuchi {
 namespace wsv {
 

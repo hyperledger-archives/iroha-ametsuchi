@@ -23,8 +23,7 @@ namespace block_store {
 
 void BlockStoreNuDB::append(size_t index, const std::string &block) {
   nudb::error_code ec;
-  db_.insert(&size_, block.data(), block.size(), ec);
-  ++size_;
+  db_.insert(&index, block.data(), block.size(), ec);
 }
 
 std::string BlockStoreNuDB::get(size_t index) {
@@ -50,11 +49,6 @@ BlockStoreNuDB::BlockStoreNuDB() {
     ec = {};
   }
   db_.open(dat_file, key_file, log_file, ec);
-  nudb::visit(dat_file, [&](void const* key, std::size_t keySize,
-                            void const* data, std::size_t dataSize,
-                            nudb::error_code& code)  {
-    ++size_;
-  }, nudb::no_progress{}, ec);
 }
 
 BlockStoreNuDB::~BlockStoreNuDB() {

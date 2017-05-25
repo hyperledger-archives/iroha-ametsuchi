@@ -16,35 +16,73 @@
  */
 
 #include <ametsuchi/ametsuchi.h>
+#include <ametsuchi/block_index/block_index_redis.h>
+#include <ametsuchi/block_store/block_store_nudb.h>
+#include <ametsuchi/utils/action_parser.h>
 #include <ametsuchi/utils/block_parser.h>
+#include <ametsuchi/utils/transaction_parser.h>
+#include <ametsuchi/wsv/wsv_redis.h>
+#include <ametsuchi/tx_index/tx_index_redis.h>
 
 namespace ametsuchi {
 
+Ametsuchi::Ametsuchi()
+    : block_store_(new block_store::BlockStoreNuDB()),
+      block_index_(
+          new block_index::BlockIndexRedis(block_index_host, block_index_port)),
+      tx_index_(new tx_index::TxIndexRedis(tx_index_host, tx_index_port)),
+      wsv_(new wsv::WSVRedis(wsv_host, wsv_port)) {}
+
 void Ametsuchi::append(const std::string block) {
-  //Block store append
-
-  // Block Parser - meta, vector of strings (Transaction)
-
+  // Block store append
+  utils::BlockParser block_parser(block);
+  size_t block_id = std::stoul(block_parser.get_hash());
+  block_store_->append(block_id, block);
 
   // Block Index - pass meta and block
-
+  block_index_->add_blockhash_blockid(block_parser.get_hash(), block_id);
 
   // for each Transaction
-  {
+  auto transactions = block_parser.get_transactions();
+  for (size_t tx_id = 0; tx_id < transactions.size(); tx_id++) {
     // do Transaction parser - return meta and vector of strings (Actions)
+    utils::TransactionParser transaction_parser(transactions.at(tx_id));
     // Append  meta of transaction and transaction blob to tx index
-
+    tx_index_->add_txhash_blockid_txid(transaction_parser.get_hash(), block_id,
+                                       tx_id);
     // Send to WSV [Actions]
-
+    auto actions = transaction_parser.get_actions();
     // For each action in Actions :
-    {
+    for (auto raw_action : actions) {
       // Parse Action - get table name, key(account_id), value(name, balance)
       // Put to wsv
+      utils::ActionParser action_parser(raw_action);
+      if (action_parser.get_table_name() == "account") {
+        wsv_->add_account(std::stoul(action_parser.get_key()),
+                          action_parser.get_value());
+      } else if (action_parser.get_table_name() == "balance") {
+        wsv_->add_balance(std::stoul(action_parser.get_key()),
+                          std::stoul(action_parser.get_value()));
+      }
     }
   }
-
-
-
 }
 
+std::string Ametsuchi::get_block_by_hash(std::string block_hash) {
+  auto block_id = block_index_->get_blockid_by_blockhash(block_hash);
+  return block_store_->get(block_id);
+}
+
+std::string Ametsuchi::get_transaction_by_hash(std::string tx_hash) {
+  auto block_id = tx_index_->get_blockid_by_txhash(tx_hash);
+  auto tx_id = tx_index_->get_txid_by_txhash(tx_hash);
+
+  auto block = block_store_->get(block_id);
+  utils::BlockParser block_parser(block);
+  return block_parser.get_transactions().at(tx_id);
+}
+
+size_t Ametsuchi::get_balance_by_accountid(size_t account_id) {
+  return wsv_->get_balance_by_account_id(account_id);
+}
 }

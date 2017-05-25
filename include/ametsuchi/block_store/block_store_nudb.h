@@ -30,7 +30,6 @@ class BlockStoreNuDB : public BlockStore {
   ~BlockStoreNuDB();
  private:
   nudb::store db_;
-  size_t size_;
 };
 
 }

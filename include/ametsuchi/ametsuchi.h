@@ -19,22 +19,43 @@
 #ifndef AMETSUCHI_AMETSUCHI_H
 #define AMETSUCHI_AMETSUCHI_H
 
-#include <ametsuchi/tx_index/tx_index_redis.h>
+#include <ametsuchi/block_index/block_index.h>
+#include <ametsuchi/block_store/block_store.h>
+#include <ametsuchi/tx_index/tx_index.h>
 #include <ametsuchi/wsv/wsv.h>
+#include <memory>
 
 namespace ametsuchi {
 
+const std::string block_index_host = "10.90.130.160";
+const size_t block_index_port = 6379;
+
+const std::string tx_index_host = "10.90.130.160";
+const size_t tx_index_port = 6379;
+
+const std::string wsv_host = "10.90.130.160";
+const size_t wsv_port = 6379;
+
 class Ametsuchi {
  public:
+  Ametsuchi();
   void append(const std::string tx);
 
-  // Queries:
+  // Queries on BlockStore
+  std::string get_block_by_hash(std::string block_hash);
 
+  // Queries on transactions
+  std::string get_transaction_by_hash(std::string tx_hash);
 
+  // Queries on WSV:
+  size_t get_balance_by_accountid(size_t account_id);
 
+ private:
+  std::unique_ptr<block_store::BlockStore> block_store_;
+  std::unique_ptr<block_index::BlockIndex> block_index_;
+  std::unique_ptr<tx_index::TxIndex> tx_index_;
+  std::unique_ptr<wsv::WSV> wsv_;
 };
-
 }
 
-#endif //AMETSUCHI_AMETSUCHI_H
-
+#endif  // AMETSUCHI_AMETSUCHI_H
