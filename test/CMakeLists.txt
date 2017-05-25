@@ -17,3 +17,7 @@ target_link_libraries(tx_index_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(block_store_nudb_test ametsuchi/block_store/block_store_nudb_test.cc)
 target_link_libraries(block_store_nudb_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+
+AddTest(parser_test ametsuchi/utils/parser_test.cc)
+target_link_libraries(parser_test PRIVATE ${LIBAMETSUCHI_NAME})

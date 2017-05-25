@@ -16,29 +16,41 @@
  */
 
 
-#ifndef AMETSUCHI_BLOCK_PARSER_H
-#define AMETSUCHI_BLOCK_PARSER_H
+#include <ametsuchi/utils/block_parser.h>
+#include <sstream>
 
-#include <string>
-#include <vector>
+namespace ametsuchi{
+namespace utils{
 
-namespace ametsuchi {
-namespace utils {
+BlockParser::BlockParser(std::string raw) {
+  split(raw);
+}
+std::string BlockParser::get_hash() {
+  return hash;
+}
+std::vector<std::string> BlockParser::get_transactions() {
+  return transactions;
+}
+void BlockParser::split(std::string raw) {
+  char delimeter = '#';
+  std::stringstream ss(raw); // Turn the string into a stream.
+  std::string tok;
 
-class BlockParser {
- public:
-  BlockParser(std::string raw);
-  std::string get_hash();
-  std::vector<std::string> get_transactions();
- private:
-  std::string hash;
-  std::vector<std::string> transactions;
-  void split(std::string raw);
+  bool is_first  = true;
+  while(getline(ss, tok, delimeter)) {
+    if (is_first)
+    {
+      hash = tok;
+      is_first = false;
 
-};
+    }
+    else{
+      transactions.push_back(tok);
+    }
+
+  }
+
+}
 
 }
 }
-
-
-#endif //AMETSUCHI_BLOCK_PARSER_H

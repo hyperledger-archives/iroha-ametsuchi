@@ -16,29 +16,39 @@
  */
 
 
-#ifndef AMETSUCHI_BLOCK_PARSER_H
-#define AMETSUCHI_BLOCK_PARSER_H
+#include <ametsuchi/utils/action_parser.h>
+#include <sstream>
 
-#include <string>
-#include <vector>
+namespace ametsuchi{
+namespace utils{
 
-namespace ametsuchi {
-namespace utils {
+ActionParser::ActionParser(std::string raw) {
+  split(raw);
+}
+void ActionParser::split(std::string raw) {
+  char delimeter = ' ';
+  std::stringstream ss(raw); // Turn the string into a stream.
+  std::string tok;
 
-class BlockParser {
- public:
-  BlockParser(std::string raw);
-  std::string get_hash();
-  std::vector<std::string> get_transactions();
- private:
-  std::string hash;
-  std::vector<std::string> transactions;
-  void split(std::string raw);
+  getline(ss, tok, delimeter);
+  table_name = tok;
 
-};
+  getline(ss, tok, delimeter);
+  key = tok;
+
+  getline(ss, tok, delimeter);
+  value = tok;
+
+}
+std::string ActionParser::get_value() {
+  return value;
+}
+std::string ActionParser::get_key() {
+  return key;
+}
+std::string ActionParser::get_table_name() {
+  return table_name;
+}
 
 }
 }
-
-
-#endif //AMETSUCHI_BLOCK_PARSER_H

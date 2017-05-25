@@ -41,6 +41,9 @@ set(AMETSUCHI_INCLUDE
     )
 
 set(AMETSUCHI_SRC
+    src/ametsuchi/utils/block_parser.cc
+    src/ametsuchi/utils/action_parser.cc
+    src/ametsuchi/utils/transcation_parser.cc
     src/ametsuchi/ametsuchi.cc
     src/ametsuchi/wsv/wsv_redis.cc
     src/ametsuchi/tx_index/tx_index_redis.cc
