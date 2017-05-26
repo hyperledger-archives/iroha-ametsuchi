@@ -24,13 +24,8 @@
 #include <string>
 #include <vector>
 
-extern "C" {
-#include <SimpleFIPS202.h>
-}
-
-
 namespace ametsuchi {
-namespace merkle {
+namespace merkle_tree {
 
 // all tests are written for 32 byte hashes, do not change!
 const size_t HASH_LEN = 32;

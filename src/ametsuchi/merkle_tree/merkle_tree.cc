@@ -16,12 +16,13 @@
  */
 
 #include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <ametsuchi/utils/hash.h>
 #include <algorithm>
 
 // extern std::shared_ptr<spdlog::logger> console;
 
 namespace ametsuchi {
-namespace merkle {
+namespace merkle_tree {
 
 /**
  * Returns floor(log2(x))
@@ -174,20 +175,20 @@ hash_t MerkleTree::hash(const hash_t &a, const hash_t &b) {
   std::copy(a.begin(), a.end(), &input[0]);
   std::copy(b.begin(), b.end(), &input[HASH_LEN]);
 
-  SHA3_256(output.data(), input.data(), input.size());
+  utils::sha3_256(output.data(), input.data(), input.size());
 
   return output;
 }
 
 hash_t MerkleTree::hash(const std::vector<uint8_t> &data) {
   hash_t output;
-  SHA3_256(output.data(), data.data(), data.size());
+  utils::sha3_256(output.data(), data.data(), data.size());
   return output;
 }
 
 hash_t MerkleTree::hash(const uint8_t *data, size_t size) {
   hash_t output;
-  SHA3_256(output.data(), data, size);
+  utils::sha3_256(output.data(), data, size);
   return output;
 }
 

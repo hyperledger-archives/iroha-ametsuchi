@@ -17,11 +17,11 @@ class TxIndex_Test : public ::testing::Test {
 TEST_F(TxIndex_Test, TxRedisTest){
   ametsuchi::tx_index::TxIndexRedis tx_index(host_, port_);
 
-  tx_index.add_txhash_blockid_txid("tx_one", 1, 10);
+  tx_index.add_txhash_blockhash_txid("tx_one", 1, 10);
 
-  auto one = tx_index.get_blockid_by_txhash("tx_one");
+  auto one = tx_index.get_blockhash_by_txhash("tx_one");
   auto ten = tx_index.get_txid_by_txhash("tx_one");
-  
+
   ASSERT_EQ(one, 1);
   ASSERT_EQ(ten, 10);
 }

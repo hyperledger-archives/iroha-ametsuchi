@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 namespace ametsuchi {
-namespace merkle {
+namespace merkle_tree {
 
 auto str2hex = [](const std::string &hex) {
   const std::string alp = "0123456789abcdef";

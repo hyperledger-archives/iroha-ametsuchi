@@ -36,6 +36,7 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/utils/action_parser.h
   include/ametsuchi/utils/block_parser.h
   include/ametsuchi/utils/transaction_parser.h
+  include/ametsuchi/utils/hash.h
   include/ametsuchi/wsv/wsv.h
   include/ametsuchi/wsv/wsv_redis.h
   include/ametsuchi/ametsuchi.h
@@ -45,6 +46,7 @@ set(AMETSUCHI_SRC
   src/ametsuchi/utils/block_parser.cc
   src/ametsuchi/utils/action_parser.cc
   src/ametsuchi/utils/transcation_parser.cc
+  src/ametsuchi/utils/hash.cc
   src/ametsuchi/ametsuchi.cc
   src/ametsuchi/wsv/wsv_redis.cc
   src/ametsuchi/tx_index/tx_index_redis.cc

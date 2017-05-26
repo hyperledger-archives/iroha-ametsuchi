@@ -36,13 +36,15 @@ const size_t tx_index_port = 6379;
 const std::string wsv_host = "10.90.130.160";
 const size_t wsv_port = 6379;
 
+const std::string block_store_path = "/tmp/ametsuchi";
+
 class Ametsuchi {
  public:
   Ametsuchi();
   void append(const std::string tx);
 
   // Queries on BlockStore
-  std::string get_block_by_hash(std::string block_hash);
+  std::string get_block_by_hash(merkle_tree::hash_t block_hash);
 
   // Queries on transactions
   std::string get_transaction_by_hash(std::string tx_hash);

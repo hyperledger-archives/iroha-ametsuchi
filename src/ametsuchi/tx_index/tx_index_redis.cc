@@ -16,6 +16,7 @@
  */
 
 #include <ametsuchi/tx_index/tx_index_redis.h>
+#include <ametsuchi/merkle_tree/merkle_tree.h>
 
 namespace ametsuchi {
 namespace tx_index {
@@ -24,7 +25,9 @@ TxIndexRedis::~TxIndexRedis() {
   client_.disconnect();
 }
 
-bool TxIndexRedis::add_txhash_blockid_txid(std::string txhash, size_t blockid, size_t txid) {
+bool TxIndexRedis::add_txhash_blockhash_txid(std::string txhash,
+                                             size_t blockid,
+                                             size_t txid) {
   client_.hset("tx:"+txhash, "blockid", std::to_string(blockid));
   client_.hset("tx:"+txhash, "txid", std::to_string(txid));
   client_.sync_commit();
@@ -37,7 +40,7 @@ size_t TxIndexRedis::get_txid_by_txhash(std::string txhash) {
   return res;
 }
 
-size_t TxIndexRedis::get_blockid_by_txhash(std::string txhash) {
+merkle_tree::hash_t TxIndexRedis::get_blockhash_by_txhash(std::string txhash) {
   size_t res;
   client_.hget("tx:"+txhash, "blockid", [&res](cpp_redis::reply& reply) { res = std::stoul(reply.as_string()); });
   client_.sync_commit();

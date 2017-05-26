@@ -16,34 +16,38 @@
  */
 
 #include <ametsuchi/block_store/block_store_nudb.h>
-#include <iostream>
+#include <boost/filesystem.hpp>
 
 namespace ametsuchi {
 namespace block_store {
 
-void BlockStoreNuDB::append(size_t index, const std::string &block) {
+void BlockStoreNuDB::append(const merkle_tree::hash_t &hash,
+                            const std::string &block) {
   nudb::error_code ec;
-  db_.insert(&index, block.data(), block.size(), ec);
+  db_.insert(&hash, block.data(), block.size(), ec);
 }
 
-std::string BlockStoreNuDB::get(size_t index) {
+std::string BlockStoreNuDB::get(const merkle_tree::hash_t &hash) {
   nudb::error_code ec;
   std::string block;
-  db_.fetch(&index,
+  db_.fetch(&hash,
             [&](void const *buffer, std::size_t size) {
-              block = {(uint8_t *) buffer, (uint8_t *) buffer + size};
+              block = {(uint8_t *)buffer, (uint8_t *)buffer + size};
             },
             ec);
   return block;
 }
 
-BlockStoreNuDB::BlockStoreNuDB() {
-  const auto dat_file = "nudb.dat", key_file = "nudb.key",
-    log_file = "nudb.log";
+BlockStoreNuDB::BlockStoreNuDB(const std::string &path) {
+  auto const folder = boost::filesystem::path(path);
+  boost::filesystem::create_directories(folder);
+  const auto dat_file = (folder / "nudb.dat").string(),
+             key_file = (folder / "nudb.key").string(),
+             log_file = (folder / "nudb.log").string();
   const auto load_factor = .5f;
   nudb::error_code ec;
   nudb::create<nudb::xxhasher>(dat_file, key_file, log_file, 1,
-                               nudb::make_salt(), sizeof(size_t),
+                               nudb::make_salt(), merkle_tree::HASH_LEN,
                                nudb::block_size("."), load_factor, ec);
   if (ec == nudb::errc::file_exists) {
     ec = {};
@@ -55,6 +59,5 @@ BlockStoreNuDB::~BlockStoreNuDB() {
   nudb::error_code ec;
   db_.close(ec);
 }
-
 }
 }

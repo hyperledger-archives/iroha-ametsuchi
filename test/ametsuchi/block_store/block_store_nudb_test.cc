@@ -17,15 +17,18 @@
 
 #include <gtest/gtest.h>
 #include <ametsuchi/block_store/block_store_nudb.h>
+#include <ametsuchi/utils/hash.h>
 
 namespace ametsuchi{
 namespace block_store {
 
 TEST(block_store_nudb_test, sample_test) {
-  BlockStoreNuDB bs;
+  BlockStoreNuDB bs("/tmp");
   auto str = std::string{0, 1, 2, 3};
-  bs.append(0, str);
-  ASSERT_EQ(bs.get(0), str);
+  merkle_tree::hash_t str_hash;
+  utils::sha3_256(str_hash.data(), reinterpret_cast<unsigned char*>(str.data()), str.size());
+  bs.append(str_hash, str);
+  ASSERT_EQ(str_hash, str);
 }
 
 }
