@@ -14,9 +14,6 @@ class BlockIndexRedis: public BlockIndex{
 
   ~BlockIndexRedis();
 
-  bool add_blockhash_blockid(std::string blockhash, size_t blockid);
-  size_t get_blockid_by_blockhash(std::string blockhash);
-
 
  private:
   cpp_redis::redis_client client_;

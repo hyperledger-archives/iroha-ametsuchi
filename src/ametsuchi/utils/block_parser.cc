@@ -25,22 +25,22 @@ namespace utils{
 BlockParser::BlockParser(std::string raw) {
   split(raw);
 }
-std::string BlockParser::get_hash() {
+merkle_tree::hash_t BlockParser::get_hash() {
   return hash;
 }
 std::vector<std::string> BlockParser::get_transactions() {
   return transactions;
 }
 void BlockParser::split(std::string raw) {
-  char delimeter = '#';
+  char delimiter = '#';
   std::stringstream ss(raw); // Turn the string into a stream.
   std::string tok;
 
   bool is_first  = true;
-  while(getline(ss, tok, delimeter)) {
+  while(getline(ss, tok, delimiter)) {
     if (is_first)
     {
-      hash = tok;
+      hash = {tok.data(), tok.data() + tok.size()};
       is_first = false;
 
     }

@@ -16,18 +16,13 @@
  */
 
 #pragma once
-
-#include <string>
-#include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <string.h>
 
 namespace ametsuchi {
-namespace block_store{
+namespace utils {
 
-class BlockStore {
- public:
-  virtual void append(const merkle_tree::hash_t &hash, const std::string &block) = 0;
-  virtual std::string get(const merkle_tree::hash_t &hash) = 0;
-};
+inline int sha3_256(unsigned char *input, const unsigned char *output,
+                    size_t out_size);
 
 }
 }

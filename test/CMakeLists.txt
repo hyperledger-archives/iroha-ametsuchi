@@ -23,3 +23,6 @@ target_link_libraries(parser_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 AddTest(ametsuchi_test ametsuchi/ametsuchi_test.cc)
 target_link_libraries(ametsuchi_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+AddTest(merkle_tree_test ametsuchi/merkle_tree/merkle_tree_test.cc)
+target_link_libraries(merkle_tree_test PRIVATE ${LIBAMETSUCHI_NAME})

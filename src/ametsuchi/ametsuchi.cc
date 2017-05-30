@@ -27,7 +27,7 @@
 namespace ametsuchi {
 
 Ametsuchi::Ametsuchi()
-    : block_store_(new block_store::BlockStoreNuDB()),
+    : block_store_(new block_store::BlockStoreNuDB(block_store_path)),
       block_index_(
           new block_index::BlockIndexRedis(block_index_host, block_index_port)),
       tx_index_(new tx_index::TxIndexRedis(tx_index_host, tx_index_port)),
@@ -36,11 +36,9 @@ Ametsuchi::Ametsuchi()
 void Ametsuchi::append(const std::string block) {
   // Block store append
   utils::BlockParser block_parser(block);
-  size_t block_id = std::stoul(block_parser.get_hash());
-  block_store_->append(block_id, block);
+  block_store_->append(block_parser.get_hash(), block);
 
   // Block Index - pass meta and block
-  block_index_->add_blockhash_blockid(block_parser.get_hash(), block_id);
 
   // for each Transaction
   auto transactions = block_parser.get_transactions();
@@ -48,8 +46,9 @@ void Ametsuchi::append(const std::string block) {
     // do Transaction parser - return meta and vector of strings (Actions)
     utils::TransactionParser transaction_parser(transactions.at(tx_id));
     // Append  meta of transaction and transaction blob to tx index
-    tx_index_->add_txhash_blockid_txid(transaction_parser.get_hash(), block_id,
-                                       tx_id);
+    tx_index_->add_txhash_blockhash_txid(transaction_parser.get_hash(),
+                                         block_parser.get_hash(),
+                                         tx_id);
     // Send to WSV [Actions]
     auto actions = transaction_parser.get_actions();
     // For each action in Actions :
@@ -68,16 +67,15 @@ void Ametsuchi::append(const std::string block) {
   }
 }
 
-std::string Ametsuchi::get_block_by_hash(std::string block_hash) {
-  auto block_id = block_index_->get_blockid_by_blockhash(block_hash);
-  return block_store_->get(block_id);
+std::string Ametsuchi::get_block_by_hash(merkle_tree::hash_t block_hash) {
+  return block_store_->get(block_hash);
 }
 
 std::string Ametsuchi::get_transaction_by_hash(std::string tx_hash) {
-  auto block_id = tx_index_->get_blockid_by_txhash(tx_hash);
+  auto block_hash = tx_index_->get_blockhash_by_txhash(tx_hash);
   auto tx_id = tx_index_->get_txid_by_txhash(tx_hash);
 
-  auto block = block_store_->get(block_id);
+  auto block = block_store_->get(block_hash);
   utils::BlockParser block_parser(block);
   return block_parser.get_transactions().at(tx_id);
 }
