@@ -87,8 +87,6 @@ ExternalProject_Get_Property(vinniefalco_NuDB source_dir)
 set(NuDB_INCLUDE_DIRS ${source_dir}/include)
 file(MAKE_DIRECTORY ${NuDB_INCLUDE_DIRS})
 
-message(STATUS "${NuDB_INCLUDE_DIRS}")
-
 add_library(NuDB INTERFACE IMPORTED)
 set_target_properties(NuDB PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${NuDB_INCLUDE_DIRS}
@@ -128,3 +126,122 @@ set_target_properties(keccak PROPERTIES
 
 add_dependencies(keccak gvanas_keccak)
 
+##########################
+#        cppassist       #
+##########################
+ExternalProject_Add(cginternals_cppassist
+  GIT_REPOSITORY "https://github.com/cginternals/cppassist.git"
+  CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  -DBUILD_SHARED_LIBS=OFF
+  -DOPTION_BUILD_TESTS=OFF
+  BUILD_IN_SOURCE 1
+  INSTALL_COMMAND "" # remove install step
+  UPDATE_COMMAND "" # remove update step
+  TEST_COMMAND "" # remove test step
+  )
+ExternalProject_Get_Property(cginternals_cppassist source_dir)
+set(CPPASSIST_SOURCE_DIR ${source_dir})
+set(CPPASSIST_INCLUDE_DIRS ${source_dir}/source/cppassist/include)
+set(CPPASSIST_LIBRARIES ${source_dir}/libcppassistd.a)
+file(MAKE_DIRECTORY ${CPPASSIST_INCLUDE_DIRS})
+
+add_library(cppassist STATIC IMPORTED)
+set_target_properties(cppassist PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${CPPASSIST_INCLUDE_DIRS}
+  IMPORTED_LOCATION ${CPPASSIST_LIBRARIES}
+  )
+
+add_dependencies(cppassist cginternals_cppassist)
+
+##########################
+#        cpplocate       #
+##########################
+ExternalProject_Add(cginternals_cpplocate
+  GIT_REPOSITORY "https://github.com/cginternals/cpplocate.git"
+  CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  -DBUILD_SHARED_LIBS=OFF
+  -DOPTION_BUILD_TESTS=OFF
+  BUILD_IN_SOURCE 1
+  INSTALL_COMMAND "" # remove install step
+  UPDATE_COMMAND "" # remove update step
+  TEST_COMMAND "" # remove test step
+  )
+ExternalProject_Get_Property(cginternals_cpplocate source_dir)
+set(CPPLOCATE_SOURCE_DIR ${source_dir})
+set(CPPLOCATE_INCLUDE_DIRS ${source_dir}/source/cpplocate/include)
+set(CPPLOCATE_LIBRARIES ${source_dir}/libcpplocated.a)
+file(MAKE_DIRECTORY ${CPPLOCATE_INCLUDE_DIRS})
+
+add_library(cpplocate STATIC IMPORTED)
+set_target_properties(cpplocate PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${CPPLOCATE_INCLUDE_DIRS}
+  IMPORTED_LOCATION ${CPPLOCATE_LIBRARIES}
+  )
+
+add_dependencies(cpplocate cginternals_cpplocate)
+
+##########################
+#        cppexpose       #
+##########################
+ExternalProject_Add(cginternals_cppexpose
+  GIT_REPOSITORY "https://github.com/cginternals/cppexpose.git"
+  CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  -DBUILD_SHARED_LIBS=OFF
+  -DOPTION_BUILD_TESTS=OFF
+  -Dcppassist_DIR=${CPPASSIST_SOURCE_DIR}
+  -Dcpplocate_DIR=${CPPLOCATE_SOURCE_DIR}
+  BUILD_IN_SOURCE 1
+  INSTALL_COMMAND "" # remove install step
+  UPDATE_COMMAND "" # remove update step
+  TEST_COMMAND "" # remove test step
+  )
+ExternalProject_Get_Property(cginternals_cppexpose source_dir)
+set(CPPEXPOSE_SOURCE_DIR ${source_dir})
+add_dependencies(cginternals_cppexpose cppassist cpplocate)
+set(CPPEXPOSE_INCLUDE_DIRS ${source_dir}/source/cppexpose/include)
+set(CPPEXPOSE_LIBRARIES ${source_dir}/libcppexposed.a)
+file(MAKE_DIRECTORY ${CPPEXPOSE_INCLUDE_DIRS})
+
+add_library(cppexpose STATIC IMPORTED)
+set_target_properties(cppexpose PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES "${CPPEXPOSE_INCLUDE_DIRS};${CPPASSIST_INCLUDE_DIRS}"
+  IMPORTED_LOCATION ${CPPEXPOSE_LIBRARIES}
+  INTERFACE_LINK_LIBRARIES "${CPPASSIST_LIBRARIES};${CPPLOCATE_LIBRARIES}"
+  )
+
+add_dependencies(cppexpose cginternals_cppexpose)
+
+##########################
+#         cppfs          #
+##########################
+ExternalProject_Add(cginternals_cppfs
+  GIT_REPOSITORY "https://github.com/cginternals/cppfs.git"
+  CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  -DBUILD_SHARED_LIBS=OFF
+  -DOPTION_BUILD_TESTS=OFF
+  -Dcppexpose_DIR=${CPPEXPOSE_SOURCE_DIR}
+  -Dcppassist_DIR=${CPPASSIST_SOURCE_DIR}
+  -Dcpplocate_DIR=${CPPLOCATE_SOURCE_DIR}
+  BUILD_IN_SOURCE 1
+  INSTALL_COMMAND "" # remove install step
+  UPDATE_COMMAND "" # remove update step
+  TEST_COMMAND "" # remove test step
+  )
+add_dependencies(cginternals_cppfs cppexpose)
+ExternalProject_Get_Property(cginternals_cppfs source_dir)
+set(CPPFS_INCLUDE_DIRS ${source_dir}/source/cppfs/include)
+set(CPPFS_LIBRARIES ${source_dir}/libcppfsd.a)
+file(MAKE_DIRECTORY ${CPPFS_INCLUDE_DIRS})
+
+add_library(cppfs STATIC IMPORTED)
+set_target_properties(cppfs PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${CPPFS_INCLUDE_DIRS}
+  IMPORTED_LOCATION ${CPPFS_LIBRARIES}
+  INTERFACE_LINK_LIBRARIES "${CPPEXPOSE_LIBRARIES};${CPPASSIST_LIBRARIES};${CPPLOCATE_LIBRARIES};ssh2;ssl;crypto"
+  )
+
+add_dependencies(cppfs cginternals_cppfs)

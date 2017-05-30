@@ -18,11 +18,12 @@
 #include <ametsuchi/block_store/block_store_flat.h>
 #include <stdio.h>
 
-#include <boost/filesystem.hpp>
 #include <iostream>
-#include <boost/filesystem/fstream.hpp>
+#include <cppfs/fs.h>
+#include <cppfs/FileHandle.h>
 
-namespace fs = boost::filesystem;
+namespace fs = cppfs::fs;
+using cppfs::FileHandle;
 
 namespace ametsuchi {
 namespace block_store {
@@ -33,11 +34,11 @@ BlockStoreFlat::BlockStoreFlat() {
   current_id = get_last_id();
   // Init flat block store, might throw exception
 
-  fs::path p("./dump");
-  if (fs::exists(p)) // does path p actually exist?
+  auto p = fs::open("./dump");
+  if (p.exists()) // does path p actually exist?
   {
     // There exist block store
-    if (fs::is_directory(p))
+    if (p.isDirectory())
     {
       // Everything is ok
       std::cout << "Directory exist ";
@@ -45,11 +46,9 @@ BlockStoreFlat::BlockStoreFlat() {
   }
   else
   {
-    boost::system::error_code returnedError;
-    fs::create_directory(p, returnedError);
-    if (returnedError)
+    if (!p.createDirectory())
     {
-      std::cout << "Error creating dir " << returnedError.message();
+      std::cout << "Error creating dir";
       // throw
     }
     else
@@ -67,8 +66,8 @@ std::string BlockStoreFlat::append(const std::string index, const std::vector<ui
 
   file_name += ".dat";
   // Write block to binary file
-  auto file_path = fs::current_path() / file_name;
-  if (fs::exists(file_path))
+  auto file_path = fs::open(file_name);
+  if (!file_path.exists())
   {
     // New file will be created
     FILE* pfile;
@@ -106,14 +105,15 @@ const std::string BlockStoreFlat::get_last_id() {
   if (!dump_dir.empty())
   {
 
-    fs::path apk_path(dump_dir);
-    fs::recursive_directory_iterator end;
+    auto apk_path = fs::open(dump_dir);
 
-    for(fs::recursive_directory_iterator i(apk_path); i != end; ++i)
-    {
-      const fs::path cp = (*i);
-      tmp = cp.stem().string();
-    }
+//    for(fs::recursive_directory_iterator i(apk_path); i != end; ++i)
+//    {
+//      const fs::path cp = (*i);
+//      tmp = cp.stem().string();
+//    }
+    // TODO implement
+//    apk_path.traverse([]())
     // Get from tmp the id by splitting
      //tmp = tmp - ''
   }
@@ -129,7 +129,7 @@ const std::string BlockStoreFlat::get_next_id() {
     ++li_dec;
     char buf[100];
     sprintf(buf, "%016li", li_dec);
-    
+
   }
 
 }

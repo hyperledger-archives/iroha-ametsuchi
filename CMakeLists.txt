@@ -54,7 +54,8 @@ set(AMETSUCHI_SRC
   src/ametsuchi/block_store/block_store_nudb.cc
   src/ametsuchi/block_index/block_index_redis.cc
   src/ametsuchi/block_store/block_store_flat.cc
-  src/ametsuchi/merkle_tree/merkle_tree.cc)
+  src/ametsuchi/merkle_tree/merkle_tree.cc
+  )
 
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
@@ -66,6 +67,7 @@ target_link_libraries(${LIBAMETSUCHI_NAME}
   cpp_redis
   NuDB
   keccak
+  cppfs
   )
 StrictMode(${LIBAMETSUCHI_NAME})
 
