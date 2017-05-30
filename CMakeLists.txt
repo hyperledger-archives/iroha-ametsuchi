@@ -28,6 +28,7 @@ include(cmake/functions.cmake)
 set(AMETSUCHI_INCLUDE
   include/ametsuchi/block_index/block_index.h
   include/ametsuchi/block_index/block_index_redis.h
+  include/ametsuchi/block_store/block_store_flat.h
   include/ametsuchi/block_store/block_store.h
   include/ametsuchi/block_store/block_store_nudb.h
   include/ametsuchi/merkle_tree/merkle_tree.h
@@ -52,6 +53,7 @@ set(AMETSUCHI_SRC
   src/ametsuchi/tx_index/tx_index_redis.cc
   src/ametsuchi/block_store/block_store_nudb.cc
   src/ametsuchi/block_index/block_index_redis.cc
+  src/ametsuchi/block_store/block_store_flat.cc
   src/ametsuchi/merkle_tree/merkle_tree.cc)
 
 # Library.

@@ -25,8 +25,11 @@ namespace block_store{
 
 class BlockStore {
  public:
-  virtual void append(const merkle_tree::hash_t &hash, const std::string &block) = 0;
-  virtual std::string get(const merkle_tree::hash_t &hash) = 0;
+  virtual std::string append(const std::string index, const std::vector<uint8_t> &block) = 0;
+  virtual const std::vector<uint8_t>& get(const std::string id) = 0;
+  // Iterators
+  virtual const std::string get_last_id() = 0;
+
 };
 
 }

@@ -44,7 +44,7 @@ merkle_tree::hash_t TxIndexRedis::get_blockhash_by_txhash(std::string txhash) {
   size_t res;
   client_.hget("tx:"+txhash, "blockid", [&res](cpp_redis::reply& reply) { res = std::stoul(reply.as_string()); });
   client_.sync_commit();
-  return res;
+  return NULL;
 }
 
 }

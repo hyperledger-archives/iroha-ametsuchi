@@ -40,7 +40,7 @@ void BlockParser::split(std::string raw) {
   while(getline(ss, tok, delimiter)) {
     if (is_first)
     {
-      hash = {tok.data(), tok.data() + tok.size()};
+      //hash = {tok.data(), tok.data() + tok.size()};
       is_first = false;
 
     }

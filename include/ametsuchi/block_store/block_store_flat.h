@@ -26,11 +26,18 @@ class BlockStoreFlat : public BlockStore
 {
  public:
   BlockStoreFlat();
-  void append(size_t index, const std::string &block) override;
-  std::string get(size_t index) override;
+  std::string append(const std::string index, const std::vector<uint8_t> &block) override;
+  const std::vector<uint8_t>& get(const std::string hash) override;
   ~BlockStoreFlat();
+  const std::string get_last_id() override;
+  const std::string get_next_id();
+  // Iterators
+
+
  private:
-  nudb::store db_;
+  // CurrentID
+  std::string current_id;
+  std::string dump_dir;
 };
 
 }

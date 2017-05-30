@@ -17,7 +17,7 @@
 #pragma once
 
 #include <nudb/nudb.hpp>
-#include "block_store.h"
+#include <ametsuchi/block_store/block_store.h>
 
 namespace ametsuchi {
 namespace block_store{
@@ -25,8 +25,8 @@ namespace block_store{
 class BlockStoreNuDB : public BlockStore {
  public:
   BlockStoreNuDB(const std::string &path);
-  void append(const merkle_tree::hash_t &hash, const std::string &block) override;
-  std::string get(const merkle_tree::hash_t &hash) override;
+  void append(const merkle_tree::hash_t &hash, const std::vector<uint8_t> &block) override;
+  std::string get(const merkle_tree::hash_t hash) override;
   ~BlockStoreNuDB();
  private:
   nudb::store db_;

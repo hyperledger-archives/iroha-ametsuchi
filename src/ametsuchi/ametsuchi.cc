@@ -36,7 +36,7 @@ Ametsuchi::Ametsuchi()
 void Ametsuchi::append(const std::string block) {
   // Block store append
   utils::BlockParser block_parser(block);
-  block_store_->append(block_parser.get_hash(), block);
+  //block_store_->append(block_parser.get_hash(), block);
 
   // Block Index - pass meta and block
 

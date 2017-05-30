@@ -22,7 +22,7 @@ namespace ametsuchi {
 namespace block_store {
 
 void BlockStoreNuDB::append(const merkle_tree::hash_t &hash,
-                            const std::string &block) {
+                            const std::vector<uint8_t> &block) {
   nudb::error_code ec;
   db_.insert(&hash, block.data(), block.size(), ec);
 }
@@ -59,5 +59,6 @@ BlockStoreNuDB::~BlockStoreNuDB() {
   nudb::error_code ec;
   db_.close(ec);
 }
+
 }
 }
