@@ -20,3 +20,6 @@ target_link_libraries(parser_test PRIVATE ${LIBAMETSUCHI_NAME})
 
 #AddTest(ametsuchi_test ametsuchi/ametsuchi_test.cc)
 #target_link_libraries(ametsuchi_test PRIVATE ${LIBAMETSUCHI_NAME})
+
+AddTest(bstore_test ametsuchi/block_store/block_store_flat_test.cc)
+target_link_libraries(bstore_test PRIVATE ${LIBAMETSUCHI_NAME})

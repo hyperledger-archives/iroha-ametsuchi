@@ -22,6 +22,7 @@
 #include <cppfs/FileIterator.h>
 #include <cppfs/fs.h>
 #include <iostream>
+#include <dirent.h>
 
 namespace fs = cppfs::fs;
 using cppfs::FileHandle;
@@ -32,9 +33,8 @@ namespace block_store {
 
 
 std::string BlockStoreFlat::append(const std::vector<uint8_t> &block) {
-
   std::string next_id = get_next_id(current_id);
-  std::string file_name = dump_dir + next_id + ".dmp";
+  std::string file_name = dump_dir + "/" + next_id;
   // Write block to binary file
   auto fh = fs::open(file_name);
   if (!fh.exists()) {
@@ -52,8 +52,9 @@ std::string BlockStoreFlat::append(const std::vector<uint8_t> &block) {
     // Already exists, something is wrong
     // Answer iroha status
     // TODO: handle this case
+    std::cout << "File name already exist " << std::endl;
+    return std::string();
   }
-
 }
 
 BlockStoreFlat::~BlockStoreFlat() {}
@@ -76,49 +77,70 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
       // TODO: handle wrong path
     }
   } else {
+
     // New BlockStore
     if (!fh.createDirectory()) {
       // TODO: handle cannot create directory
+      std::cout << "Error creating directory " << std::endl;
     }
     current_id = "0";
+    dump_dir = path;
   }
 }
 
 
 const std::string BlockStoreFlat::get_last_id() {
-  std::string tmp;
+  std::string tmp = "0";
   if (!dump_dir.empty()) {
     FileHandle dir = fs::open(dump_dir);
     if (dir.isDirectory()) {
-      for (FileIterator it = dir.begin(); it != dir.end(); ++it) {
-        if (get_next_id(tmp) != *it) {
-          // Inconsistency in block store
-          // TODO: handle inconsistency
-        }
-        tmp = *it;
+
+      // Directory iterator:
+      struct dirent **namelist;
+      auto n = scandir(dump_dir.c_str(), &namelist, NULL, alphasort);
+      if (n<0) {
+        // TODO: handle error
       }
+      else{
+        uint i = 1;
+        while(++i < n){
+          if (get_next_id(tmp) != namelist[i]->d_name) {
+           // TODO: handle Inconsistent state
+          }
+          tmp = namelist[i]->d_name;
+          free(namelist[i]);
+        }
+        free(namelist);
+      }
+
 
     } else {
       // Not a directory
       // TODO: handle
+      std::cout << "Not a directory "  <<std::endl;
     }
   }
   return tmp;
 }
 
 
-const std::vector<uint8_t> &BlockStoreFlat::get(const std::string id) {
-  std::vector<uint8_t> result;
-  std::string filename = dump_dir + current_id + ".dmp";
+const std::vector<uint8_t> BlockStoreFlat::get(const std::string id) {
+  std::string filename = dump_dir + "/" + id;
   FileHandle fh = fs::open(filename);
-  if (fh.exists())
-  {
-    auto content = fh.readFile();
-    std::copy(content.begin(), content.end(), result.begin());
-    // TODO: make more clever read
-  }
- return result;
-}
+  if (fh.exists()) {
+    auto f_size = fh.size();
+    std::vector<uint8_t > buf(f_size);
+    FILE* pfile = fopen(filename.c_str(), "rb");
+    fread(&buf[0], sizeof(uint8_t), f_size, pfile);
+    fclose(pfile);
+    return buf;
 
+  } else {
+    std::cout << "No file with this id " << std::endl;
+    // TODO: handle not found
+    return std::vector<uint8_t>();
+  }
+
+}
 }
 }

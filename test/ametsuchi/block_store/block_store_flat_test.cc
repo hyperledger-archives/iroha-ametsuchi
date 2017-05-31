@@ -15,34 +15,25 @@
  * limitations under the License.
  */
 
-#pragma once
+#include <ametsuchi/tx_index/tx_index_redis.h>
+#include <gtest/gtest.h>
+#include <ametsuchi/block_store/block_store_flat.h>
 
-#include <string>
-#include <vector>
-
-namespace ametsuchi {
-namespace block_store{
-
-class BlockStore {
- public:
-  virtual std::string append(const std::vector<uint8_t> &block) = 0;
-  virtual const std::vector<uint8_t>  get(const std::string id) = 0;
-  // Iterators
-  //virtual const std::string get_last_id() = 0;
+class BlStore_Test : public ::testing::Test {
  protected:
+  virtual void TearDown() {
 
-  static const std::string get_next_id(std::string old_id) {
-    std::string new_id(16, '\0');
-    if (!old_id.empty()) {
-      std::string::size_type sz;
-      auto li_dec = std::stoll(old_id, &sz);
-      ++li_dec;
-      sprintf(&new_id[0], "%016lli", li_dec);
-    }
-    return new_id;
   }
 
 };
 
-}
+TEST(BlStore_Test, Read_Write_Test) {
+
+  std::vector<uint8_t > block = {2, 3, 4, 2, 3, 0, 2};
+  ametsuchi::block_store::BlockStoreFlat bl_store("dump");
+  auto id = bl_store.append(block);
+  auto id2 = bl_store.append(block);
+  auto res = bl_store.get(id);
+  ASSERT_FALSE(res.empty());
+  ASSERT_EQ(res, block);
 }
