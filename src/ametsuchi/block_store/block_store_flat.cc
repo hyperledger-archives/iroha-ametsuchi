@@ -40,7 +40,7 @@ std::string BlockStoreFlat::append(const std::vector<uint8_t> &block) {
   if (!fh.exists()) {
     // New file will be created
     FILE *pfile;
-    pfile = fopen(file_name, "wb");
+    pfile = fopen(file_name.c_str(), "wb");
     auto res = fwrite(block.data(), sizeof(uint8_t), block.size(), pfile);
     fflush(pfile);
     fclose(pfile);

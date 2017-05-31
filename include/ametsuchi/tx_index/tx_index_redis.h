@@ -18,7 +18,6 @@
 #pragma once
 
 #include <cpp_redis/redis_client.hpp>
-#include <ametsuchi/merkle_tree/merkle_tree.h>
 #include "tx_index.h"
 
 namespace ametsuchi {
@@ -32,10 +31,10 @@ class TxIndexRedis: public TxIndex{
   }
 
   bool add_txhash_blockhash_txid(std::string txhash,
-                                 size_t blockid,
-                                 size_t txid);
-  size_t get_txid_by_txhash(std::string txhash);
-  merkle_tree::hash_t get_blockhash_by_txhash(std::string txhash);
+                                 std::string blockid,
+                                 std::string txid);
+  std::string get_txid_by_txhash(std::string txhash);
+  std::string get_blockhash_by_txhash(std::string txhash);
 
   ~TxIndexRedis();
 

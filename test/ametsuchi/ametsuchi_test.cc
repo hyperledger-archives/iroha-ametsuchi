@@ -29,6 +29,7 @@ TEST_F(Ametsuchi_Test, Ametsuchi_Test) {
   std::string block =
       "2345234#12_account 1 bulat_account 2 andrei_balance 1 10_balance 2 "
       "10#22_account 3 kamil_balance 3 100";
+  std::vector<uint8_t> block_vector = {block.data(), block.data() + block.size()};
   succi.append(block);
   ASSERT_EQ(succi.get_balance_by_accountid(1), 10);
   ASSERT_EQ(succi.get_balance_by_accountid(2), 10);
@@ -37,6 +38,6 @@ TEST_F(Ametsuchi_Test, Ametsuchi_Test) {
   ASSERT_EQ(succi.get_transaction_by_hash("12"), "12_account 1 bulat_account 2 andrei_balance 1 10_balance 2 10");
   ASSERT_EQ(succi.get_transaction_by_hash("22"), "22_account 3 kamil_balance 3 100");
 
-  ASSERT_EQ(succi.get_block_by_hash("2345234"), block);
+  ASSERT_EQ(succi.get_block_by_hash("2345234"), block_vector);
 
 }

@@ -30,8 +30,6 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/block_index/block_index_redis.h
   include/ametsuchi/block_store/block_store_flat.h
   include/ametsuchi/block_store/block_store.h
-  include/ametsuchi/block_store/block_store_nudb.h
-  include/ametsuchi/merkle_tree/merkle_tree.h
   include/ametsuchi/tx_index/tx_index.h
   include/ametsuchi/tx_index/tx_index_redis.h
   include/ametsuchi/utils/action_parser.h
@@ -48,13 +46,11 @@ set(AMETSUCHI_SRC
   src/ametsuchi/utils/action_parser.cc
   src/ametsuchi/utils/transcation_parser.cc
   src/ametsuchi/utils/hash.cc
-  src/ametsuchi/ametsuchi.cc
+#  src/ametsuchi/ametsuchi.cc
   src/ametsuchi/wsv/wsv_redis.cc
   src/ametsuchi/tx_index/tx_index_redis.cc
-  src/ametsuchi/block_store/block_store_nudb.cc
   src/ametsuchi/block_index/block_index_redis.cc
   src/ametsuchi/block_store/block_store_flat.cc
-  src/ametsuchi/merkle_tree/merkle_tree.cc
   )
 
 # Library.
@@ -65,7 +61,6 @@ add_library(${LIBAMETSUCHI_NAME} STATIC
   )
 target_link_libraries(${LIBAMETSUCHI_NAME}
   cpp_redis
-  NuDB
   keccak
   cppfs
   )

@@ -10,7 +10,7 @@ class BlockIndex_Test : public ::testing::Test {
     client.disconnect();
   }
 
-  std::string host_ = "10.90.130.160";
+  std::string host_ = std::getenv("REDISHOST");
   size_t port_ = 6379;
 };
 

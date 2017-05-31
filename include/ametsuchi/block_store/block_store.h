@@ -32,12 +32,12 @@ class BlockStore {
  protected:
 
   static const std::string get_next_id(std::string old_id) {
-    std::string new_id(16, (char)'/0');
+    std::string new_id(16, '\0');
     if (!old_id.empty()) {
       std::string::size_type sz;
       auto li_dec = std::stoll(old_id, &sz);
       ++li_dec;
-      sprintf(new_id, "%016lli", li_dec);
+      sprintf(&new_id[0], "%016lli", li_dec);
     }
     return new_id;
   }

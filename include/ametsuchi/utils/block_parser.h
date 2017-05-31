@@ -21,7 +21,6 @@
 
 #include <string>
 #include <vector>
-#include <ametsuchi/merkle_tree/merkle_tree.h>
 
 namespace ametsuchi {
 namespace utils {
@@ -29,10 +28,10 @@ namespace utils {
 class BlockParser {
  public:
   BlockParser(std::string raw);
-  merkle_tree::hash_t get_hash();
+  std::string get_hash();
   std::vector<std::string> get_transactions();
  private:
-  merkle_tree::hash_t hash;
+  std::string hash;
   std::vector<std::string> transactions;
   void split(std::string raw);
 

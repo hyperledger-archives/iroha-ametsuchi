@@ -36,7 +36,8 @@ Ametsuchi::Ametsuchi()
 void Ametsuchi::append(const std::string block) {
   // Block store append
   utils::BlockParser block_parser(block);
-  //block_store_->append(block_parser.get_hash(), block);
+  std::vector<uint8_t> block_vector = {block.data(), block.data() + block.size()};
+  auto block_id = block_store_->append(block_vector);
 
   // Block Index - pass meta and block
 
@@ -48,7 +49,7 @@ void Ametsuchi::append(const std::string block) {
     // Append  meta of transaction and transaction blob to tx index
     tx_index_->add_txhash_blockhash_txid(transaction_parser.get_hash(),
                                          block_parser.get_hash(),
-                                         tx_id);
+                                         std::to_string(tx_id));
     // Send to WSV [Actions]
     auto actions = transaction_parser.get_actions();
     // For each action in Actions :
@@ -67,7 +68,7 @@ void Ametsuchi::append(const std::string block) {
   }
 }
 
-std::string Ametsuchi::get_block_by_hash(merkle_tree::hash_t block_hash) {
+std::vector<uint8_t> Ametsuchi::get_block_by_hash(std::string block_hash) {
   return block_store_->get(block_hash);
 }
 
@@ -76,8 +77,9 @@ std::string Ametsuchi::get_transaction_by_hash(std::string tx_hash) {
   auto tx_id = tx_index_->get_txid_by_txhash(tx_hash);
 
   auto block = block_store_->get(block_hash);
-  utils::BlockParser block_parser(block);
-  return block_parser.get_transactions().at(tx_id);
+  auto block_string = std::string{block.data(), block.data() + block.size()};
+  utils::BlockParser block_parser(block_string);
+  return block_parser.get_transactions().at(std::stoul(tx_id));
 }
 
 size_t Ametsuchi::get_balance_by_accountid(size_t account_id) {

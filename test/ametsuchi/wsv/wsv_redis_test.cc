@@ -20,7 +20,8 @@
 namespace ametsuchi {
 
 TEST(WSV_TEST, GET_TEST) {
-  wsv::WSVRedis wsvRedis("10.90.130.160", 6379);
+  auto host = std::getenv("REDISHOST");
+  wsv::WSVRedis wsvRedis(host, 6379);
 
   wsvRedis.add_account(1, "Ivan");
 

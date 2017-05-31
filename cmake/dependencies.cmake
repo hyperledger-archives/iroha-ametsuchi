@@ -70,31 +70,6 @@ set_target_properties(cpp_redis PROPERTIES
 
 add_dependencies(cpp_redis cylix_cpp_redis)
 
-##########################
-#         NuDB           #
-##########################
-find_package(Boost 1.58.0 REQUIRED COMPONENTS filesystem program_options system thread)
-
-ExternalProject_Add(vinniefalco_NuDB
-  URL https://github.com/vinniefalco/NuDB/archive/1.0.0.tar.gz
-  CONFIGURE_COMMAND "" # remove configure step
-  BUILD_COMMAND "" # remove build step
-  INSTALL_COMMAND "" # remove install step
-  TEST_COMMAND "" # remove test step
-  UPDATE_COMMAND "" # remove update step
-  )
-ExternalProject_Get_Property(vinniefalco_NuDB source_dir)
-set(NuDB_INCLUDE_DIRS ${source_dir}/include)
-file(MAKE_DIRECTORY ${NuDB_INCLUDE_DIRS})
-
-add_library(NuDB INTERFACE IMPORTED)
-set_target_properties(NuDB PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES ${NuDB_INCLUDE_DIRS}
-  INTERFACE_LINK_LIBRARIES "${Boost_LIBRARIES}"
-  )
-
-add_dependencies(NuDB vinniefalco_NuDB)
-
 ###########################
 #         keccak          #
 ###########################
@@ -245,3 +220,34 @@ set_target_properties(cppfs PROPERTIES
   )
 
 add_dependencies(cppfs cginternals_cppfs)
+
+##########################
+#          pqxx          #
+##########################
+find_package(PostgreSQL QUIET)
+if (NOT PostgreSQL_LIBRARY)
+  message(FATAL_ERROR "libpq not found")
+endif ()
+
+ExternalProject_Add(jtv_libpqxx
+  GIT_REPOSITORY "https://github.com/jtv/libpqxx.git"
+  CONFIGURE_COMMAND ./configure --disable-documentation
+  BUILD_IN_SOURCE 1
+  BUILD_COMMAND $(MAKE)
+  INSTALL_COMMAND "" # remove install step
+  TEST_COMMAND "" # remove test step
+  UPDATE_COMMAND "" # remove update step
+  )
+ExternalProject_Get_Property(jtv_libpqxx source_dir)
+set(pqxx_INCLUDE_DIRS ${source_dir}/include)
+set(pqxx_LIBRARIES ${source_dir}/src/.libs/libpqxx.a)
+file(MAKE_DIRECTORY ${pqxx_INCLUDE_DIRS})
+
+add_library(pqxx STATIC IMPORTED)
+set_target_properties(pqxx PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${pqxx_INCLUDE_DIRS}
+  IMPORTED_LOCATION ${pqxx_LIBRARIES}
+  INTERFACE_LINK_LIBRARIES "pq"
+  )
+
+add_dependencies(pqxx jtv_libpqxx)

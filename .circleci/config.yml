@@ -6,8 +6,13 @@ jobs:
       - image: warchantua/iroha-dev
         environment:
           AMETSUCHI_HOME: /ametsuchi
+      - image: postgres:9.5
+        environment:
+          POSTGRES_PASSWORD: $PGPASSWORD
+      - image: redis:3.2.8
     steps:
       - checkout
+      - run: apt install -y libssh2-1-dev libssl-dev libpq-dev
       - run:
           name: cmake
           command: cmake .
@@ -22,7 +27,7 @@ jobs:
           name: analyze source code with cppcheck, valgrind and sonarqube
           command: |
             cppcheck --enable=all --inconclusive --xml --xml-version=2 -Iinclude src test benchmark  2>/tmp/cppcheck.xml || true
-            
+
             # run valgrind for tests
             VALGRIND_XML=
             mkdir -p valgrind_report

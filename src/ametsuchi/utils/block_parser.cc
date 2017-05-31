@@ -25,7 +25,7 @@ namespace utils{
 BlockParser::BlockParser(std::string raw) {
   split(raw);
 }
-merkle_tree::hash_t BlockParser::get_hash() {
+std::string BlockParser::get_hash() {
   return hash;
 }
 std::vector<std::string> BlockParser::get_transactions() {
@@ -40,7 +40,7 @@ void BlockParser::split(std::string raw) {
   while(getline(ss, tok, delimiter)) {
     if (is_first)
     {
-      //hash = {tok.data(), tok.data() + tok.size()};
+      hash = tok;
       is_first = false;
 
     }

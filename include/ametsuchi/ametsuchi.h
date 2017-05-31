@@ -44,7 +44,7 @@ class Ametsuchi {
   void append(const std::string tx);
 
   // Queries on BlockStore
-  std::string get_block_by_hash(merkle_tree::hash_t block_hash);
+  std::vector<uint8_t> get_block_by_hash(std::string block_hash);
 
   // Queries on transactions
   std::string get_transaction_by_hash(std::string tx_hash);
