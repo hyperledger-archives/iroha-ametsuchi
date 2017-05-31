@@ -251,3 +251,54 @@ set_target_properties(pqxx PROPERTIES
   )
 
 add_dependencies(pqxx jtv_libpqxx)
+
+################################
+#         flatbuffers          #
+################################
+#find_package(flatbuffers 1.6.0)
+
+#if(NOT flatbuffers_FOUND)
+set(flatbuffers_CMAKE_ARGS
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DFLATBUFFERS_BUILD_TESTS=OFF
+        -DFLATBUFFERS_INSTALL=OFF
+        -DFLATBUFFERS_BUILD_FLATHASH=OFF
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DFLATBUFFERS_BUILD_FLATC=ON
+        )
+ExternalProject_Add(google_flatbuffers
+        GIT_REPOSITORY    "https://github.com/google/flatbuffers.git"
+        CMAKE_ARGS        ${flatbuffers_CMAKE_ARGS}
+        INSTALL_COMMAND   "" # remove install step
+        TEST_COMMAND      "" # remove test step
+        UPDATE_COMMAND    "" # remove update step
+        )
+ExternalProject_Get_Property(google_flatbuffers source_dir binary_dir)
+set(flatbuffers_INCLUDE_DIRS ${source_dir}/include)
+set(flatbuffers_LIBRARIES ${binary_dir}/libflatbuffers.a)
+set(flatc_EXECUTABLE ${binary_dir}/flatc)
+file(MAKE_DIRECTORY ${flatbuffers_INCLUDE_DIRS})
+
+#endif ()
+
+add_library(flatbuffers STATIC IMPORTED)
+set_target_properties(flatbuffers PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${flatbuffers_INCLUDE_DIRS}
+        IMPORTED_LOCATION ${flatbuffers_LIBRARIES}
+        )
+
+function(compile_fbs_to_cpp FBS)
+  string(REGEX REPLACE "\\.fbs$" "_generated.h" GEN_HEADER ${FBS})
+  add_custom_command(
+          OUTPUT ${IROHA_SCHEMA_DIR}/${GEN_HEADER}
+          COMMAND "${flatc_EXECUTABLE}" -c --scoped-enums --no-prefix --gen-mutable
+          -o ${IROHA_SCHEMA_DIR} ${IROHA_SCHEMA_DIR}/${FBS}
+          DEPENDS flatbuffers google_flatbuffers)
+endfunction()
+
+compile_fbs_to_cpp(block.fbs)
+
+if(NOT flatbuffers_FOUND)
+  add_dependencies(flatbuffers google_flatbuffers)
+endif()

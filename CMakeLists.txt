@@ -12,6 +12,11 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 option(TESTING "Build tests" ON)
 
+if(NOT IROHA_SCHEMA_DIR)
+  set(IROHA_SCHEMA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/schema)
+endif()
+message(STATUS "Schema folder found: ${IROHA_SCHEMA_DIR}")
+
 # set default CMAKE_BUILD_TYPE=Debug
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
@@ -39,7 +44,9 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/wsv/wsv.h
   include/ametsuchi/wsv/wsv_redis.h
   include/ametsuchi/ametsuchi.h
-  )
+
+  schema/block_generated.h
+        include/ametsuchi/utils/block_parser_flatbuffers.h)
 
 set(AMETSUCHI_SRC
   src/ametsuchi/utils/block_parser.cc
@@ -63,6 +70,7 @@ target_link_libraries(${LIBAMETSUCHI_NAME}
   cpp_redis
   keccak
   cppfs
+  flatbuffers
   )
 StrictMode(${LIBAMETSUCHI_NAME})
 

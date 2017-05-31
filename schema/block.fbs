@@ -1,0 +1,14 @@
+namespace iroha;
+
+table Block{
+    txs: [Transaction];
+    peer_sigs: [Signature];
+    prev_hash: [ubyte];
+    length: uint;
+    merkle_root: [ubyte];
+    height: ulong;
+    created: [ubyte];
+}
+
+table Transaction{}
+table Signature{}
