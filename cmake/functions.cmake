@@ -38,3 +38,17 @@ function(AddBenchmark bench_name SOURCES)
   target_link_libraries(${bench_name} PRIVATE benchmark)
   StrictMode(${bench_name})
 endfunction()
+
+
+
+function(compile_fbs_to_cpp FBS)
+  string(REGEX REPLACE "\\.fbs$" "_generated.h" GEN_HEADER ${FBS})
+  string(REGEX REPLACE "\\.fbs$" "_h" GEN_TARGET ${FBS})
+  add_custom_command(
+    OUTPUT ${IROHA_SCHEMA_DIR}/${GEN_HEADER}
+    COMMAND "${flatc_EXECUTABLE}" -c --scoped-enums --no-prefix --gen-mutable
+    -o ${IROHA_SCHEMA_DIR} ${IROHA_SCHEMA_DIR}/${FBS}
+    DEPENDS flatc)
+  add_custom_target(${GEN_TARGET} DEPENDS "${IROHA_SCHEMA_DIR}/${GEN_HEADER}")
+  add_dependencies(flatbuffers ${GEN_TARGET})
+endfunction()

@@ -12,9 +12,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 option(TESTING "Build tests" ON)
 
-if(NOT IROHA_SCHEMA_DIR)
+if (NOT IROHA_SCHEMA_DIR)
   set(IROHA_SCHEMA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/schema)
-endif()
+endif ()
 message(STATUS "Schema folder found: ${IROHA_SCHEMA_DIR}")
 
 # set default CMAKE_BUILD_TYPE=Debug
@@ -44,21 +44,22 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/wsv/wsv.h
   include/ametsuchi/wsv/wsv_redis.h
   include/ametsuchi/ametsuchi.h
-
-  schema/block_generated.h
-        include/ametsuchi/utils/block_parser_flatbuffers.h)
+  include/ametsuchi/utils/block_parser_flatbuffers.h
+  )
 
 set(AMETSUCHI_SRC
   src/ametsuchi/utils/block_parser.cc
   src/ametsuchi/utils/action_parser.cc
   src/ametsuchi/utils/transcation_parser.cc
   src/ametsuchi/utils/hash.cc
-#  src/ametsuchi/ametsuchi.cc
+  #  src/ametsuchi/ametsuchi.cc
   src/ametsuchi/wsv/wsv_redis.cc
   src/ametsuchi/tx_index/tx_index_redis.cc
   src/ametsuchi/block_index/block_index_redis.cc
   src/ametsuchi/block_store/block_store_flat.cc
   )
+
+compile_fbs_to_cpp(block.fbs)
 
 # Library.
 set(LIBAMETSUCHI_NAME ametsuchi)
