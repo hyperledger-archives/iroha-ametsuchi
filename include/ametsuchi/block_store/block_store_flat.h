@@ -25,19 +25,21 @@ namespace block_store {
 class BlockStoreFlat : public BlockStore
 {
  public:
-  BlockStoreFlat();
-  std::string append(const std::string index, const std::vector<uint8_t> &block) override;
-  const std::vector<uint8_t>& get(const std::string hash) override;
+  BlockStoreFlat(const std::string &path);
+  std::string append(const std::vector<uint8_t> &block) override;
+  const std::vector<uint8_t>& get(const std::string id) override;
   ~BlockStoreFlat();
-  const std::string get_last_id() override;
-  const std::string get_next_id();
+
   // Iterators
 
 
  private:
-  // CurrentID
+
   std::string current_id;
   std::string dump_dir;
+  // Get next auto increment
+  // Get last consistent id, check iternal consistency of block store
+  const std::string get_last_id();
 };
 
 }

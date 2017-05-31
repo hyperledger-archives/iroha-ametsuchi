@@ -18,17 +18,29 @@
 #pragma once
 
 #include <string>
-#include <ametsuchi/merkle_tree/merkle_tree.h>
+#include <vector>
 
 namespace ametsuchi {
 namespace block_store{
 
 class BlockStore {
  public:
-  virtual std::string append(const std::string index, const std::vector<uint8_t> &block) = 0;
-  virtual const std::vector<uint8_t>& get(const std::string id) = 0;
+  virtual std::string append(const std::vector<uint8_t> &block) = 0;
+  virtual const std::vector<uint8_t> & get(const std::string id) = 0;
   // Iterators
-  virtual const std::string get_last_id() = 0;
+  //virtual const std::string get_last_id() = 0;
+ protected:
+
+  static const std::string get_next_id(std::string old_id) {
+    std::string new_id(16, (char)'/0');
+    if (!old_id.empty()) {
+      std::string::size_type sz;
+      auto li_dec = std::stoll(old_id, &sz);
+      ++li_dec;
+      sprintf(new_id, "%016lli", li_dec);
+    }
+    return new_id;
+  }
 
 };
 

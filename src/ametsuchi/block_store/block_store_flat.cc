@@ -18,120 +18,106 @@
 #include <ametsuchi/block_store/block_store_flat.h>
 #include <stdio.h>
 
-#include <iostream>
-#include <cppfs/fs.h>
 #include <cppfs/FileHandle.h>
+#include <cppfs/FileIterator.h>
+#include <cppfs/fs.h>
+#include <iostream>
 
 namespace fs = cppfs::fs;
 using cppfs::FileHandle;
+using cppfs::FileIterator;
 
 namespace ametsuchi {
 namespace block_store {
 
-BlockStoreFlat::BlockStoreFlat() {
 
-  // Restore block, read last block
-  current_id = get_last_id();
-  // Init flat block store, might throw exception
+std::string BlockStoreFlat::append(const std::vector<uint8_t> &block) {
 
-  auto p = fs::open("./dump");
-  if (p.exists()) // does path p actually exist?
-  {
-    // There exist block store
-    if (p.isDirectory())
-    {
-      // Everything is ok
-      std::cout << "Directory exist ";
-    }
-  }
-  else
-  {
-    if (!p.createDirectory())
-    {
-      std::cout << "Error creating dir";
-      // throw
-    }
-    else
-    {
-
-    }
-    // Create new block store
-  }
-}
-
-std::string BlockStoreFlat::append(const std::string index, const std::vector<uint8_t> &block) {
-
-  std::string file_name;
-  file_name.reserve(100);
-
-  file_name += ".dat";
+  std::string next_id = get_next_id(current_id);
+  std::string file_name = dump_dir + next_id + ".dmp";
   // Write block to binary file
-  auto file_path = fs::open(file_name);
-  if (!file_path.exists())
-  {
+  auto fh = fs::open(file_name);
+  if (!fh.exists()) {
     // New file will be created
-    FILE* pfile;
-
+    FILE *pfile;
     pfile = fopen(file_name, "wb");
-    auto res = fwrite(block.data(), sizeof(uint8_t), block.size(),
-                           pfile);
+    auto res = fwrite(block.data(), sizeof(uint8_t), block.size(), pfile);
     fflush(pfile);
+    fclose(pfile);
 
-
-
-  }
-  else
-  {
+    // Update internals, release lock ?
+    current_id = next_id;
+    return current_id;
+  } else {
     // Already exists, something is wrong
     // Answer iroha status
+    // TODO: handle this case
   }
-  // Write in one dir dump
-
-  // Other dir may contain links to this dir
-
-  //
 
 }
 
-BlockStoreFlat::~BlockStoreFlat() {
+BlockStoreFlat::~BlockStoreFlat() {}
 
+BlockStoreFlat::BlockStoreFlat(const std::string &path) {
+  // Check if path exist:
+  FileHandle fh = fs::open(path);
+  if (fh.exists()) {
+    if (fh.isDirectory()) {
+      // Directory exists
+      dump_dir = path;
+      current_id = get_last_id();
+      if (current_id.empty()) {
+        // TODO: check
+      }
+
+
+    } else {
+      // Wrong path
+      // TODO: handle wrong path
+    }
+  } else {
+    // New BlockStore
+    if (!fh.createDirectory()) {
+      // TODO: handle cannot create directory
+    }
+    current_id = "0";
+  }
 }
 
-const std::vector<uint8_t> &BlockStoreFlat::get(const std::string hash) {
-  return <#initializer#>;
-}
+
 const std::string BlockStoreFlat::get_last_id() {
   std::string tmp;
-  if (!dump_dir.empty())
-  {
+  if (!dump_dir.empty()) {
+    FileHandle dir = fs::open(dump_dir);
+    if (dir.isDirectory()) {
+      for (FileIterator it = dir.begin(); it != dir.end(); ++it) {
+        if (get_next_id(tmp) != *it) {
+          // Inconsistency in block store
+          // TODO: handle inconsistency
+        }
+        tmp = *it;
+      }
 
-    auto apk_path = fs::open(dump_dir);
-
-//    for(fs::recursive_directory_iterator i(apk_path); i != end; ++i)
-//    {
-//      const fs::path cp = (*i);
-//      tmp = cp.stem().string();
-//    }
-    // TODO implement
-//    apk_path.traverse([]())
-    // Get from tmp the id by splitting
-     //tmp = tmp - ''
+    } else {
+      // Not a directory
+      // TODO: handle
+    }
   }
-
   return tmp;
 }
-const std::string BlockStoreFlat::get_next_id() {
-  std::string new_id;
-  if (!current_id.empty())
+
+
+const std::vector<uint8_t> &BlockStoreFlat::get(const std::string id) {
+  std::vector<uint8_t> result;
+  std::string filename = dump_dir + current_id + ".dmp";
+  FileHandle fh = fs::open(filename);
+  if (fh.exists())
   {
-    std::string::size_type  sz;
-    long li_dec = std::stol(current_id, &sz);
-    ++li_dec;
-    char buf[100];
-    sprintf(buf, "%016li", li_dec);
-
+    auto content = fh.readFile();
+    std::copy(content.begin(), content.end(), result.begin());
+    // TODO: make more clever read
   }
-
+ return result;
 }
 
 }

@@ -25,11 +25,13 @@ namespace block_store{
 class BlockStoreNuDB : public BlockStore {
  public:
   BlockStoreNuDB(const std::string &path);
-  void append(const merkle_tree::hash_t &hash, const std::vector<uint8_t> &block) override;
-  std::string get(const merkle_tree::hash_t hash) override;
+  std::string append(const std::vector<uint8_t> &block) override;
+  const std::vector<uint8_t>& get(const std::string id) override;
   ~BlockStoreNuDB();
  private:
   nudb::store db_;
+  std::string current_id;
+  const std::string get_last_id();
 };
 
 }

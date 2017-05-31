@@ -46,18 +46,30 @@ BlockStoreNuDB::BlockStoreNuDB(const std::string &path) {
              log_file = (folder / "nudb.log").string();
   const auto load_factor = .5f;
   nudb::error_code ec;
+  //TODO: check size of the key
   nudb::create<nudb::xxhasher>(dat_file, key_file, log_file, 1,
-                               nudb::make_salt(), merkle_tree::HASH_LEN,
+                               nudb::make_salt(), 16,
                                nudb::block_size("."), load_factor, ec);
   if (ec == nudb::errc::file_exists) {
     ec = {};
   }
   db_.open(dat_file, key_file, log_file, ec);
+
 }
 
 BlockStoreNuDB::~BlockStoreNuDB() {
   nudb::error_code ec;
   db_.close(ec);
+}
+std::string BlockStoreNuDB::append(const std::vector<uint8_t> &block) {
+  nudb::error_code ec;
+
+  db_.insert(&hash, block.data(), block.size(), ec);
+
+
+}
+const std::vector<uint8_t> &BlockStoreNuDB::get(const std::string id) {
+  return <#initializer#>;
 }
 
 }
