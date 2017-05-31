@@ -75,6 +75,14 @@ target_link_libraries(${LIBAMETSUCHI_NAME}
   )
 StrictMode(${LIBAMETSUCHI_NAME})
 
+add_executable(ametsuchi-main
+  src/main.cc
+    )
+target_link_libraries(ametsuchi-main PRIVATE
+  ${LIBAMETSUCHI_NAME}
+  uvw
+  )
+
 if (TESTING)
   # Connect test executable and CMake test system.
   enable_testing()
