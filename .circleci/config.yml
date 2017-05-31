@@ -12,7 +12,7 @@ jobs:
       - image: redis:3.2.8
     steps:
       - checkout
-      - run: apt install -y libssh2-1-dev libssl-dev libpq-dev
+      - run: apt update && apt install -y libssh2-1-dev libssl-dev libpq-dev
       - run:
           name: cmake
           command: cmake .
