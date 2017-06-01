@@ -29,7 +29,7 @@ class BlStore_Test : public ::testing::Test {
 
 TEST(BlStore_Test, Read_Write_Test) {
 
-  std::vector<uint8_t > block = {2, 3, 4, 2, 3, 0, 2};
+  std::vector<uint8_t > block(100000, 5);
   ametsuchi::block_store::BlockStoreFlat bl_store("dump");
   auto id = bl_store.append(block);
   auto id2 = bl_store.append(block);

@@ -45,7 +45,7 @@ std::string BlockStoreFlat::append(const std::vector<uint8_t> &block) {
     fflush(pfile);
     fclose(pfile);
 
-    // Update internals, release lock ?
+    // Update internals, release lock
     current_id = next_id;
     return current_id;
   } else {
@@ -66,7 +66,7 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
     if (fh.isDirectory()) {
       // Directory exists
       dump_dir = path;
-      current_id = get_last_id();
+      current_id = check_consitency();
       if (current_id.empty()) {
         // TODO: check
       }
@@ -89,7 +89,7 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
 }
 
 
-const std::string BlockStoreFlat::get_last_id() {
+const std::string BlockStoreFlat::check_consitency() {
   std::string tmp = "0";
   if (!dump_dir.empty()) {
     FileHandle dir = fs::open(dump_dir);
@@ -142,5 +142,17 @@ const std::vector<uint8_t> BlockStoreFlat::get(const std::string id) {
   }
 
 }
+
+const std::string BlockStoreFlat::get_next_id(std::string old_id) {
+  std::string new_id(16, '\0');
+  if (!old_id.empty()) {
+    std::string::size_type sz;
+    auto li_dec = std::stoll(old_id, &sz);
+    ++li_dec;
+    sprintf(&new_id[0], "%016lli", li_dec);
+  }
+  return new_id;
+}
+
 }
 }

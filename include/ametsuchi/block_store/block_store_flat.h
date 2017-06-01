@@ -39,7 +39,8 @@ class BlockStoreFlat : public BlockStore
   std::string dump_dir;
   // Get next auto increment
   // Get last consistent id, check iternal consistency of block store
-  const std::string get_last_id();
+  const std::string check_consitency();
+  const std::string get_next_id(std::string old_id);
 
 };
 
