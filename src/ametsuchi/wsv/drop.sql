@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS domain_has_account;
+DROP TABLE IF EXISTS account_has_asset;
+DROP TABLE IF EXISTS asset;
+DROP TABLE IF EXISTS domain;
+DROP TABLE IF EXISTS signatory;
+DROP TABLE IF EXISTS account;

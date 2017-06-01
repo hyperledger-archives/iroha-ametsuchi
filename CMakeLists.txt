@@ -44,6 +44,7 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/utils/hash.h
   include/ametsuchi/wsv/wsv.h
   include/ametsuchi/wsv/wsv_redis.h
+  include/ametsuchi/wsv/wsv_postgres.h
   include/ametsuchi/ametsuchi.h
   include/ametsuchi/utils/block_parser_flatbuffers.h
 
@@ -57,6 +58,7 @@ set(AMETSUCHI_SRC
   src/ametsuchi/utils/hash.cc
   #  src/ametsuchi/ametsuchi.cc
   src/ametsuchi/wsv/wsv_redis.cc
+  src/ametsuchi/wsv/wsv_postgres.cc
   src/ametsuchi/tx_index/tx_index_redis.cc
   src/ametsuchi/block_index/block_index_redis.cc
   src/ametsuchi/block_store/block_store_flat.cc
@@ -76,6 +78,7 @@ target_link_libraries(${LIBAMETSUCHI_NAME}
   keccak
   cppfs
   flatbuffers
+  pqxx
   )
 StrictMode(${LIBAMETSUCHI_NAME})
 
