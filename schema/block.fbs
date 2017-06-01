@@ -3,11 +3,11 @@ namespace iroha;
 table Block{
     txs: [Transaction];
     peer_sigs: [Signature];
-    prev_hash: [ubyte];
+    prev_hash: [ubyte:32];
     length: uint;
-    merkle_root: [ubyte];
+    merkle_root: [ubyte:32];
     height: ulong;
-    created: [ubyte];
+    created: [ubyte:25];
 }
 
 table Transaction{}

@@ -26,6 +26,7 @@ message(STATUS "-DTESTING=${TESTING}")
 include_directories(
   # Library headers.
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/schema"
 )
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
@@ -45,6 +46,8 @@ set(AMETSUCHI_INCLUDE
   include/ametsuchi/wsv/wsv_redis.h
   include/ametsuchi/ametsuchi.h
   include/ametsuchi/utils/block_parser_flatbuffers.h
+
+  schema/block_generated.h
   )
 
 set(AMETSUCHI_SRC
@@ -57,6 +60,7 @@ set(AMETSUCHI_SRC
   src/ametsuchi/tx_index/tx_index_redis.cc
   src/ametsuchi/block_index/block_index_redis.cc
   src/ametsuchi/block_store/block_store_flat.cc
+  src/ametsuchi/utils/block_parser_flatbuffers.cc
   )
 
 compile_fbs_to_cpp(block.fbs)

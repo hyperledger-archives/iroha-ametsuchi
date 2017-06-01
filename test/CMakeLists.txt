@@ -18,6 +18,9 @@ target_link_libraries(tx_index_test PRIVATE ${LIBAMETSUCHI_NAME})
 AddTest(parser_test ametsuchi/utils/parser_test.cc)
 target_link_libraries(parser_test PRIVATE ${LIBAMETSUCHI_NAME})
 
+AddTest(block_parser_flatbuffers_test ametsuchi/utils/block_parser_flatbuffers_test.cc)
+target_link_libraries(block_parser_flatbuffers_test PRIVATE ${LIBAMETSUCHI_NAME})
+
 #AddTest(ametsuchi_test ametsuchi/ametsuchi_test.cc)
 #target_link_libraries(ametsuchi_test PRIVATE ${LIBAMETSUCHI_NAME})
 
