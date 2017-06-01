@@ -1,8 +1,9 @@
-# Don not include environment-dependent files here (e.g. IDE configs).
-# Instead, place them in the global .gitignore file:
-# https://help.github.com/articles/ignoring-files/#create-a-global-gitignore
-
 # CMake
 build/
 external/
+
+# protobuf / flatbuffers
 *_generated.h
+
+# CLion
+.idea/
