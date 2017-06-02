@@ -2,6 +2,7 @@
 #include <block_parser_protobuf.h>
 #include <gtest/gtest.h>
 #include <fstream>
+#include <action.pb.h>
 
 using utils::BlockParserProtobuf;
 
@@ -12,10 +13,10 @@ TEST(BLOCK_PARSE_PROTOBUF_TEST, PARSE_TEST) {
   transaction->set_nonce(25);
   auto action = transaction->add_actions();
 
-//  iroha::AddAccount add_account;
-//  add_account.set_account_id(1);
-//  add_account.set_name("account_name");
-//  action->set_allocated_add_account(&add_account);
+  iroha::AddAccount* add_account = action->mutable_add_account();
+  add_account->set_account_id(1);
+  add_account->set_name("account_name");
+
   auto action_sign = transaction->add_sigs();
   action_sign->set_sig("action_sig");
   action_sign->set_pubkey("sign_pubkey");
@@ -58,4 +59,16 @@ TEST(BLOCK_PARSE_PROTOBUF_TEST, PARSE_TEST) {
   std::copy_n(std::make_move_iterator(merkle_root.begin()), 32,
               merkle_root_to_compare.begin());
   ASSERT_EQ(parser.get_merkle_root(), merkle_root_to_compare);
+
+  auto txs = block.txs();
+  auto tx = txs[0];
+  auto actions = tx.actions();
+  auto a_action = actions[0];
+  auto a_add_account = a_action.add_account();
+  ASSERT_EQ(a_add_account.account_id(), 1);
+  ASSERT_EQ(a_add_account.name(), "account_name");
+
+  auto tx_sig = tx.sigs()[0];
+  ASSERT_EQ(tx_sig.sig(), "action_sig");
+  ASSERT_EQ(tx_sig.pubkey(), "sign_pubkey");
 }

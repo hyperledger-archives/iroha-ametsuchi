@@ -25,7 +25,7 @@ message AddAsset{
 }
 
 message Action{
-    oneof action{
+    oneof command{
         AddBalance add_balance = 1;
         AddAccount add_account = 2;
         AddDomain add_domain = 3;
