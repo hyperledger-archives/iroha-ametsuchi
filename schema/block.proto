@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package iroha;
+
+message Block{
+    repeated Transaction txs = 1;
+    repeated Signature peer_sigs = 2;
+    bytes prev_hash = 3;
+    uint32 length = 4;
+    bytes merkle_root = 5;
+    uint64 height = 6;
+    uint64 created= 7;
+}
+
+message Transaction{
+    repeated Signature sigs = 1;
+}
+message Signature{
+    bytes pubkey = 1;
+}

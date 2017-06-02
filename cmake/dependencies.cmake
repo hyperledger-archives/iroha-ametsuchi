@@ -288,6 +288,20 @@ set_target_properties(flatbuffers PROPERTIES
 add_dependencies(flatbuffers google_flatbuffers flatc)
 
 ################################
+#           protobuf           #
+################################
+
+set(PROTOBUF_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/schema)
+execute_process(COMMAND bash "-c" "cd ${PROTOBUF_SRC_DIR}; protoc  --cpp_out=${PROTOBUF_SRC_DIR}/ *.proto")
+
+INCLUDE(FindProtobuf)
+FIND_PACKAGE(Protobuf REQUIRED)
+INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIR})
+#PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER block.proto)
+#ADD_LIBRARY(proto ${PROTO_HEADER} ${PROTO_SRC})
+add_library(proto STATIC
+        ${PROTOBUF_SRC_DIR}/block.pb.cc)
+################################
 #            libuv             #
 ################################
 ExternalProject_Add(libuv_libuv
