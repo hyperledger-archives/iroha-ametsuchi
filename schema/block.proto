@@ -1,6 +1,7 @@
 syntax = "proto3";
-
 package iroha;
+
+import "action.proto";
 
 message Block{
     repeated Transaction txs = 1;
@@ -21,8 +22,4 @@ message Transaction{
 message Signature{
     bytes pubkey = 1;
     bytes sig = 2;
-}
-
-message Action{
-
 }
