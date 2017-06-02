@@ -1,0 +1,34 @@
+syntax = "proto3";
+package iroha;
+
+message AddBalance{
+    uint64 account_id = 1;
+    uint64 asset_id = 2;
+    uint64 amount = 3;
+}
+
+message AddAccount{
+    uint64 account_id = 1;
+    string name = 2;
+}
+
+message AddDomain{
+    uint64 domain_id = 1;
+    string name = 2;
+    uint64 amount = 3;
+}
+
+message AddAsset{
+    uint64 asset_id = 1;
+    string name = 2;
+    uint64 domain_id = 3;
+}
+
+message Action{
+    oneof action{
+        AddBalance add_balance = 1;
+        AddAccount add_account = 2;
+        AddDomain add_domain = 3;
+        AddAsset add_asset = 4;
+    }
+}
