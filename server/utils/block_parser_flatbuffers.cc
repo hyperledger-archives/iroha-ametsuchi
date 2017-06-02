@@ -26,21 +26,21 @@ std::vector<uint8_t> BlockParserFlatbuffers::_get_peer_sigs() {
 std::array<uint8_t, 32> BlockParserFlatbuffers::_get_prev_hash() {
   auto prev_hash = block_->prev_hash();
   std::array<uint8_t, 32> res;
-  std::copy_n(std::make_move_iterator(prev_hash->begin()), 32, res.begin());
+  std::copy_n(prev_hash->begin(), 32, res.begin());
   return res;
 }
 uint32_t BlockParserFlatbuffers::_get_length() { return block_->length(); }
 std::array<uint8_t, 32> BlockParserFlatbuffers::_get_merkle_root() {
   auto merkle_root = block_->merkle_root();
   std::array<uint8_t, 32> res;
-  std::copy_n(std::make_move_iterator(merkle_root->begin()), 32, res.begin());
+  std::copy_n(merkle_root->begin(), 32, res.begin());
   return res;
 }
 uint64_t BlockParserFlatbuffers::_get_height() { return block_->height(); }
 std::array<uint8_t, 25> BlockParserFlatbuffers::_get_created() {
   auto prev_hash = block_->created();
   std::array<uint8_t, 25> res;
-  std::copy_n(std::make_move_iterator(prev_hash->begin()), 25, res.begin());
+  std::copy_n(prev_hash->begin(), 25, res.begin());
   return res;
 }
 std::vector<uint8_t> BlockParserFlatbuffers::get_txs() { return txs_; }

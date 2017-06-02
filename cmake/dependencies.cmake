@@ -255,29 +255,36 @@ add_dependencies(pqxx jtv_libpqxx)
 ################################
 #         flatbuffers          #
 ################################
-set(flatbuffers_CMAKE_ARGS
-  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-  -DFLATBUFFERS_BUILD_TESTS=OFF
-  -DFLATBUFFERS_INSTALL=OFF
-  -DFLATBUFFERS_BUILD_FLATHASH=OFF
-  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-  -DFLATBUFFERS_BUILD_FLATC=ON
-  )
-ExternalProject_Add(google_flatbuffers
-  GIT_REPOSITORY "https://github.com/google/flatbuffers.git"
-  CMAKE_ARGS ${flatbuffers_CMAKE_ARGS}
-  INSTALL_COMMAND "" # remove install step
-  TEST_COMMAND "" # remove test step
-  UPDATE_COMMAND "" # remove update step
-  )
-ExternalProject_Get_Property(google_flatbuffers source_dir binary_dir)
-set(flatbuffers_INCLUDE_DIRS ${source_dir}/include)
-set(flatbuffers_LIBRARIES ${binary_dir}/libflatbuffers.a)
-set(flatc_EXECUTABLE ${binary_dir}/flatc)
-file(MAKE_DIRECTORY ${flatbuffers_INCLUDE_DIRS})
-
-add_custom_target(flatc DEPENDS google_flatbuffers)
+find_package(Flatbuffers)
+if (NOT Flatbuffers_FOUND OR NOT Flatbuffers_flatc_EXECUTABLE)
+  set(flatbuffers_CMAKE_ARGS
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DFLATBUFFERS_BUILD_TESTS=OFF
+    -DFLATBUFFERS_INSTALL=OFF
+    -DFLATBUFFERS_BUILD_FLATHASH=OFF
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DFLATBUFFERS_BUILD_FLATC=ON
+    )
+  ExternalProject_Add(google_flatbuffers
+    GIT_REPOSITORY "https://github.com/google/flatbuffers.git"
+    CMAKE_ARGS ${flatbuffers_CMAKE_ARGS}
+    INSTALL_COMMAND "" # remove install step
+    TEST_COMMAND "" # remove test step
+    UPDATE_COMMAND "" # remove update step
+    )
+  ExternalProject_Get_Property(google_flatbuffers source_dir binary_dir)
+  set(flatbuffers_INCLUDE_DIRS ${source_dir}/include)
+  set(flatbuffers_LIBRARIES ${binary_dir}/libflatbuffers.a)
+  set(flatc_EXECUTABLE ${binary_dir}/flatc)
+  file(MAKE_DIRECTORY ${flatbuffers_INCLUDE_DIRS})
+  add_custom_target(flatc DEPENDS google_flatbuffers)
+else()
+  set(flatbuffers_INCLUDE_DIRS ${Flatbuffers_INCLUDE_DIRS})
+  set(flatbuffers_LIBRARIES ${Flatbuffers_LIBRARIES})
+  set(flatc_EXECUTABLE ${Flatbuffers_flatc_EXECUTABLE})
+  add_custom_target(flatc)
+endif ()
 
 add_library(flatbuffers STATIC IMPORTED)
 set_target_properties(flatbuffers PROPERTIES
@@ -285,7 +292,9 @@ set_target_properties(flatbuffers PROPERTIES
   IMPORTED_LOCATION ${flatbuffers_LIBRARIES}
   )
 
-add_dependencies(flatbuffers google_flatbuffers flatc)
+if (NOT Flatbuffers_FOUND OR NOT Flatbuffers_flatc_EXECUTABLE)
+  add_dependencies(flatbuffers google_flatbuffers flatc)
+endif()
 
 ################################
 #           protobuf           #
@@ -320,7 +329,7 @@ set_target_properties(protobuf PROPERTIES
   IMPORTED_LOCATION ${protobuf_LIBRARIES}
   )
 
-if (NOT Protobuf_FOUND)
+if (NOT PROTOBUF_FOUND OR NOT PROTOBUF_PROTOC_EXECUTABLE)
   add_dependencies(protobuf google_protobuf protoc)
 endif()
 
@@ -375,48 +384,56 @@ set_target_properties(uvw PROPERTIES
 add_dependencies(uvw skypjack_uvw)
 
 #########################
-#         grpc          #
+#         gRPC          #
 #########################
-ExternalProject_Add(grpc_grpc
-  GIT_REPOSITORY "https://github.com/grpc/grpc.git"
-  GIT_TAG "v1.3.0"
-  BUILD_IN_SOURCE 1
-  BUILD_COMMAND $(MAKE)
-  CONFIGURE_COMMAND "" # remove configure step
-  INSTALL_COMMAND "" # remove install step
-  TEST_COMMAND "" # remove test step
-  UPDATE_COMMAND "" # remove update step
-  )
-ExternalProject_Get_Property(grpc_grpc source_dir)
-set(grpc_INCLUDE_DIR ${source_dir}/include/grpc)
-set(grpcpp_INCLUDE_DIR ${source_dir}/include/grpc++)
-set(grpc_LIB ${source_dir}/libs/opt/libgrpc.so)
-set(grpcpp_LIB ${source_dir}/libs/opt/libgrpc++.so)
-set(gpr_LIB ${source_dir}/libs/opt/gpr.so)
+find_package(GRPC)
+if (NOT GRPC_FOUND)
+  ExternalProject_Add(grpc_grpc
+    GIT_REPOSITORY "https://github.com/grpc/grpc.git"
+    GIT_TAG "v1.3.0"
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND $(MAKE)
+    CONFIGURE_COMMAND "" # remove configure step
+    INSTALL_COMMAND "" # remove install step
+    TEST_COMMAND "" # remove test step
+    UPDATE_COMMAND "" # remove update step
+    )
+  ExternalProject_Get_Property(grpc_grpc source_dir)
+  set(grpc_INCLUDE_DIR ${source_dir}/include)
+  set(grpc_LIBRARY ${source_dir}/libs/opt/libgrpc.so)
+  set(grpc_grpc++_LIBRARY ${source_dir}/libs/opt/libgrpc++.so)
+  set(groc_grpc++_reflection_LIBRARY ${source_dir}/libs/opt/libgrpc++_reflection.so)
+else()
+  set(grpc_INCLUDE_DIR ${GRPC_INCLUDE_DIR})
+  set(grpc_LIBRARY ${GRPC_LIBRARY})
+  set(grpc_grpc++_LIBRARY ${GRPC_GRPC++_LIBRARY})
+  set(grpc_grpc++_reflection_LIBRARY ${GRPC_GRPC++_REFLECTION_LIBRARY})
+endif ()
+
 
 # libgrpc
 add_library(grpc SHARED IMPORTED)
 set_target_properties(grpc PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${grpc_INCLUDE_DIR}
-  IMPORTED_LOCATION ${grpc_LIB}
-  IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-  )
-
-# libgpr
-add_library(gpr SHARED IMPORTED)
-set_target_properties(gpr PROPERTIES
-  IMPORTED_LOCATION ${gpr_LIB}
-  IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+  IMPORTED_LOCATION ${grpc_LIBRARY}
   )
 
 # libgrpc++
 add_library(grpc++ SHARED IMPORTED)
 set_target_properties(grpc++ PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES ${grpcpp_INCLUDE_DIR}
-  IMPORTED_LOCATION ${grpcpp_LIB}
-  IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+  INTERFACE_INCLUDE_DIRECTORIES ${grpc_INCLUDE_DIR}
+  IMPORTED_LOCATION ${grpc_grpc++_LIBRARY}
   )
 
-add_dependencies(grpc grpc_grpc)
-add_dependencies(gpr grpc_grpc)
-add_dependencies(grpc++ grpc_grpc)
+# libgrpc++_reflection
+add_library(grpc++_reflection SHARED IMPORTED)
+set_target_properties(grpc++_reflection PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${grpc_INCLUDE_DIR}
+  IMPORTED_LOCATION ${grpc_grpc++_reflection_LIBRARY}
+  )
+
+if (NOT GRPC_FOUND)
+  add_dependencies(grpc grpc_grpc)
+  add_dependencies(grpc++ grpc_grpc)
+  add_dependencies(grpc++_reflection grpc_grpc)
+endif ()

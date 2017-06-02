@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 #include <fstream>
 
-using ametsuchi::utils::BlockParserProtobuf;
+using utils::BlockParserProtobuf;
 
 TEST(BLOCK_PARSE_PROTOBUF_TEST, PARSE_TEST) {
   iroha::Block block;
