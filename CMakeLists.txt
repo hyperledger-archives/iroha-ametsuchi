@@ -24,71 +24,15 @@ endif ()
 message(STATUS "-DTESTING=${TESTING}")
 
 include_directories(
-  # Library headers.
-  "${CMAKE_CURRENT_SOURCE_DIR}/include"
   "${CMAKE_CURRENT_SOURCE_DIR}/schema"
 )
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
-set(AMETSUCHI_INCLUDE
-  include/ametsuchi/block_index/block_index.h
-  include/ametsuchi/block_index/block_index_redis.h
-  include/ametsuchi/block_store/block_store_flat.h
-  include/ametsuchi/block_store/block_store.h
-  include/ametsuchi/tx_index/tx_index.h
-  include/ametsuchi/tx_index/tx_index_redis.h
-  include/ametsuchi/utils/action_parser.h
-  include/ametsuchi/utils/block_parser.h
-  include/ametsuchi/utils/transaction_parser.h
-  include/ametsuchi/utils/hash.h
-  include/ametsuchi/wsv/wsv.h
-  include/ametsuchi/wsv/wsv_redis.h
-  include/ametsuchi/wsv/wsv_postgres.h
-  include/ametsuchi/ametsuchi.h
-  include/ametsuchi/utils/block_parser_flatbuffers.h
-
-  schema/block_generated.h
-  )
-
-set(AMETSUCHI_SRC
-  src/ametsuchi/utils/block_parser.cc
-  src/ametsuchi/utils/action_parser.cc
-  src/ametsuchi/utils/transcation_parser.cc
-  src/ametsuchi/utils/hash.cc
-  #  src/ametsuchi/ametsuchi.cc
-  src/ametsuchi/wsv/wsv_redis.cc
-  src/ametsuchi/wsv/wsv_postgres.cc
-  src/ametsuchi/tx_index/tx_index_redis.cc
-  src/ametsuchi/block_index/block_index_redis.cc
-  src/ametsuchi/block_store/block_store_flat.cc
-  src/ametsuchi/utils/block_parser_flatbuffers.cc
-  )
-
 compile_fbs_to_cpp(block.fbs)
 
-# Library.
-set(LIBAMETSUCHI_NAME ametsuchi)
-add_library(${LIBAMETSUCHI_NAME} STATIC
-  ${AMETSUCHI_INCLUDE}
-  ${AMETSUCHI_SRC}
-  )
-target_link_libraries(${LIBAMETSUCHI_NAME}
-  cpp_redis
-  keccak
-  cppfs
-  flatbuffers
-  pqxx
-  )
-StrictMode(${LIBAMETSUCHI_NAME})
-
-add_executable(ametsuchi-main
-  src/main.cc
-    )
-target_link_libraries(ametsuchi-main PRIVATE
-  ${LIBAMETSUCHI_NAME}
-  uvw
-  )
+add_subdirectory(server)
+add_subdirectory(client)
 
 if (TESTING)
   # Connect test executable and CMake test system.
