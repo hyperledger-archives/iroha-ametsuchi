@@ -23,15 +23,10 @@ if (NOT CMAKE_BUILD_TYPE)
 endif ()
 message(STATUS "-DTESTING=${TESTING}")
 
-include_directories(
-  "${CMAKE_CURRENT_SOURCE_DIR}/schema"
-)
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
-compile_fbs_to_cpp(block.fbs)
-compile_proto_to_cpp(block.proto)
-compile_proto_to_cpp(action.proto)
+add_subdirectory(schema)
 
 add_subdirectory(server)
 add_subdirectory(client)

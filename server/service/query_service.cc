@@ -17,19 +17,21 @@
 
 #include "query_service.h"
 
-void RunServer() {
-  std::string server_address("0.0.0.0:50051");
-  service::QueryServiceImpl service;
+namespace service {
 
-  grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  builder.RegisterService(&service);
-  auto server = builder.BuildAndStart();
-
-  server->Wait();
+grpc::Status QueryServiceImpl::GetAccount(
+    ::grpc::ServerContext *context, const ::iroha::AccountRequest *request,
+    ::iroha::AccountReply *response) {
+  auto name = wsvPostgres.get_account_by_id(request->account_id());
+  response->set_name(name);
+  return grpc::Status::OK;
 }
-
-int main() {
-  RunServer();
-  return 0;
+grpc::Status QueryServiceImpl::GetBalance(
+    ::grpc::ServerContext *context, const ::iroha::BalanceRequest *request,
+    ::iroha::BalanceReply *response) {
+  auto amount = wsvPostgres.get_balance_by_account_id_asset_id(
+      request->account_id(), request->asset_id());
+  response->set_amount(amount);
+  return grpc::Status::OK;
+}
 }

@@ -15,21 +15,24 @@
  * limitations under the License.
  */
 
-#include "query_service.h"
+#ifndef AMETSUCHI_CLIENT_H
+#define AMETSUCHI_CLIENT_H
 
-void RunServer() {
-  std::string server_address("0.0.0.0:50051");
-  service::QueryServiceImpl service;
+#include <string>
+#include <cstdint>
+#include <memory>
+#include <query.grpc.pb.h>
 
-  grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  builder.RegisterService(&service);
-  auto server = builder.BuildAndStart();
-
-  server->Wait();
+namespace ametsuchi {
+class Client {
+ public:
+  Client();
+  std::string get_account_by_id(uint64_t account_id);
+  uint64_t get_balance_by_account_id_asset_id(uint64_t account_id,
+                                              uint64_t asset_id);
+ private:
+  std::unique_ptr<iroha::Query::Stub> stub_;
+};
 }
 
-int main() {
-  RunServer();
-  return 0;
-}
+#endif //AMETSUCHI_CLIENT_H

@@ -6,15 +6,12 @@ add_subdirectory(tx_index)
 add_subdirectory(utils)
 add_subdirectory(wsv)
 
+add_subdirectory(service)
+
 add_executable(ametsuchi-server
   main.cc
   )
 
 target_link_libraries(ametsuchi-server PRIVATE
-  block_index
-  block_store
-  tx_index
-  utils
-  wsv
-  uvw
+  service
   )

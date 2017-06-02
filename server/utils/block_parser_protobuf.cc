@@ -11,7 +11,6 @@ namespace utils {
 
 BlockParserProtobuf::BlockParserProtobuf(std::vector<uint8_t> blob) {
   block_.ParseFromArray(blob.data(), blob.size());
-  block_.prev_hash().data();
 }
 BlockParserProtobuf::BlockParserProtobuf(std::string filename) {
   std::fstream input(filename, std::ios::in | std::ios::binary);

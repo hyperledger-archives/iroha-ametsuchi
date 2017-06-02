@@ -1,0 +1,4 @@
+compile_fbs_to_cpp(block.fbs)
+compile_proto_to_cpp(block.proto)
+compile_proto_to_cpp(action.proto)
+compile_proto_to_grpc_cpp(query.proto)

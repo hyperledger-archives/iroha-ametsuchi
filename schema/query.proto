@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package iroha;
+
+service Query {
+  rpc GetAccount(AccountRequest) returns (AccountReply) {}
+  rpc GetBalance(BalanceRequest) returns (BalanceReply) {}
+}
+
+message AccountRequest {
+  uint64 account_id = 1;
+}
+
+message AccountReply {
+  string name = 1;
+}
+
+message BalanceRequest {
+  uint64 account_id = 1;
+  uint64 asset_id = 2;
+}
+
+message BalanceReply {
+  uint64 amount = 1;
+}

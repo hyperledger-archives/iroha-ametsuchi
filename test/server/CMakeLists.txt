@@ -29,3 +29,8 @@ target_link_libraries(block_parser_protobuf_test
 AddTest(bstore_test block_store/block_store_flat_test.cc)
 target_link_libraries(bstore_test
   block_store)
+
+AddTest(sample_client_test service/sample_client_test.cc)
+target_link_libraries(sample_client_test
+  service
+  wsv)
