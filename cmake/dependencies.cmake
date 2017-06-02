@@ -299,7 +299,7 @@ endif()
 ################################
 #           protobuf           #
 ################################
-find_package(Protobuf 3.3.0)
+find_package(Protobuf 3.0.0)
 if (NOT PROTOBUF_FOUND OR NOT PROTOBUF_PROTOC_EXECUTABLE)
   ExternalProject_Add(google_protobuf
     URL https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz
@@ -404,6 +404,7 @@ if (NOT GRPC_FOUND)
   set(grpc_grpc++_LIBRARY ${source_dir}/libs/opt/libgrpc++.so)
   set(grpc_grpc++_reflection_LIBRARY ${source_dir}/libs/opt/libgrpc++_reflection.so)
   set(grpc_CPP_PLUGIN ${source_dir})
+  file(MAKE_DIRECTORY ${grpc_INCLUDE_DIR})
   add_custom_target(grpc_cpp_plugin DEPENDS grpc_grpc protoc)
 else()
   set(grpc_INCLUDE_DIR ${GRPC_INCLUDE_DIR})

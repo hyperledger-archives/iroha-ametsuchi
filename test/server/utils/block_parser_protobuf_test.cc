@@ -61,14 +61,14 @@ TEST(BLOCK_PARSE_PROTOBUF_TEST, PARSE_TEST) {
   ASSERT_EQ(parser.get_merkle_root(), merkle_root_to_compare);
 
   auto txs = block.txs();
-  auto tx = txs[0];
+  auto tx = txs.Get(0);
   auto actions = tx.actions();
-  auto a_action = actions[0];
+  auto a_action = actions.Get(0);
   auto a_add_account = a_action.add_account();
   ASSERT_EQ(a_add_account.account_id(), 1);
   ASSERT_EQ(a_add_account.name(), "account_name");
 
-  auto tx_sig = tx.sigs()[0];
+  auto tx_sig = tx.sigs().Get(0);
   ASSERT_EQ(tx_sig.sig(), "action_sig");
   ASSERT_EQ(tx_sig.pubkey(), "sign_pubkey");
 }
