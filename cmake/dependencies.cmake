@@ -290,27 +290,29 @@ add_dependencies(flatbuffers google_flatbuffers flatc)
 ################################
 #           protobuf           #
 ################################
-set(protobuf_CMAKE_ARGS
-  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-  -Dprotobuf_BUILD_TESTS=OFF
-  )
-ExternalProject_Add(google_protobuf
-  GIT_REPOSITORY "https://github.com/google/protobuf.git"
-  CMAKE_ARGS ${protobuf_CMAKE_ARGS}
-  SOURCE_SUBDIR cmake
-  INSTALL_COMMAND "" # remove install step
-  TEST_COMMAND "" # remove test step
-  UPDATE_COMMAND "" # remove update step
-  )
-ExternalProject_Get_Property(google_protobuf source_dir binary_dir)
-set(protobuf_INCLUDE_DIRS ${source_dir}/src)
-set(protobuf_LIBRARIES ${binary_dir}/libprotobufd.a)
-set(protoc_EXECUTABLE ${binary_dir}/protoc)
-file(MAKE_DIRECTORY ${protobuf_INCLUDE_DIRS})
-
-add_custom_target(protoc DEPENDS google_protobuf)
+find_package(Protobuf 3.0.0)
+if (NOT Protobuf_FOUND OR NOT Protobuf_PROTOC_EXECUTABLE)
+  ExternalProject_Add(google_protobuf
+    URL https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz
+    CONFIGURE_COMMAND ./configure
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND $(MAKE)
+    INSTALL_COMMAND "" # remove install step
+    TEST_COMMAND "" # remove test step
+    UPDATE_COMMAND "" # remove update step
+    )
+  ExternalProject_Get_Property(google_protobuf source_dir)
+  set(protobuf_INCLUDE_DIRS ${source_dir}/src)
+  set(protobuf_LIBRARIES ${source_dir}/src/.libs/libprotobuf.a)
+  set(protoc_EXECUTABLE ${source_dir}/src/protoc)
+  file(MAKE_DIRECTORY ${protobuf_INCLUDE_DIRS})
+  add_custom_target(protoc DEPENDS google_protobuf)
+else()
+  set(protobuf_INCLUDE_DIRS ${Protobuf_INCLUDE_DIRS})
+  set(protobuf_LIBRARIES ${Protobuf_LIBRARY})
+  set(protoc_EXECUTABLE ${Protobuf_PROTOC_EXECUTABLE})
+  add_custom_target(protoc)
+endif ()
 
 add_library(protobuf STATIC IMPORTED)
 set_target_properties(protobuf PROPERTIES
@@ -318,7 +320,9 @@ set_target_properties(protobuf PROPERTIES
   IMPORTED_LOCATION ${protobuf_LIBRARIES}
   )
 
-add_dependencies(protobuf google_protobuf protoc)
+if (NOT Protobuf_FOUND)
+  add_dependencies(protobuf google_protobuf protoc)
+endif()
 
 ################################
 #            libuv             #

@@ -2,6 +2,7 @@
 // Created by dainfos on 01.06.17.
 //
 
+#include <algorithm>
 #include "block_parser_protobuf.h"
 
 namespace ametsuchi {
