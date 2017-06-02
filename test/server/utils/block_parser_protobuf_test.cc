@@ -33,10 +33,12 @@ TEST(BLOCK_PARSE_PROTOBUF_TEST, PARSE_TEST) {
   ASSERT_EQ(parser.get_created(), 1);
 
   std::array<uint8_t, 32> hash_to_compare;
-  std::copy_n(std::make_move_iterator(hash.begin()), 32, hash_to_compare.begin());
+  std::copy_n(std::make_move_iterator(hash.begin()), 32,
+              hash_to_compare.begin());
   ASSERT_EQ(parser.get_prev_hash(), hash_to_compare);
 
   std::array<uint8_t, 32> merkle_root_to_compare;
-  std::copy_n(std::make_move_iterator(merkle_root.begin()), 32, merkle_root_to_compare.begin());
+  std::copy_n(std::make_move_iterator(merkle_root.begin()), 32,
+              merkle_root_to_compare.begin());
   ASSERT_EQ(parser.get_merkle_root(), merkle_root_to_compare);
 }

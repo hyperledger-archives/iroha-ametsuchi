@@ -2,16 +2,23 @@
 // Created by dainfos on 01.06.17.
 //
 
-#include <algorithm>
 #include "block_parser_protobuf.h"
+#include <algorithm>
+#include <fstream>
 
 namespace utils {
 
 BlockParserProtobuf::BlockParserProtobuf(std::vector<uint8_t> blob) {
   block_.ParseFromArray(blob.data(), blob.size());
-  block_.prev_hash().data();
 }
-BlockParserProtobuf::BlockParserProtobuf(std::string filename) {}
+BlockParserProtobuf::BlockParserProtobuf(std::string filename) {
+  std::ifstream input(filename, std::ios::binary);
+  input.unsetf(std::ios::skipws);
+  assert(input.is_open());
+  std::vector<uint8_t> blob{std::istreambuf_iterator<char>(input),
+                            std::istreambuf_iterator<char>()};
+  block_.ParseFromArray(blob.data(), blob.size());
+}
 google::protobuf::RepeatedPtrField<iroha::Transaction>
 BlockParserProtobuf::get_txs() {
   return block_.txs();
