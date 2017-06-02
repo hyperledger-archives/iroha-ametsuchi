@@ -291,7 +291,7 @@ add_dependencies(flatbuffers google_flatbuffers flatc)
 #           protobuf           #
 ################################
 find_package(Protobuf 3.0.0)
-if (NOT Protobuf_FOUND OR NOT Protobuf_PROTOC_EXECUTABLE)
+if (NOT PROTOBUF_FOUND OR NOT PROTOBUF_PROTOC_EXECUTABLE)
   ExternalProject_Add(google_protobuf
     URL https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz
     CONFIGURE_COMMAND ./configure
@@ -308,9 +308,9 @@ if (NOT Protobuf_FOUND OR NOT Protobuf_PROTOC_EXECUTABLE)
   file(MAKE_DIRECTORY ${protobuf_INCLUDE_DIRS})
   add_custom_target(protoc DEPENDS google_protobuf)
 else()
-  set(protobuf_INCLUDE_DIRS ${Protobuf_INCLUDE_DIRS})
-  set(protobuf_LIBRARIES ${Protobuf_LIBRARY})
-  set(protoc_EXECUTABLE ${Protobuf_PROTOC_EXECUTABLE})
+  set(protobuf_INCLUDE_DIRS ${PROTOBUF_INCLUDE_DIRS})
+  set(protobuf_LIBRARIES ${PROTOBUF_LIBRARY})
+  set(protoc_EXECUTABLE ${PROTOBUF_PROTOC_EXECUTABLE})
   add_custom_target(protoc)
 endif ()
 
