@@ -3,6 +3,7 @@ build/
 external/
 
 # protobuf / flatbuffers
+*.pb.*
 *_generated.h
 
 # CLion

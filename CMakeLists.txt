@@ -30,6 +30,7 @@ include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
 compile_fbs_to_cpp(block.fbs)
+compile_proto_to_cpp(block.proto)
 
 add_subdirectory(server)
 add_subdirectory(client)

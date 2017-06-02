@@ -290,17 +290,36 @@ add_dependencies(flatbuffers google_flatbuffers flatc)
 ################################
 #           protobuf           #
 ################################
+set(protobuf_CMAKE_ARGS
+  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  -Dprotobuf_BUILD_TESTS=OFF
+  )
+ExternalProject_Add(google_protobuf
+  GIT_REPOSITORY "https://github.com/google/protobuf.git"
+  CMAKE_ARGS ${protobuf_CMAKE_ARGS}
+  SOURCE_SUBDIR cmake
+  INSTALL_COMMAND "" # remove install step
+  TEST_COMMAND "" # remove test step
+  UPDATE_COMMAND "" # remove update step
+  )
+ExternalProject_Get_Property(google_protobuf source_dir binary_dir)
+set(protobuf_INCLUDE_DIRS ${source_dir}/src)
+set(protobuf_LIBRARIES ${binary_dir}/libprotobufd.a)
+set(protoc_EXECUTABLE ${binary_dir}/protoc)
+file(MAKE_DIRECTORY ${protobuf_INCLUDE_DIRS})
 
-set(PROTOBUF_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/schema)
-execute_process(COMMAND bash "-c" "cd ${PROTOBUF_SRC_DIR}; protoc  --cpp_out=${PROTOBUF_SRC_DIR}/ *.proto")
+add_custom_target(protoc DEPENDS google_protobuf)
 
-INCLUDE(FindProtobuf)
-FIND_PACKAGE(Protobuf REQUIRED)
-INCLUDE_DIRECTORIES(${PROTOBUF_INCLUDE_DIR})
-#PROTOBUF_GENERATE_CPP(PROTO_SRC PROTO_HEADER block.proto)
-#ADD_LIBRARY(proto ${PROTO_HEADER} ${PROTO_SRC})
-add_library(proto STATIC
-        ${PROTOBUF_SRC_DIR}/block.pb.cc)
+add_library(protobuf STATIC IMPORTED)
+set_target_properties(protobuf PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${protobuf_INCLUDE_DIRS}
+  IMPORTED_LOCATION ${protobuf_LIBRARIES}
+  )
+
+add_dependencies(protobuf google_protobuf protoc)
+
 ################################
 #            libuv             #
 ################################
@@ -350,3 +369,50 @@ set_target_properties(uvw PROPERTIES
   )
 
 add_dependencies(uvw skypjack_uvw)
+
+#########################
+#         grpc          #
+#########################
+ExternalProject_Add(grpc_grpc
+  GIT_REPOSITORY "https://github.com/grpc/grpc.git"
+  GIT_TAG "v1.3.0"
+  BUILD_IN_SOURCE 1
+  BUILD_COMMAND $(MAKE)
+  CONFIGURE_COMMAND "" # remove configure step
+  INSTALL_COMMAND "" # remove install step
+  TEST_COMMAND "" # remove test step
+  UPDATE_COMMAND "" # remove update step
+  )
+ExternalProject_Get_Property(grpc_grpc source_dir)
+set(grpc_INCLUDE_DIR ${source_dir}/include/grpc)
+set(grpcpp_INCLUDE_DIR ${source_dir}/include/grpc++)
+set(grpc_LIB ${source_dir}/libs/opt/libgrpc.so)
+set(grpcpp_LIB ${source_dir}/libs/opt/libgrpc++.so)
+set(gpr_LIB ${source_dir}/libs/opt/gpr.so)
+
+# libgrpc
+add_library(grpc SHARED IMPORTED)
+set_target_properties(grpc PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${grpc_INCLUDE_DIR}
+  IMPORTED_LOCATION ${grpc_LIB}
+  IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+  )
+
+# libgpr
+add_library(gpr SHARED IMPORTED)
+set_target_properties(gpr PROPERTIES
+  IMPORTED_LOCATION ${gpr_LIB}
+  IMPORTED_LINK_INTERFACE_LANGUAGES "C"
+  )
+
+# libgrpc++
+add_library(grpc++ SHARED IMPORTED)
+set_target_properties(grpc++ PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${grpcpp_INCLUDE_DIR}
+  IMPORTED_LOCATION ${grpcpp_LIB}
+  IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+  )
+
+add_dependencies(grpc grpc_grpc)
+add_dependencies(gpr grpc_grpc)
+add_dependencies(grpc++ grpc_grpc)

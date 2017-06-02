@@ -22,6 +22,10 @@ AddTest(block_parser_flatbuffers_test utils/block_parser_flatbuffers_test.cc)
 target_link_libraries(block_parser_flatbuffers_test
   utils)
 
+AddTest(block_parser_protobuf_test utils/block_parser_protobuf_test.cc)
+target_link_libraries(block_parser_protobuf_test
+  utils)
+
 AddTest(bstore_test block_store/block_store_flat_test.cc)
 target_link_libraries(bstore_test
   block_store)

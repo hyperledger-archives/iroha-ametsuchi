@@ -2,7 +2,7 @@
 // Created by dainfos on 01.06.17.
 //
 
-#include <ametsuchi/utils/block_parser_protobuf.h>
+#include "block_parser_protobuf.h"
 
 namespace ametsuchi {
 namespace utils {
@@ -11,8 +11,7 @@ BlockParserProtobuf::BlockParserProtobuf(std::vector<uint8_t> blob) {
   block_.ParseFromArray(blob.data(), blob.size());
   block_.prev_hash().data();
 }
-BlockParserProtobuf::BlockParserProtobuf(std::string filename) {
-}
+BlockParserProtobuf::BlockParserProtobuf(std::string filename) {}
 google::protobuf::RepeatedPtrField<iroha::Transaction>
 BlockParserProtobuf::get_txs() {
   return block_.txs();

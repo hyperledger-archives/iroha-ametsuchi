@@ -5,6 +5,8 @@ add_library(utils
   block_parser.cc
   block_parser_flatbuffers.h
   block_parser_flatbuffers.cc
+  block_parser_protobuf.h
+  block_parser_protobuf.cc
   hash.h
   hash.cc
   transaction_parser.h
@@ -13,6 +15,7 @@ add_library(utils
 
 target_link_libraries(utils
   flatbuffers
+  protobuf
   keccak
   )
 

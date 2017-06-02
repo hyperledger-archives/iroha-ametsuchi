@@ -6,11 +6,15 @@
 #define AMETSUCHI_BLOCK_PARSER_PROTOBUF_H
 
 #include <block.pb.h>
+#include <array>
+#include <cstdint>
+#include <string>
+#include <vector>
 
-namespace ametsuchi{
-namespace utils{
+namespace ametsuchi {
+namespace utils {
 
-class BlockParserProtobuf{
+class BlockParserProtobuf {
  public:
   BlockParserProtobuf(std::vector<uint8_t> blob);
   BlockParserProtobuf(std::string filename);
@@ -25,8 +29,7 @@ class BlockParserProtobuf{
  private:
   iroha::Block block_;
 };
-
 }
 }
 
-#endif //AMETSUCHI_BLOCK_PARSER_PROTOBUF_H
+#endif  // AMETSUCHI_BLOCK_PARSER_PROTOBUF_H
