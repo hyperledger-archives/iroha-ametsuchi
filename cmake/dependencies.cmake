@@ -299,7 +299,7 @@ endif()
 ################################
 #           protobuf           #
 ################################
-find_package(Protobuf 3.0.0)
+find_package(Protobuf 3.3.0)
 if (NOT PROTOBUF_FOUND OR NOT PROTOBUF_PROTOC_EXECUTABLE)
   ExternalProject_Add(google_protobuf
     URL https://github.com/google/protobuf/releases/download/v3.3.0/protobuf-cpp-3.3.0.tar.gz
