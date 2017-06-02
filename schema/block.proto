@@ -14,7 +14,15 @@ message Block{
 
 message Transaction{
     repeated Signature sigs = 1;
+    uint64 created = 2;
+    uint32 nonce = 3;
+    repeated Action actions = 4;
 }
 message Signature{
     bytes pubkey = 1;
+    bytes sig = 2;
+}
+
+message Action{
+
 }

@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace ametsuchi {
+
 namespace utils {
 
 class BlockParserProtobuf {
@@ -29,7 +29,6 @@ class BlockParserProtobuf {
  private:
   iroha::Block block_;
 };
-}
 }
 
 #endif  // AMETSUCHI_BLOCK_PARSER_PROTOBUF_H
