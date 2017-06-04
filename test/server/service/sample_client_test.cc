@@ -17,47 +17,51 @@
 
 #include <gtest/gtest.h>
 #include <thread>
+#include <manager.h>
 #include "query_service.h"
 
 namespace service {
 
 TEST(sample_client_test, sample_test) {
-  wsv::WSVPostgres wsvPostgres;
-  wsvPostgres.add_account(0, "Ivan");
-  wsvPostgres.add_domain(0, "RU", 0);
-  wsvPostgres.add_asset(0, "USD", 0);
-  wsvPostgres.add_balance(0, 0, 100);
+  for (auto backend: {"Postgres", "Redis"}) {
+    std::unique_ptr<wsv::WSV>
+      wsv_ = wsv::Manager::instance().make_WSV(backend);
+    wsv_->add_account(0, "Ivan");
+    wsv_->add_domain(0, "RU", 0);
+    wsv_->add_asset(0, "USD", 0);
+    wsv_->add_balance(0, 0, 100);
 
-  std::string server_address("0.0.0.0:50051");
-  QueryServiceImpl service;
+    std::string server_address("0.0.0.0:50051");
+    QueryServiceImpl service(backend);
 
-  grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  builder.RegisterService(&service);
-  auto server = builder.BuildAndStart();
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    builder.RegisterService(&service);
+    auto server = builder.BuildAndStart();
 
-  auto stub = iroha::Query::NewStub(grpc::CreateChannel(
+    auto stub = iroha::Query::NewStub(grpc::CreateChannel(
       "localhost:50051", grpc::InsecureChannelCredentials()));
-  {
-    iroha::AccountRequest request;
-    request.set_account_id(0);
-    iroha::AccountReply reply;
-    grpc::ClientContext context;
-    auto status = stub->GetAccount(&context, request, &reply);
-    ASSERT_TRUE(status.ok());
-    ASSERT_EQ(reply.name(), "Ivan");
-  }
-  {
-    iroha::BalanceRequest request;
-    request.set_account_id(0);
-    request.set_asset_id(0);
-    iroha::BalanceReply reply;
-    grpc::ClientContext context;
-    auto status = stub->GetBalance(&context, request, &reply);
-    ASSERT_TRUE(status.ok());
-    ASSERT_EQ(reply.amount(), 100);
-  }
+    {
+      iroha::AccountRequest request;
+      request.set_account_id(0);
+      iroha::AccountReply reply;
+      grpc::ClientContext context;
+      auto status = stub->GetAccount(&context, request, &reply);
+      ASSERT_TRUE(status.ok());
+      ASSERT_EQ(reply.name(), "Ivan");
+    }
+    {
+      iroha::BalanceRequest request;
+      request.set_account_id(0);
+      request.set_asset_id(0);
+      iroha::BalanceReply reply;
+      grpc::ClientContext context;
+      auto status = stub->GetBalance(&context, request, &reply);
+      ASSERT_TRUE(status.ok());
+      ASSERT_EQ(reply.amount(), 100);
+    }
 
-  wsvPostgres.drop_tables();
+    wsv_->clear();
+  }
 }
 }

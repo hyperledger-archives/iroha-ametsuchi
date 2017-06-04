@@ -1,9 +1,5 @@
-AddTest(wsv_redis_test wsv/wsv_redis_test.cc)
-target_link_libraries(wsv_redis_test
-  wsv)
-
-AddTest(wsv_postgres_test wsv/wsv_postgres_test.cc)
-target_link_libraries(wsv_postgres_test
+AddTest(wsv_test wsv/wsv_test.cc)
+target_link_libraries(wsv_test
   wsv)
 
 AddTest(block_index_test block_index/block_index_test.cc)

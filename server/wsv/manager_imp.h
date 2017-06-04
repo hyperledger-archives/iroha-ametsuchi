@@ -14,26 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <gtest/gtest.h>
-#include <wsv_postgres.h>
+
+#ifndef AMETSUCHI_MANAGERIMP_H
+#define AMETSUCHI_MANAGERIMP_H
+
+#include <unordered_map>
+#include "manager.h"
 
 namespace wsv {
-TEST(wsv_postgres_test, add_account) {
-  WSVPostgres wsvPostgres;
-  wsvPostgres.add_account(0, "Ivan");
-  ASSERT_EQ(wsvPostgres.get_account_by_id(0), "Ivan");
-  wsvPostgres.drop_tables();
+
+class ManagerImp : public Manager {
+ public:
+  ManagerImp();
+  ~ManagerImp();
+  static ManagerImp& instance();
+  void insert(Factory &factory) override;
+  void erase(Factory &factory) override;
+  std::unique_ptr<WSV> make_WSV(const std::string &name) override;
+ private:
+  std::unordered_map<std::string, Factory*> map_;
+};
+
 }
 
-TEST(wsv_postgres_test, balance) {
-  WSVPostgres wsvPostgres;
-  wsvPostgres.add_account(0, "Ivan");
-  wsvPostgres.add_domain(0, "RU", 0);
-  wsvPostgres.add_asset(0, "USD", 0);
-  wsvPostgres.add_balance(0, 0, 100);
-  ASSERT_EQ(wsvPostgres.get_balance_by_account_id_asset_id(0, 0), 100);
-  wsvPostgres.add_balance(0, 0, 100);
-  ASSERT_EQ(wsvPostgres.get_balance_by_account_id_asset_id(0, 0), 200);
-  wsvPostgres.drop_tables();
-}
-}
+#endif //AMETSUCHI_MANAGERIMP_H

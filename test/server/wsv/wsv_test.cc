@@ -15,23 +15,22 @@
  * limitations under the License.
  */
 
-#include "query_service.h"
+#include <gtest/gtest.h>
+#include <wsv.h>
+#include <manager.h>
 
-namespace service {
-
-grpc::Status QueryServiceImpl::GetAccount(
-    ::grpc::ServerContext *context, const ::iroha::AccountRequest *request,
-    ::iroha::AccountReply *response) {
-  auto name = wsv_->get_account_by_id(request->account_id());
-  response->set_name(name);
-  return grpc::Status::OK;
-}
-grpc::Status QueryServiceImpl::GetBalance(
-    ::grpc::ServerContext *context, const ::iroha::BalanceRequest *request,
-    ::iroha::BalanceReply *response) {
-  auto amount = wsv_->get_balance_by_account_id_asset_id(
-      request->account_id(), request->asset_id());
-  response->set_amount(amount);
-  return grpc::Status::OK;
-}
+TEST(wsv_test, sample_test) {
+  for (auto backend: {"Postgres", "Redis"}){
+    auto wsv_ = wsv::Manager::instance().make_WSV(backend);
+    wsv_->add_account(0, "Ivan");
+    ASSERT_EQ(wsv_->get_account_by_id(0), "Ivan");
+    wsv_->add_domain(0, "RU", 0);
+    wsv_->add_asset(0, "USD", 0);
+    ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 0);
+    wsv_->add_balance(0, 0, 100);
+    ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 100);
+    wsv_->add_balance(0, 0, 100);
+    ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 200);
+    wsv_->clear();
+  }
 }

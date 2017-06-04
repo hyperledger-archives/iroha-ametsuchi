@@ -15,35 +15,31 @@
  * limitations under the License.
  */
 
-#ifndef WSV_REDIS_H
-#define WSV_REDIS_H
+#include "manager_imp.h"
 
-#include <cpp_redis/redis_client.hpp>
-#include "wsv.h"
+namespace wsv{
 
-namespace wsv {
+void ManagerImp::insert(Factory &factory) {
+  map_.insert(std::make_pair(factory.name(), &factory));
+}
+std::unique_ptr<WSV> ManagerImp::make_WSV(const std::string &name) {
+  return map_.at(name)->create_instance();
+}
+ManagerImp &ManagerImp::instance() {
+  static ManagerImp instance_;
+  return instance_;
+}
+void ManagerImp::erase(Factory &factory) {
+  map_.erase(factory.name());
+}
+ManagerImp::ManagerImp() {
 
-class WSVRedis : public WSV {
- public:
-  WSVRedis(std::string host, size_t port) : host_(host), port_(port) {
-    client_.connect(host_, port_);
-  }
-  ~WSVRedis();
+}
+ManagerImp::~ManagerImp() {
 
-  bool add_account(uint64_t account_id, std::string name);
-  bool add_balance(uint64_t account_id, std::uint64_t amount);
-
-
-  std::string get_account_by_id(uint64_t account_id);
-  uint64_t get_balance_by_account_id(uint64_t account_id);
-  void flush_all();
-
-
- private:
-  cpp_redis::redis_client client_;
-  std::string host_;
-  size_t port_;
-};
 }
 
-#endif  // WSV_REDIS_H
+Manager& Manager::instance() {
+  return ManagerImp::instance();
+}
+}

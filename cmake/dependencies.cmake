@@ -51,6 +51,7 @@ ExternalProject_Add(cylix_cpp_redis
   GIT_REPOSITORY "https://github.com/Cylix/cpp_redis.git"
   CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
   -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
   INSTALL_COMMAND "" # remove install step
   UPDATE_COMMAND "" # remove update step
   TEST_COMMAND "" # remove test step
@@ -231,7 +232,7 @@ endif ()
 
 ExternalProject_Add(jtv_libpqxx
   GIT_REPOSITORY "https://github.com/jtv/libpqxx.git"
-  CONFIGURE_COMMAND ./configure --disable-documentation
+  CONFIGURE_COMMAND ./configure --disable-documentation --with-pic
   BUILD_IN_SOURCE 1
   BUILD_COMMAND $(MAKE)
   INSTALL_COMMAND "" # remove install step
@@ -332,56 +333,6 @@ set_target_properties(protobuf PROPERTIES
 if (NOT PROTOBUF_FOUND OR NOT PROTOBUF_PROTOC_EXECUTABLE)
   add_dependencies(protobuf google_protobuf protoc)
 endif()
-
-################################
-#            libuv             #
-################################
-ExternalProject_Add(libuv_libuv
-  GIT_REPOSITORY "https://github.com/libuv/libuv.git"
-  CONFIGURE_COMMAND ./autogen.sh && ./configure
-  BUILD_IN_SOURCE 1
-  BUILD_COMMAND $(MAKE)
-  INSTALL_COMMAND "" # remove install step
-  TEST_COMMAND "" # remove test step
-  UPDATE_COMMAND "" # remove update step
-  )
-ExternalProject_Get_Property(libuv_libuv source_dir)
-set(uv_INCLUDE_DIRS ${source_dir}/include)
-set(uv_LIBRARIES ${source_dir}/.libs/libuv.a)
-file(MAKE_DIRECTORY ${uv_INCLUDE_DIRS})
-
-add_library(uv STATIC IMPORTED)
-set_target_properties(uv PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES ${uv_INCLUDE_DIRS}
-  IMPORTED_LOCATION ${uv_LIBRARIES}
-  INTERFACE_LINK_LIBRARIES "pthread"
-  )
-
-add_dependencies(uv libuv_libuv)
-
-################################
-#             uvw              #
-################################
-ExternalProject_Add(skypjack_uvw
-  GIT_REPOSITORY "https://github.com/skypjack/uvw.git"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  INSTALL_COMMAND "" # remove install step
-  TEST_COMMAND "" # remove test step
-  UPDATE_COMMAND "" # remove update step
-  )
-ExternalProject_Get_Property(skypjack_uvw source_dir)
-add_dependencies(skypjack_uvw uv)
-set(uvw_INCLUDE_DIRS ${source_dir}/src)
-file(MAKE_DIRECTORY ${uvw_INCLUDE_DIRS})
-
-add_library(uvw INTERFACE IMPORTED)
-set_target_properties(uvw PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${uvw_INCLUDE_DIRS};${uv_INCLUDE_DIRS}"
-  INTERFACE_LINK_LIBRARIES "${uv_LIBRARIES};pthread"
-  )
-
-add_dependencies(uvw skypjack_uvw)
 
 #########################
 #         gRPC          #

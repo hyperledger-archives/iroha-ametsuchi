@@ -15,25 +15,21 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
-#include <wsv_redis.h>
+#ifndef AMETSUCHI_MANAGER_H
+#define AMETSUCHI_MANAGER_H
 
-TEST(WSV_TEST, GET_TEST) {
-  auto host = std::getenv("REDISHOST");
-  wsv::WSVRedis wsvRedis(host, 6379);
+#include "factory.h"
+#include "wsv.h"
+namespace wsv {
 
-  wsvRedis.add_account(1, "Ivan");
+class Manager {
+ public:
+  static Manager& instance();
+  virtual void insert(Factory& factory) = 0;
+  virtual void erase(Factory& factory) = 0;
+  virtual std::unique_ptr<WSV> make_WSV(const std::string& name) = 0;
+};
 
-  std::string ivan = wsvRedis.get_account_by_id(1);
+} // namespace wsv
 
-  ASSERT_EQ(ivan, "Ivan");
-
-  uint64_t balance = wsvRedis.get_balance_by_account_id(1);
-  ASSERT_EQ(balance, 0);
-  //
-  wsvRedis.add_balance(1, 100);
-  balance = wsvRedis.get_balance_by_account_id(1);
-  ASSERT_EQ(balance, 100);
-
-  wsvRedis.flush_all();
-}
+#endif //AMETSUCHI_MANAGER_H

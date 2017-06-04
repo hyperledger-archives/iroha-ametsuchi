@@ -18,23 +18,31 @@
 #ifndef AMETSUCHI_QUERYSERVICE_H
 #define AMETSUCHI_QUERYSERVICE_H
 
-#include <wsv_postgres.h>
 #include <grpc++/grpc++.h>
 #include <query.grpc.pb.h>
+#include <wsv.h>
+#include <manager.h>
 
 namespace service {
 
 class QueryServiceImpl final : public iroha::Query::Service {
  public:
+  QueryServiceImpl(std::string backend = "Postgres") {
+    auto envbackend = std::getenv("AMWSVBACKEND");
+    if (envbackend){
+      backend = envbackend;
+    }
+    wsv_ = wsv::Manager::instance().make_WSV(backend);
+  }
   grpc::Status GetAccount(::grpc::ServerContext *context,
-                    const ::iroha::AccountRequest *request,
-                    ::iroha::AccountReply *response) override;
+                          const ::iroha::AccountRequest *request,
+                          ::iroha::AccountReply *response) override;
   grpc::Status GetBalance(::grpc::ServerContext *context,
                     const ::iroha::BalanceRequest *request,
                     ::iroha::BalanceReply *response) override;
 
  private:
-  wsv::WSVPostgres wsvPostgres;  // TODO refactor
+  std::unique_ptr<wsv::WSV> wsv_;
 };
 
 }

@@ -27,14 +27,21 @@ class WSV {
  public:
   // adds/removes
   virtual bool add_account(uint64_t account_id, std::string name) = 0;
-  //  virtual bool add_country(uint64_t account_id, std::string country) = 0;
-  virtual bool add_balance(uint64_t account_id, std::uint64_t amount) = 0;
-  //  virtual bool remove_balance(uint64_t account_id, std::uint64_t amount) =
-  //  0;
+  virtual bool add_domain(uint64_t domain_id, std::string name,
+                          uint64_t root_account_id) = 0;
+  virtual bool add_asset(uint64_t asset_id, std::string name,
+                         uint64_t domain_id) = 0;
+  virtual bool add_balance(uint64_t account_id, uint64_t asset_id,
+                           std::uint64_t amount) = 0;
+
 
   // gets
   virtual std::string get_account_by_id(uint64_t account_id) = 0;
-  virtual uint64_t get_balance_by_account_id(uint64_t account_id) = 0;
+  // TODO define behavior when no such asset given an account
+  virtual uint64_t get_balance_by_account_id_asset_id(uint64_t account_id,
+                                                      uint64_t asset_id) = 0;
+
+  virtual void clear() = 0;
 };
 }
 

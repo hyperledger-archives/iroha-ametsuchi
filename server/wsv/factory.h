@@ -15,23 +15,21 @@
  * limitations under the License.
  */
 
-#include "query_service.h"
+#ifndef AMETSUCHI_FACTORY_H
+#define AMETSUCHI_FACTORY_H
 
-namespace service {
+#include <memory>
+#include "wsv.h"
 
-grpc::Status QueryServiceImpl::GetAccount(
-    ::grpc::ServerContext *context, const ::iroha::AccountRequest *request,
-    ::iroha::AccountReply *response) {
-  auto name = wsv_->get_account_by_id(request->account_id());
-  response->set_name(name);
-  return grpc::Status::OK;
+namespace wsv {
+
+class Factory {
+ public:
+  virtual ~Factory() = default;
+  virtual std::string name() const = 0;
+  virtual std::unique_ptr<WSV> create_instance() = 0;
+};
+
 }
-grpc::Status QueryServiceImpl::GetBalance(
-    ::grpc::ServerContext *context, const ::iroha::BalanceRequest *request,
-    ::iroha::BalanceReply *response) {
-  auto amount = wsv_->get_balance_by_account_id_asset_id(
-      request->account_id(), request->asset_id());
-  response->set_amount(amount);
-  return grpc::Status::OK;
-}
-}
+
+#endif //AMETSUCHI_FACTORY_H

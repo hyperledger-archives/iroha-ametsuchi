@@ -1,8 +1,10 @@
-add_library(wsv
+add_library(wsv SHARED
+  factory.h
+  manager.h
+  manager_imp.h
+  manager_imp.cc
   wsv.h
-  wsv_redis.h
   wsv_redis.cc
-  wsv_postgres.h
   wsv_postgres.cc
   )
 

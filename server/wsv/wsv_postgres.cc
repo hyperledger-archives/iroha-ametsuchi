@@ -16,9 +16,34 @@
  * limitations under the License.
  */
 
-#include "wsv_postgres.h"
+#include <pqxx/pqxx>
+#include "wsv.h"
+#include "factory.h"
+#include "manager.h"
 
 namespace wsv {
+
+class WSVPostgres : public WSV {
+ public:
+  WSVPostgres(std::string host = "localhost",
+              size_t port = 5432,
+              std::string user = "postgres");
+  bool add_account(uint64_t account_id, std::string name) override;
+  bool add_balance(uint64_t account_id, uint64_t asset_id,
+                   std::uint64_t amount) override;
+  bool add_domain(uint64_t domain_id, std::string name,
+                  uint64_t root_account_id) override;
+  bool add_asset(uint64_t asset_id, std::string name,
+                 uint64_t domain_id) override;
+
+  std::string get_account_by_id(uint64_t account_id) override;
+  uint64_t get_balance_by_account_id_asset_id(uint64_t account_id,
+                                              uint64_t asset_id) override;
+  void clear() override;
+
+ private:
+  pqxx::connection connection_;
+};
 
 const auto init =
     "CREATE TABLE IF NOT EXISTS account (\n"
@@ -76,21 +101,13 @@ bool WSVPostgres::add_account(uint64_t account_id, std::string name) {
   txn.commit();
   return true;
 }
-WSVPostgres::WSVPostgres() : connection_() {
+WSVPostgres::WSVPostgres(std::string host, size_t port,
+                         std::string user)
+    : connection_("host=" + host + " port=" + std::to_string(port) + " user=" +
+                  user) {
   pqxx::work txn(connection_);
   txn.exec(init);
   txn.commit();
-}
-void WSVPostgres::drop_tables() {
-  pqxx::work txn(connection_);
-  txn.exec(drop);
-  txn.commit();
-}
-bool WSVPostgres::add_balance(uint64_t account_id, std::uint64_t amount) {
-  return false;
-}
-uint64_t WSVPostgres::get_balance_by_account_id(uint64_t account_id) {
-  return 0;
 }
 std::string WSVPostgres::get_account_by_id(uint64_t account_id) {
   pqxx::work txn(connection_);
@@ -190,6 +207,27 @@ uint64_t WSVPostgres::get_balance_by_account_id_asset_id(uint64_t account_id,
       "account_has_asset.asset_id = " +
       txn.quote(asset_uuid) + ";");
   txn.commit();
-  return std::stoull(res.at(0)["amount"].as<std::string>());
+  return res.empty() ? 0 : std::stoull(res.at(0)["amount"].as<std::string>());
 }
+void WSVPostgres::clear() {
+  pqxx::work txn(connection_);
+  txn.exec(drop);
+  txn.commit();
+}
+
+class PostgresFactory : public Factory {
+ public:
+  PostgresFactory() {
+    Manager::instance().insert(*this);
+  }
+  std::string name() const override {
+    return "Postgres";
+  }
+  std::unique_ptr<WSV> create_instance() override {
+    return std::make_unique<WSVPostgres>();
+  }
+};
+
+static PostgresFactory postgresFactory;
+
 }
