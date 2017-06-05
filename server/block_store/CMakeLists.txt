@@ -1,6 +1,8 @@
 add_library(block_store
   block_store.h
   block_store_flat.h
+  flat_iterator.h
+  flat_iterator.cc
   block_store_flat.cc
   )
 

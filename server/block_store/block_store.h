@@ -24,8 +24,9 @@ namespace block_store {
 
 class BlockStore {
  public:
-  virtual std::string append(const std::vector<uint8_t> &block) = 0;
-  virtual const std::vector<uint8_t> get(const std::string id) = 0;
-  // Iterators
+  virtual const uint64_t append(const std::vector<uint8_t> &block) = 0;
+  virtual const std::vector<uint8_t> get(uint64_t id) = 0;
+  virtual const uint64_t last_id() = 0;
+
 };
 }

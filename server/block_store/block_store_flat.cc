@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "block_store_flat.h"
+
 #include <stdio.h>
 
 #include <cppfs/FileHandle.h>
-#include <cppfs/FileIterator.h>
 #include <cppfs/fs.h>
 #include <dirent.h>
 #include <iostream>
+#include "block_store_flat.h"
 
 namespace fs = cppfs::fs;
 using cppfs::FileHandle;
@@ -31,9 +31,9 @@ using cppfs::FileIterator;
 namespace block_store {
 
 
-std::string BlockStoreFlat::append(const std::vector<uint8_t> &block) {
-  std::string next_id = get_next_id(current_id);
-  std::string file_name = dump_dir + "/" + next_id;
+const uint64_t BlockStoreFlat::append(const std::vector<uint8_t> &block) {
+  auto next_id = current_id + 1;
+  std::string file_name = dump_dir + "/" + id_to_name(next_id);
   // Write block to binary file
   auto fh = fs::open(file_name);
   if (!fh.exists()) {
@@ -52,7 +52,7 @@ std::string BlockStoreFlat::append(const std::vector<uint8_t> &block) {
     // Answer iroha status
     // TODO: handle this case
     std::cout << "File name already exist " << std::endl;
-    return std::string();
+    return 0;
   }
 }
 
@@ -66,12 +66,10 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
       // Directory exists
       dump_dir = path;
       current_id = check_consitency();
-      if (current_id.empty()) {
-        // TODO: check
+      if(!current_id){
+        // TODO: inconsistent state
       }
-
-
-    } else {
+     } else {
       // Wrong path
       // TODO: handle wrong path
     }
@@ -81,14 +79,14 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
       // TODO: handle cannot create directory
       std::cout << "Error creating directory " << std::endl;
     }
-    current_id = "0";
+    current_id = 0;
     dump_dir = path;
   }
 }
 
 
-const std::string BlockStoreFlat::check_consitency() {
-  std::string tmp = "0";
+const uint64_t BlockStoreFlat::check_consitency() {
+  uint64_t tmp_id = 0u;
   if (!dump_dir.empty()) {
     FileHandle dir = fs::open(dump_dir);
     if (dir.isDirectory()) {
@@ -98,12 +96,13 @@ const std::string BlockStoreFlat::check_consitency() {
       if (n < 0) {
         // TODO: handle error
       } else {
+        tmp_id++;
         uint i = 1;
         while (++i < n) {
-          if (get_next_id(tmp) != namelist[i]->d_name) {
+          if (id_to_name(tmp_id) != namelist[i]->d_name) {
             // TODO: handle Inconsistent state
           }
-          tmp = namelist[i]->d_name;
+          tmp_id = name_to_id(namelist[i]->d_name);
           free(namelist[i]);
         }
         free(namelist);
@@ -116,12 +115,13 @@ const std::string BlockStoreFlat::check_consitency() {
       std::cout << "Not a directory " << std::endl;
     }
   }
-  return tmp;
+  return tmp_id;
 }
 
 
-const std::vector<uint8_t> BlockStoreFlat::get(const std::string id) {
-  std::string filename = dump_dir + "/" + id;
+const std::vector<uint8_t> BlockStoreFlat::get(uint64_t id) {
+
+  std::string filename = dump_dir + "/" + id_to_name(id);
   FileHandle fh = fs::open(filename);
   if (fh.exists()) {
     auto f_size = fh.size();
@@ -148,4 +148,20 @@ const std::string BlockStoreFlat::get_next_id(std::string old_id) {
   }
   return new_id;
 }
+
+const std::string BlockStoreFlat::id_to_name(uint64_t id) {
+  std::string new_id(16, '\0');
+  sprintf(&new_id[0], "%016llu", id);
+  return new_id;
+}
+
+const uint64_t block_store::BlockStoreFlat::last_id() {
+  return current_id;
+}
+
+const uint64_t BlockStoreFlat::name_to_id(std::string name) {
+  std::string::size_type sz;
+  return std::stoull(name, &sz);
+}
+
 }
