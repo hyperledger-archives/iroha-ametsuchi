@@ -91,12 +91,12 @@ block_store::BlockStoreFlat::Iterator block_store::BlockStoreFlat::Iterator::ope
   return *this;
 }
 
-Iterator block_store::BlockStoreFlat::begin() {
+block_store::BlockStoreFlat::Iterator block_store::BlockStoreFlat::begin() {
   return Iterator(*this);
 }
 
 
-Iterator block_store::BlockStoreFlat::end() {
+block_store::BlockStoreFlat::Iterator block_store::BlockStoreFlat::end() {
   return Iterator(*this, this->last_id());
 }
 
