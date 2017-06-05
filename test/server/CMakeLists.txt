@@ -26,6 +26,10 @@ AddTest(bstore_test block_store/block_store_flat_test.cc)
 target_link_libraries(bstore_test
   block_store)
 
+AddTest(bstore_iterators_test block_store/flat_iterators_test.cc)
+target_link_libraries(bstore_iterators_test
+    block_store)
+
 AddTest(sample_client_test service/sample_client_test.cc)
 target_link_libraries(sample_client_test
   service

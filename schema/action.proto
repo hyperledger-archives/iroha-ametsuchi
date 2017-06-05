@@ -15,7 +15,7 @@ message AddAccount{
 message AddDomain{
     uint64 domain_id = 1;
     string name = 2;
-    uint64 amount = 3;
+    uint64 root_account_id = 3;
 }
 
 message AddAsset{

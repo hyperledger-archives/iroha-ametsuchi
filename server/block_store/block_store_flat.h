@@ -20,6 +20,7 @@
 
 #include "block_store.h"
 
+
 namespace block_store {
 class BlockStoreFlat : public BlockStore {
  public:
