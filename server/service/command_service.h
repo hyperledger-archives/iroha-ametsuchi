@@ -15,24 +15,27 @@
  * limitations under the License.
  */
 
-#include "query_service.h"
-#include "command_service.h"
+#ifndef AMETSUCHI_COMMANDSERVICE_H
+#define AMETSUCHI_COMMANDSERVICE_H
 
-void RunServer() {
-  std::string server_address("0.0.0.0:50051");
-  service::QueryServiceImpl queryService;
-  service::CommandServiceImpl commandService;
+#include <grpc++/grpc++.h>
+#include <command.grpc.pb.h>
+#include <block_store_flat.h>
 
-  grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  builder.RegisterService(&queryService);
-  builder.RegisterService(&commandService);
-  auto server = builder.BuildAndStart();
+namespace service {
 
-  server->Wait();
+class CommandServiceImpl final : public iroha::Command::Service {
+ public:
+  CommandServiceImpl(){
+    block_store_.reset(new block_store::BlockStoreFlat);
+  }
+  grpc::Status Append(::grpc::ServerContext *context,
+                      const ::iroha::AppendRequest *request,
+                      ::iroha::AppendResponse *response) override;
+ private:
+  std::unique_ptr<block_store::BlockStore> block_store_;
+};
+
 }
 
-int main() {
-  RunServer();
-  return 0;
-}
+#endif //AMETSUCHI_COMMANDSERVICE_H

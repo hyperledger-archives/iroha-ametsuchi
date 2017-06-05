@@ -24,7 +24,7 @@ namespace block_store {
 class BlockStoreFlat : public BlockStore {
  public:
 
-  BlockStoreFlat(const std::string &path);
+  BlockStoreFlat(const std::string &path = "/tmp/block_store"); // TODO refactor
   ~BlockStoreFlat();
 
   const uint64_t append(const std::vector<uint8_t> &block) override;

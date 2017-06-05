@@ -21,14 +21,14 @@ namespace service {
 
 grpc::Status QueryServiceImpl::GetAccount(
     ::grpc::ServerContext *context, const ::iroha::AccountRequest *request,
-    ::iroha::AccountReply *response) {
+    ::iroha::AccountResponse *response) {
   auto name = wsv_->get_account_by_id(request->account_id());
   response->set_name(name);
   return grpc::Status::OK;
 }
 grpc::Status QueryServiceImpl::GetBalance(
     ::grpc::ServerContext *context, const ::iroha::BalanceRequest *request,
-    ::iroha::BalanceReply *response) {
+    ::iroha::BalanceResponse *response) {
   auto amount = wsv_->get_balance_by_account_id_asset_id(
       request->account_id(), request->asset_id());
   response->set_amount(amount);

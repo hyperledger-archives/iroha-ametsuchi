@@ -16,8 +16,9 @@
  */
 
 #include <gtest/gtest.h>
-#include <thread>
 #include <manager.h>
+#include <block_store_flat.h>
+#include <command_service.h>
 #include "query_service.h"
 
 namespace service {
@@ -44,7 +45,7 @@ TEST(sample_client_test, sample_test) {
     {
       iroha::AccountRequest request;
       request.set_account_id(0);
-      iroha::AccountReply reply;
+      iroha::AccountResponse reply;
       grpc::ClientContext context;
       auto status = stub->GetAccount(&context, request, &reply);
       ASSERT_TRUE(status.ok());
@@ -54,7 +55,7 @@ TEST(sample_client_test, sample_test) {
       iroha::BalanceRequest request;
       request.set_account_id(0);
       request.set_asset_id(0);
-      iroha::BalanceReply reply;
+      iroha::BalanceResponse reply;
       grpc::ClientContext context;
       auto status = stub->GetBalance(&context, request, &reply);
       ASSERT_TRUE(status.ok());
@@ -64,4 +65,31 @@ TEST(sample_client_test, sample_test) {
     wsv_->clear();
   }
 }
+
+TEST(sample_client_test, block_test) {
+  std::string server_address("0.0.0.0:50051");
+  CommandServiceImpl service;
+
+  grpc::ServerBuilder builder;
+  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+  builder.RegisterService(&service);
+  auto server = builder.BuildAndStart();
+
+  auto stub = iroha::Command::NewStub(grpc::CreateChannel(
+    "localhost:50051", grpc::InsecureChannelCredentials()));
+  for (auto i: {1, 2, 3}) {
+    iroha::AppendRequest request;
+    request.set_allocated_block(new iroha::Block);
+    iroha::AppendResponse response;
+    grpc::ClientContext context;
+    auto status = stub->Append(&context, request, &response);
+    ASSERT_TRUE(status.ok());
+    ASSERT_EQ(response.id(), i);
+  }
+  std::remove("/tmp/block_store/0000000000000001");
+  std::remove("/tmp/block_store/0000000000000002");
+  std::remove("/tmp/block_store/0000000000000003");
+  std::remove("/tmp/block_store");
+}
+
 }

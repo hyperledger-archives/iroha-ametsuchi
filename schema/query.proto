@@ -3,15 +3,15 @@ syntax = "proto3";
 package iroha;
 
 service Query {
-  rpc GetAccount(AccountRequest) returns (AccountReply) {}
-  rpc GetBalance(BalanceRequest) returns (BalanceReply) {}
+  rpc GetAccount(AccountRequest) returns (AccountResponse) {}
+  rpc GetBalance(BalanceRequest) returns (BalanceResponse) {}
 }
 
 message AccountRequest {
   uint64 account_id = 1;
 }
 
-message AccountReply {
+message AccountResponse {
   string name = 1;
 }
 
@@ -20,6 +20,6 @@ message BalanceRequest {
   uint64 asset_id = 2;
 }
 
-message BalanceReply {
+message BalanceResponse {
   uint64 amount = 1;
 }

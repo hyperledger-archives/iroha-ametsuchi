@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package iroha;
+
+import "block.proto";
+
+service Command {
+  rpc Append (AppendRequest) returns (AppendResponse) {}
+}
+
+message AppendRequest {
+  Block block = 1;
+}
+
+message AppendResponse {
+  uint64 id = 1;
+}

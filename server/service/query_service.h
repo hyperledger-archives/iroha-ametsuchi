@@ -36,10 +36,10 @@ class QueryServiceImpl final : public iroha::Query::Service {
   }
   grpc::Status GetAccount(::grpc::ServerContext *context,
                           const ::iroha::AccountRequest *request,
-                          ::iroha::AccountReply *response) override;
+                          ::iroha::AccountResponse *response) override;
   grpc::Status GetBalance(::grpc::ServerContext *context,
                     const ::iroha::BalanceRequest *request,
-                    ::iroha::BalanceReply *response) override;
+                    ::iroha::BalanceResponse *response) override;
 
  private:
   std::unique_ptr<wsv::WSV> wsv_;

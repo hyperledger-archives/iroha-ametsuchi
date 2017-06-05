@@ -15,24 +15,16 @@
  * limitations under the License.
  */
 
-#include "query_service.h"
 #include "command_service.h"
 
-void RunServer() {
-  std::string server_address("0.0.0.0:50051");
-  service::QueryServiceImpl queryService;
-  service::CommandServiceImpl commandService;
+namespace service {
 
-  grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  builder.RegisterService(&queryService);
-  builder.RegisterService(&commandService);
-  auto server = builder.BuildAndStart();
-
-  server->Wait();
+grpc::Status CommandServiceImpl::Append(::grpc::ServerContext *context,
+                                        const ::iroha::AppendRequest *request,
+                                        ::iroha::AppendResponse *response) {
+  std::vector<uint8_t> block(request->block().ByteSize());
+  request->block().SerializeToArray(block.data(), block.size());
+  response->set_id(block_store_->append(block));
+  return grpc::Status::OK;
 }
-
-int main() {
-  RunServer();
-  return 0;
 }
