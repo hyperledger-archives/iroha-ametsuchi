@@ -101,6 +101,7 @@ const uint64_t BlockStoreFlat::check_consitency() {
         while (++i < n) {
           if (id_to_name(tmp_id) != namelist[i]->d_name) {
             // TODO: handle Inconsistent state
+
           }
           tmp_id = name_to_id(namelist[i]->d_name);
           free(namelist[i]);
