@@ -394,3 +394,48 @@ if (NOT GRPC_FOUND)
   add_dependencies(grpc++ grpc_grpc)
   add_dependencies(grpc++_reflection grpc_grpc)
 endif ()
+
+##########################
+#        optional        #
+##########################
+ExternalProject_Add(akrzemi1_Optional
+  GIT_REPOSITORY "https://github.com/akrzemi1/Optional.git"
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND "" # remove install step
+  UPDATE_COMMAND "" # remove update step
+  TEST_COMMAND "" # remove test step
+  )
+ExternalProject_Get_Property(akrzemi1_Optional source_dir)
+set(optional_INCLUDE_DIR ${source_dir})
+file(MAKE_DIRECTORY ${optional_INCLUDE_DIR})
+
+add_library(optional INTERFACE IMPORTED)
+set_target_properties(optional PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${optional_INCLUDE_DIR}
+  )
+
+add_dependencies(optional akrzemi1_Optional)
+
+#############################
+#         speedlog          #
+#############################
+ExternalProject_Add(gabime_spdlog
+  GIT_REPOSITORY    "https://github.com/gabime/spdlog.git"
+  GIT_TAG           "v0.13.0"
+  CONFIGURE_COMMAND "" # remove configure step
+  BUILD_COMMAND     "" # remove build step
+  INSTALL_COMMAND   "" # remove install step
+  TEST_COMMAND      "" # remove test step
+  UPDATE_COMMAND    "" # remove update step
+  )
+ExternalProject_Get_Property(gabime_spdlog source_dir)
+set(spdlog_INCLUDE_DIRS ${source_dir}/include)
+file(MAKE_DIRECTORY ${spdlog_INCLUDE_DIRS})
+
+add_library(spdlog INTERFACE IMPORTED)
+set_target_properties(spdlog PROPERTIES
+  INTERFACE_INCLUDE_DIRECTORIES ${spdlog_INCLUDE_DIRS}
+  )
+
+add_dependencies(spdlog gabime_spdlog)
