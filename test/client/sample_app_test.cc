@@ -18,8 +18,6 @@
 #include <ametsuchi/ametsuchi.h>
 #include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
-#include <atomic>
-#include <thread>
 
 class FakeQueryServiceImpl final : public iroha::Query::Service {
  public:
