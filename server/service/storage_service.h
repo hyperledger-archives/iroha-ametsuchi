@@ -15,19 +15,18 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_QUERYSERVICE_H
-#define AMETSUCHI_QUERYSERVICE_H
+#ifndef AMETSUCHI_STORAGE_SERVICE_H
+#define AMETSUCHI_STORAGE_SERVICE_H
 
-#include <grpc++/grpc++.h>
-#include <query.grpc.pb.h>
-#include <wsv.h>
+#include <storage.grpc.pb.h>
 #include <manager.h>
-
+#include <wsv.h>
+#include <block_store_flat.h>
 namespace service {
-
-class QueryServiceImpl final : public iroha::Query::Service {
+class StorageServiceImpl final : public iroha::Storage::Service {
  public:
-  QueryServiceImpl(std::string backend = "Postgres") {
+  StorageServiceImpl(std::string backend = "Postgres") {
+    block_store_.reset(new block_store::BlockStoreFlat);
     auto envbackend = std::getenv("AMWSVBACKEND");
     if (envbackend){
       backend = envbackend;
@@ -38,12 +37,16 @@ class QueryServiceImpl final : public iroha::Query::Service {
                           const ::iroha::AccountRequest *request,
                           ::iroha::AccountResponse *response) override;
   grpc::Status GetBalance(::grpc::ServerContext *context,
-                    const ::iroha::BalanceRequest *request,
-                    ::iroha::BalanceResponse *response) override;
+                          const ::iroha::BalanceRequest *request,
+                          ::iroha::BalanceResponse *response) override;
 
+  grpc::Status Append(::grpc::ServerContext *context,
+                      const ::iroha::AppendRequest *request,
+                      ::iroha::AppendResponse *response) override;
  private:
+  std::unique_ptr<block_store::BlockStore> block_store_;
   std::unique_ptr<wsv::WSV> wsv_;
 };
-
 }
-#endif //AMETSUCHI_QUERYSERVICE_H
+
+#endif //AMETSUCHI_STORAGE_SERVICE_H

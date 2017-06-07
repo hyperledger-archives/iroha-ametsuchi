@@ -15,18 +15,16 @@
  * limitations under the License.
  */
 
-#include "query_service.h"
-#include "command_service.h"
+#include "storage_service.h"
+#include <grpc++/grpc++.h>
 
 void RunServer() {
   std::string server_address("0.0.0.0:50051");
-  service::QueryServiceImpl queryService;
-  service::CommandServiceImpl commandService;
+  service::StorageServiceImpl service;
 
   grpc::ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  builder.RegisterService(&queryService);
-  builder.RegisterService(&commandService);
+  builder.RegisterService(&service);
   auto server = builder.BuildAndStart();
 
   server->Wait();

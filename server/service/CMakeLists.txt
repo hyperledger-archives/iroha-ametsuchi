@@ -1,8 +1,6 @@
 add_library(service
-  command_service.h
-  command_service.cc
-  query_service.h
-  query_service.cc
+  storage_service.h
+  storage_service.cc
   )
 
 target_link_libraries(service

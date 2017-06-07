@@ -28,6 +28,7 @@ class WSVPostgres : public WSV {
   WSVPostgres(std::string host = "localhost",
               size_t port = 5432,
               std::string user = "postgres");
+  ~WSVPostgres();
   bool add_account(uint64_t account_id, std::string name) override;
   bool add_balance(uint64_t account_id, uint64_t asset_id,
                    std::uint64_t amount) override;
@@ -39,7 +40,6 @@ class WSVPostgres : public WSV {
   std::string get_account_by_id(uint64_t account_id) override;
   uint64_t get_balance_by_account_id_asset_id(uint64_t account_id,
                                               uint64_t asset_id) override;
-  void clear() override;
 
  private:
   pqxx::connection connection_;
@@ -80,14 +80,6 @@ const auto init =
     "    permissions bit varying NOT NULL,\n"
     "    PRIMARY KEY (domain_id, account_id)\n"
     ");";
-
-const auto drop =
-    "DROP TABLE IF EXISTS domain_has_account;\n"
-    "DROP TABLE IF EXISTS account_has_asset;\n"
-    "DROP TABLE IF EXISTS asset;\n"
-    "DROP TABLE IF EXISTS domain;\n"
-    "DROP TABLE IF EXISTS signatory;\n"
-    "DROP TABLE IF EXISTS account;";
 
 bool WSVPostgres::add_account(uint64_t account_id, std::string name) {
   pqxx::work txn(connection_);
@@ -209,10 +201,8 @@ uint64_t WSVPostgres::get_balance_by_account_id_asset_id(uint64_t account_id,
   txn.commit();
   return res.empty() ? 0 : std::stoull(res.at(0)["amount"].as<std::string>());
 }
-void WSVPostgres::clear() {
-  pqxx::work txn(connection_);
-  txn.exec(drop);
-  txn.commit();
+WSVPostgres::~WSVPostgres() {
+  connection_.disconnect();
 }
 
 class PostgresFactory : public Factory {

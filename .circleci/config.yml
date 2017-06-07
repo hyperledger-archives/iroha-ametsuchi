@@ -54,4 +54,8 @@ jobs:
               -Dsonar.login="$SONAR_TOKEN" \
               -Dsonar.cxx.valgrind.reportPath="$VALGRIND_XML" \
               -Dsonar.cxx.cppcheck.reportPath=/tmp/cppcheck.xml || true
-
+      - run:
+        name: Sample integration
+        command: |
+          /ametsuchi/build/bin/ametsuchi-server &
+          /ametsuchi/build/test_bin/integration_test

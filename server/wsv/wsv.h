@@ -40,8 +40,6 @@ class WSV {
   // TODO define behavior when no such asset given an account
   virtual uint64_t get_balance_by_account_id_asset_id(uint64_t account_id,
                                                       uint64_t asset_id) = 0;
-
-  virtual void clear() = 0;
 };
 }
 

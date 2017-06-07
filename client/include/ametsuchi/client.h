@@ -21,20 +21,20 @@
 #include <string>
 #include <cstdint>
 #include <memory>
-#include <query.grpc.pb.h>
-#include <command.grpc.pb.h>
+#include <storage.grpc.pb.h>
 
 namespace ametsuchi {
 class Client {
  public:
   Client();
-  uint64_t append(iroha::Block *block);
+  iroha::Block* block();
+  uint64_t append();
   std::string get_account_by_id(uint64_t account_id);
   uint64_t get_balance_by_account_id_asset_id(uint64_t account_id,
                                               uint64_t asset_id);
  private:
-  std::unique_ptr<iroha::Query::Stub> query_stub_;
-  std::unique_ptr<iroha::Command::Stub> command_stub_;
+  std::unique_ptr<iroha::Storage::Stub> stub_;
+  std::unique_ptr<iroha::AppendRequest> request_;
 };
 }
 

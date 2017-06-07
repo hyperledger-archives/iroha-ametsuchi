@@ -18,32 +18,19 @@
 #include "ametsuchi/client.h"
 #include <grpc++/grpc++.h>
 
-using grpc::Channel;
-using grpc::ClientContext;
-using grpc::Status;
-using iroha::AccountRequest;
-using iroha::AccountResponse;
-using iroha::BalanceRequest;
-using iroha::BalanceResponse;
-using iroha::Query;
-using iroha::AppendRequest;
-using iroha::AppendResponse;
-using iroha::Command;
-
 namespace ametsuchi {
 
 Client::Client(){
   auto channel = grpc::CreateChannel(
     "localhost:50051", grpc::InsecureChannelCredentials());
-  query_stub_ = Query::NewStub(channel);
-  command_stub_ = Command::NewStub(channel);
+  stub_ = iroha::Storage::NewStub(channel);
 }
 std::string Client::get_account_by_id(uint64_t account_id) {
-  AccountRequest request;
+  iroha::AccountRequest request;
   request.set_account_id(account_id);
-  AccountResponse response;
-  ClientContext context;
-  auto status = query_stub_->GetAccount(&context, request, &response);
+  iroha::AccountResponse response;
+  grpc::ClientContext context;
+  auto status = stub_->GetAccount(&context, request, &response);
   if (status.ok()) {
     return response.name();
   }
@@ -53,24 +40,30 @@ std::string Client::get_account_by_id(uint64_t account_id) {
 }
 uint64_t Client::get_balance_by_account_id_asset_id(uint64_t account_id,
                                                     uint64_t asset_id) {
-  BalanceRequest request;
+  iroha::BalanceRequest request;
   request.set_account_id(account_id);
   request.set_asset_id(asset_id);
-  BalanceResponse response;
-  ClientContext context;
-  auto status = query_stub_->GetBalance(&context, request, &response);
+  iroha::BalanceResponse response;
+  grpc::ClientContext context;
+  auto status = stub_->GetBalance(&context, request, &response);
   if (status.ok()) {
     return response.amount();
   }
 }
-uint64_t Client::append(iroha::Block *block) {
-  AppendRequest request;
-  request.set_allocated_block(block);
-  AppendResponse response;
-  ClientContext context;
-  auto status = command_stub_->Append(&context, request, &response);
+uint64_t Client::append() {
+  if (!request_){
+    // TODO handle
+  }
+  iroha::AppendResponse response;
+  grpc::ClientContext context;
+  auto status = stub_->Append(&context, *request_, &response);
+  request_.reset(nullptr);
   if (status.ok()){
     return response.id();
   }
+}
+iroha::Block *Client::block() {
+  request_.reset(new iroha::AppendRequest);
+  return request_->mutable_block();
 }
 }

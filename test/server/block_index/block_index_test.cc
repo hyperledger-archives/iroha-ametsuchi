@@ -7,6 +7,7 @@ class BlockIndex_Test : public ::testing::Test {
     cpp_redis::redis_client client;
     client.connect(host_, port_);
     client.flushall();
+    client.sync_commit();
     client.disconnect();
   }
 

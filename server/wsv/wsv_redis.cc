@@ -42,7 +42,6 @@ class WSVRedis : public WSV {
   std::string get_account_by_id(uint64_t account_id) override;
   uint64_t get_balance_by_account_id_asset_id(uint64_t account_id,
                                               uint64_t asset_id) override;
-  void clear() override;
 
  private:
   cpp_redis::redis_client client_;
@@ -108,10 +107,6 @@ uint64_t WSVRedis::get_balance_by_account_id_asset_id(uint64_t account_id,
                });
   client_.sync_commit();
   return res;
-}
-void WSVRedis::clear() {
-  client_.flushall();
-  client_.sync_commit();
 }
 
 class RedisFactory : public Factory {

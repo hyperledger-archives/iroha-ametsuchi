@@ -2,10 +2,22 @@ syntax = "proto3";
 
 package iroha;
 
-service Query {
+import "block.proto";
+
+service Storage {
+  rpc Append (AppendRequest) returns (AppendResponse) {}
   rpc GetAccount(AccountRequest) returns (AccountResponse) {}
   rpc GetBalance(BalanceRequest) returns (BalanceResponse) {}
 }
+
+message AppendRequest {
+  Block block = 1;
+}
+
+message AppendResponse {
+  uint64 id = 1;
+}
+
 
 message AccountRequest {
   uint64 account_id = 1;

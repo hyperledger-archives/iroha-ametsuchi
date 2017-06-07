@@ -18,19 +18,44 @@
 #include <gtest/gtest.h>
 #include <wsv.h>
 #include <manager.h>
+#include <pqxx/pqxx>
+#include <cpp_redis/cpp_redis>
 
-TEST(wsv_test, sample_test) {
-  for (auto backend: {"Postgres", "Redis"}){
-    auto wsv_ = wsv::Manager::instance().make_WSV(backend);
-    wsv_->add_account(0, "Ivan");
-    ASSERT_EQ(wsv_->get_account_by_id(0), "Ivan");
-    wsv_->add_domain(0, "RU", 0);
-    wsv_->add_asset(0, "USD", 0);
-    ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 0);
-    wsv_->add_balance(0, 0, 100);
-    ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 100);
-    wsv_->add_balance(0, 0, 100);
-    ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 200);
-    wsv_->clear();
-  }
+void test_backend(const std::string &backend) {
+  auto wsv_ = wsv::Manager::instance().make_WSV(backend);
+  wsv_->add_account(0, "Ivan");
+  ASSERT_EQ(wsv_->get_account_by_id(0), "Ivan");
+  wsv_->add_domain(0, "RU", 0);
+  wsv_->add_asset(0, "USD", 0);
+  ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 0);
+  wsv_->add_balance(0, 0, 100);
+  ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 100);
+  wsv_->add_balance(0, 0, 100);
+  ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 200);
+}
+
+TEST(wsv_test, postgres_test) {
+  test_backend("Postgres");
+  const auto drop =
+    "DROP TABLE IF EXISTS domain_has_account;\n"
+      "DROP TABLE IF EXISTS account_has_asset;\n"
+      "DROP TABLE IF EXISTS asset;\n"
+      "DROP TABLE IF EXISTS domain;\n"
+      "DROP TABLE IF EXISTS signatory;\n"
+      "DROP TABLE IF EXISTS account;";
+
+  pqxx::connection connection;
+  pqxx::work txn(connection);
+  txn.exec(drop);
+  txn.commit();
+  connection.disconnect();
+}
+
+TEST(wsv_test, redis_test) {
+  test_backend("Redis");
+  cpp_redis::redis_client client;
+  client.connect();
+  client.flushall();
+  client.sync_commit();
+  client.disconnect();
 }

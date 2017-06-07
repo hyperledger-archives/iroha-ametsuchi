@@ -20,7 +20,40 @@
 
 TEST(integration_test, sample_test) {
   ametsuchi::Client client;
-//  ASSERT_EQ(client.get_account_by_id(0), "Ivan");
-//  ASSERT_EQ(client.get_balance_by_account_id_asset_id(0, 0), 100);
-//  ASSERT_EQ(client.append(new iroha::Block), 1);
+  {
+    auto block = client.block();
+    auto txs = block->add_txs();
+    auto actions = txs->add_actions();
+    auto add_account = actions->mutable_add_account();
+    add_account->set_account_id(0);
+    add_account->set_name("Ivan");
+    ASSERT_EQ(client.append(), 1);
+  }
+  ASSERT_EQ(client.get_account_by_id(0), "Ivan");
+  {
+    auto block = client.block();
+    auto txs = block->add_txs();
+    auto actions = txs->add_actions();
+    auto add_domain = actions->mutable_add_domain();
+    add_domain->set_domain_id(0);
+    add_domain->set_name("RU");
+    add_domain->set_root_account_id(0);
+    actions = txs->add_actions();
+    auto add_asset = actions->mutable_add_asset();
+    add_asset->set_asset_id(0);
+    add_asset->set_domain_id(0);
+    add_asset->set_name("USD");
+    ASSERT_EQ(client.append(), 2);
+  }
+  {
+    auto block = client.block();
+    auto txs = block->add_txs();
+    auto actions = txs->add_actions();
+    auto add_balance = actions->mutable_add_balance();
+    add_balance->set_account_id(0);
+    add_balance->set_asset_id(0);
+    add_balance->set_amount(100);
+    ASSERT_EQ(client.append(), 3);
+  }
+  ASSERT_EQ(client.get_balance_by_account_id_asset_id(0, 0), 100);
 }

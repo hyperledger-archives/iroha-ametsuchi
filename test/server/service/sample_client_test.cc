@@ -16,80 +16,130 @@
  */
 
 #include <gtest/gtest.h>
-#include <manager.h>
-#include <block_store_flat.h>
-#include <command_service.h>
-#include "query_service.h"
+#include "storage_service.h"
+#include <grpc++/grpc++.h>
+#include <pqxx/pqxx>
+#include <cpp_redis/cpp_redis>
 
 namespace service {
 
-TEST(sample_client_test, sample_test) {
-  for (auto backend: {"Postgres", "Redis"}) {
-    std::unique_ptr<wsv::WSV>
-      wsv_ = wsv::Manager::instance().make_WSV(backend);
-    wsv_->add_account(0, "Ivan");
-    wsv_->add_domain(0, "RU", 0);
-    wsv_->add_asset(0, "USD", 0);
-    wsv_->add_balance(0, 0, 100);
-
-    std::string server_address("0.0.0.0:50051");
-    QueryServiceImpl service(backend);
-
-    grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-    builder.RegisterService(&service);
-    auto server = builder.BuildAndStart();
-
-    auto stub = iroha::Query::NewStub(grpc::CreateChannel(
-      "localhost:50051", grpc::InsecureChannelCredentials()));
-    {
-      iroha::AccountRequest request;
-      request.set_account_id(0);
-      iroha::AccountResponse reply;
-      grpc::ClientContext context;
-      auto status = stub->GetAccount(&context, request, &reply);
-      ASSERT_TRUE(status.ok());
-      ASSERT_EQ(reply.name(), "Ivan");
-    }
-    {
-      iroha::BalanceRequest request;
-      request.set_account_id(0);
-      request.set_asset_id(0);
-      iroha::BalanceResponse reply;
-      grpc::ClientContext context;
-      auto status = stub->GetBalance(&context, request, &reply);
-      ASSERT_TRUE(status.ok());
-      ASSERT_EQ(reply.amount(), 100);
-    }
-
-    wsv_->clear();
+class ServiceTest : public ::testing::Test {
+ protected:
+  virtual void TearDown() {
+    std::remove("/tmp/block_store/0000000000000001");
+    std::remove("/tmp/block_store/0000000000000002");
+    std::remove("/tmp/block_store/0000000000000003");
+    std::remove("/tmp/block_store");
   }
-}
+};
 
-TEST(sample_client_test, block_test) {
+void test_backend(const std::string &backend) {
   std::string server_address("0.0.0.0:50051");
-  CommandServiceImpl service;
+  StorageServiceImpl service(backend);
 
   grpc::ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
   auto server = builder.BuildAndStart();
 
-  auto stub = iroha::Command::NewStub(grpc::CreateChannel(
+  auto stub = iroha::Storage::NewStub(grpc::CreateChannel(
     "localhost:50051", grpc::InsecureChannelCredentials()));
-  for (auto i: {1, 2, 3}) {
+
+  {
     iroha::AppendRequest request;
-    request.set_allocated_block(new iroha::Block);
+    auto block = request.mutable_block();
+    auto txs = block->add_txs();
+    auto actions = txs->add_actions();
+    auto add_account = actions->mutable_add_account();
+    add_account->set_account_id(0);
+    add_account->set_name("Ivan");
     iroha::AppendResponse response;
     grpc::ClientContext context;
     auto status = stub->Append(&context, request, &response);
     ASSERT_TRUE(status.ok());
-    ASSERT_EQ(response.id(), i);
+    ASSERT_EQ(response.id(), 1);
   }
-  std::remove("/tmp/block_store/0000000000000001");
-  std::remove("/tmp/block_store/0000000000000002");
-  std::remove("/tmp/block_store/0000000000000003");
-  std::remove("/tmp/block_store");
+  {
+    iroha::AccountRequest request;
+    request.set_account_id(0);
+    iroha::AccountResponse reply;
+    grpc::ClientContext context;
+    auto status = stub->GetAccount(&context, request, &reply);
+    ASSERT_TRUE(status.ok());
+    ASSERT_EQ(reply.name(), "Ivan");
+  }
+  {
+    iroha::AppendRequest request;
+    auto block = request.mutable_block();
+    auto txs = block->add_txs();
+    auto actions = txs->add_actions();
+    auto add_domain = actions->mutable_add_domain();
+    add_domain->set_domain_id(0);
+    add_domain->set_name("RU");
+    add_domain->set_root_account_id(0);
+    actions = txs->add_actions();
+    auto add_asset = actions->mutable_add_asset();
+    add_asset->set_asset_id(0);
+    add_asset->set_domain_id(0);
+    add_asset->set_name("USD");
+    iroha::AppendResponse response;
+    grpc::ClientContext context;
+    auto status = stub->Append(&context, request, &response);
+    ASSERT_TRUE(status.ok());
+    ASSERT_EQ(response.id(), 2);
+  }
+  {
+    iroha::AppendRequest request;
+    auto block = request.mutable_block();
+    auto txs = block->add_txs();
+    auto actions = txs->add_actions();
+    auto add_balance = actions->mutable_add_balance();
+    add_balance->set_account_id(0);
+    add_balance->set_asset_id(0);
+    add_balance->set_amount(100);
+    iroha::AppendResponse response;
+    grpc::ClientContext context;
+    auto status = stub->Append(&context, request, &response);
+    ASSERT_TRUE(status.ok());
+    ASSERT_EQ(response.id(), 3);
+  }
+  {
+    iroha::BalanceRequest request;
+    request.set_account_id(0);
+    request.set_asset_id(0);
+    iroha::BalanceResponse reply;
+    grpc::ClientContext context;
+    auto status = stub->GetBalance(&context, request, &reply);
+    ASSERT_TRUE(status.ok());
+    ASSERT_EQ(reply.amount(), 100);
+  }
+}
+
+TEST_F(ServiceTest, postgres_test) {
+  test_backend("Postgres");
+
+  const auto drop =
+    "DROP TABLE IF EXISTS domain_has_account;\n"
+      "DROP TABLE IF EXISTS account_has_asset;\n"
+      "DROP TABLE IF EXISTS asset;\n"
+      "DROP TABLE IF EXISTS domain;\n"
+      "DROP TABLE IF EXISTS signatory;\n"
+      "DROP TABLE IF EXISTS account;";
+
+  pqxx::connection connection;
+  pqxx::work txn(connection);
+  txn.exec(drop);
+  txn.commit();
+  connection.disconnect();
+}
+
+TEST_F(ServiceTest, redis_test) {
+  test_backend("Redis");
+  cpp_redis::redis_client client;
+  client.connect();
+  client.flushall();
+  client.sync_commit();
+  client.disconnect();
 }
 
 }
