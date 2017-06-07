@@ -113,7 +113,7 @@ block_store::BlockStoreFlat::Iterator block_store::BlockStoreFlat::begin() {
 
 
 block_store::BlockStoreFlat::Iterator block_store::BlockStoreFlat::end() {
-  return Iterator(*this, this->last_id());
+  return Iterator(*this, this->last_id()+1);
 }
 
 

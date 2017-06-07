@@ -38,3 +38,7 @@ AddTest(sample_client_test service/sample_client_test.cc)
 target_link_libraries(sample_client_test
   service
   wsv)
+
+AddTest(block_index_mediator_test crash_handler/block_index_mediator_test.cc)
+target_link_libraries(block_index_mediator_test
+        crash_handler utils)
