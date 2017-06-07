@@ -57,5 +57,5 @@ jobs:
       - run:
           name: Sample integration
           command: |
-            /ametsuchi/build/bin/ametsuchi-server &
-            /ametsuchi/build/test_bin/integration_test
+            ./bin/ametsuchi-server &
+            ./integration_test_bin/integration_test
