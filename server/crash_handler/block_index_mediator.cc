@@ -18,12 +18,11 @@ bool BlockIndexMediator::validate() {
         *dynamic_cast<block_store::BlockStoreFlat *>(
             &block_store_);  // TODO remove kakaha
     auto it = block_store_flat.begin() + last_blockid;
-    for (;
-         it < block_store_flat.end(); it++) {
+    for (it; it < block_store_flat.end(); it++) {
       auto block_blob = *it;
 
       std::string hash(32, '\0');
-      utils::sha3_256((unsigned char*)&hash.at(0), block_blob.data(), 0);
+      utils::sha3_256((unsigned char *)&hash.at(0), block_blob.data(), 0);
       block_index_.add_blockhash_blockid(hash, ++last_blockid);
     }
     return true;

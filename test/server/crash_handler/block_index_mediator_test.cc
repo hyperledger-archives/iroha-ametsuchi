@@ -32,10 +32,10 @@ TEST_F(BlockIndexMediatorTest, valid){
   std::vector<uint8_t > blob2({0x3, 0x4});
 
   std::string hash1(32, '\0');
-  utils::sha3_256((unsigned char *)&hash1.at(0), blob1.data(), 0);
+  utils::sha3_256((unsigned char *)&hash1.at(0), blob1.data(), 32);
 
   std::string hash2(32, '\0');
-  utils::sha3_256((unsigned char *)&hash2.at(0), blob2.data(), 0);
+  utils::sha3_256((unsigned char *)&hash2.at(0), blob2.data(), 32);
 
   size_t id1 = bl_store.append(blob1);
   bl_index.add_blockhash_blockid(hash1, id1);
@@ -47,6 +47,8 @@ TEST_F(BlockIndexMediatorTest, valid){
 
   crash_handler::BlockIndexMediator bim(bl_index, bl_store);
   ASSERT_TRUE(bim.validate());
+  ASSERT_EQ(bl_index.get_blockid_by_blockhash(hash1), id1);
+  ASSERT_EQ(bl_index.get_blockid_by_blockhash(hash2), id2);
 }
 
 TEST_F(BlockIndexMediatorTest, invalid_to_valid){
@@ -57,19 +59,25 @@ TEST_F(BlockIndexMediatorTest, invalid_to_valid){
   std::vector<uint8_t > blob2({0x3, 0x4});
 
   std::string hash1(32, '\0');
-  utils::sha3_256((unsigned char *)&hash1.at(0), blob1.data(), 0);
+  utils::sha3_256((unsigned char *)&hash1.at(0), blob1.data(), 32);
 
   std::string hash2(32, '\0');
-  utils::sha3_256((unsigned char *)&hash2.at(0), blob2.data(), 0);
+  utils::sha3_256((unsigned char *)&hash2.at(0), blob2.data(), 32);
 
   size_t id1 = bl_store.append(blob1);
   bl_index.add_blockhash_blockid(hash1, id1);
 
+  // The last blob is added only to bl_store, thus, it is needed to make them consistent
   size_t id2 = bl_store.append(blob2);
 
   ASSERT_NE(bl_index.get_last_blockid(), bl_store.last_id());
 
+  ASSERT_EQ(bl_index.get_blockid_by_blockhash(hash1), id1);
+
   crash_handler::BlockIndexMediator bim(bl_index, bl_store);
   ASSERT_TRUE(bim.validate());
   ASSERT_EQ(bl_index.get_last_blockid(), bl_store.last_id());
+
+  ASSERT_EQ(bl_index.get_blockid_by_blockhash(hash1), id1);
+  ASSERT_EQ(bl_index.get_blockid_by_blockhash(hash2), id2);
 }
