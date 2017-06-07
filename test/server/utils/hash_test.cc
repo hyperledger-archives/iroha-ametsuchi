@@ -15,10 +15,15 @@
  * limitations under the License.
  */
 
-#pragma once
-#include <string.h>
+#include <gtest/gtest.h>
+#include <hash.h>
 
-namespace utils {
-
-int sha3_256(unsigned char *output, const unsigned char *input, size_t in_size);
+TEST(hash_test, sha3_256_hash_test) {
+  std::string my_hash(32, '\0');
+  utils::sha3_256((unsigned char *) &my_hash.at(0), nullptr, 0);
+  std::string res_hash(64, '\0');
+  for (int i = 0; i < my_hash.size(); ++i){
+    sprintf(&res_hash[2 * i], "%02x", my_hash[i] & 0xFF);
+  }
+  ASSERT_STREQ(res_hash.c_str(), "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a");
 }

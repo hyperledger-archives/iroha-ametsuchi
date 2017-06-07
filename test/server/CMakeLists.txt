@@ -14,6 +14,10 @@ AddTest(parser_test utils/parser_test.cc)
 target_link_libraries(parser_test
   utils)
 
+AddTest(hash_test utils/hash_test.cc)
+target_link_libraries(hash_test
+  utils)
+
 AddTest(block_parser_flatbuffers_test utils/block_parser_flatbuffers_test.cc)
 target_link_libraries(block_parser_flatbuffers_test
   utils)

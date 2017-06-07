@@ -23,8 +23,8 @@ extern "C" {
 
 namespace utils {
 
-inline int sha3_256(unsigned char *input, const unsigned char *output,
-                    size_t out_size) {
-  return SHA3_256(input, output, out_size);
+int sha3_256(unsigned char *output, const unsigned char *input,
+             size_t in_size) {
+  return SHA3_256(output, input, in_size);
 }
 }
