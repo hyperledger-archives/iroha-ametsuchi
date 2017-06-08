@@ -42,22 +42,8 @@ grpc::Status StorageServiceImpl::Append(::grpc::ServerContext *context,
   response->set_id(block_store_->append(block));
   for (auto tx : request->block().txs()) {
     for (auto action : tx.actions()) {
-      if (action.has_add_account()) {
-        auto add_account = action.add_account();
-        wsv_->add_account(add_account.account_id(), add_account.name());
-      } else if (action.has_add_balance()) {
-        auto add_balance = action.add_balance();
-        wsv_->add_balance(add_balance.account_id(), add_balance.asset_id(),
-                          add_balance.amount());
-      } else if (action.has_add_domain()) {
-        auto add_domain = action.add_domain();
-        wsv_->add_domain(add_domain.domain_id(), add_domain.name(),
-                         add_domain.root_account_id());
-      } else if (action.has_add_asset()) {
-        auto add_asset = action.add_asset();
-        wsv_->add_asset(add_asset.asset_id(), add_asset.name(),
-                        add_asset.domain_id());
-      }
+      auto handler = handler_.at((uint8_t)action.command_case());
+      handler(action);
     }
   }
   return grpc::Status::OK;

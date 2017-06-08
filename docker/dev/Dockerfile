@@ -1,7 +1,7 @@
 FROM warchantua/iroha-dev
 
 RUN apt-get update && apt-get -y upgrade && \
-    apt -y install libssh2-1-dev libpq-dev
+    apt-get -y install libssh2-1-dev libpq-dev
 
 # install gtest
 RUN cd /tmp; \
@@ -43,7 +43,7 @@ RUN cd /tmp; \
 
 # install libpqxx
 RUN cd /tmp; \
-    git clone https://github.com/jtv/libpqxx.git; \
+    git clone -b feature/install-types-fix https://github.com/lebdron/libpqxx.git; \
     cd libpqxx; \
     ./configure --with-pic --disable-documentation && make && make install
 

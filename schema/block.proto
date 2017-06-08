@@ -4,22 +4,22 @@ package iroha;
 import "action.proto";
 
 message Block{
-    repeated Transaction txs = 1;
-    repeated Signature peer_sigs = 2;
-    bytes prev_hash = 3;
-    uint32 length = 4;
-    bytes merkle_root = 5;
-    uint64 height = 6;
-    uint64 created= 7;
+  repeated Transaction txs = 1;
+  repeated Signature peer_sigs = 2;
+  bytes prev_hash = 3;
+  uint32 length = 4;
+  bytes merkle_root = 5;
+  uint64 height = 6;
+  uint64 created= 7;
 }
 
 message Transaction{
-    repeated Signature sigs = 1;
-    uint64 created = 2;
-    uint32 nonce = 3;
-    repeated Action actions = 4;
+  repeated Signature sigs = 1;
+  uint64 created = 2;
+  uint32 nonce = 3;
+  repeated Action actions = 4;
 }
 message Signature{
-    bytes pubkey = 1;
-    bytes sig = 2;
+  bytes pubkey = 1;
+  bytes sig = 2;
 }

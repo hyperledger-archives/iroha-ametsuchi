@@ -10,7 +10,7 @@ if (TESTING)
   ##########################
   find_package(GTest)
 
-  if (NOT gtest_FOUND)
+  if (NOT GTEST_FOUND)
     ExternalProject_Add(google_test
       GIT_REPOSITORY "https://github.com/google/googletest.git"
       CMAKE_ARGS -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -29,17 +29,17 @@ if (TESTING)
     set(gtest_LIBRARIES ${binary_dir}/googletest/libgtest.a)
     set(gtest_MAIN_LIBRARIES ${binary_dir}/googletest/libgtest_main.a)
     file(MAKE_DIRECTORY ${gtest_INCLUDE_DIRS})
-  endif ()
 
-  add_library(gtest STATIC IMPORTED)
-  set_target_properties(gtest PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES ${gtest_INCLUDE_DIRS}
-    IMPORTED_LOCATION ${gtest_LIBRARIES}
-    IMPORTED_LINK_INTERFACE_LIBRARIES "pthread;${gtest_MAIN_LIBRARIES}"
-    )
+    add_library(gtest STATIC IMPORTED)
+    set_target_properties(gtest PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES ${gtest_INCLUDE_DIRS}
+      IMPORTED_LOCATION ${gtest_LIBRARIES}
+      IMPORTED_LINK_INTERFACE_LIBRARIES "pthread;${gtest_MAIN_LIBRARIES}"
+      )
 
-  if (NOT gtest_FOUND)
     add_dependencies(gtest google_test)
+  else ()
+    add_library(gtest ALIAS GTest::Main)
   endif ()
 
 endif (TESTING)
@@ -114,6 +114,10 @@ endif ()
 ##########################
 find_package(CPPfs)
 if (NOT CPPfs_FOUND)
+  find_package(LibSSH2 QUIET)
+  if (NOT LIBSSH2_FOUND)
+    message(FATAL_ERROR "libssh2 not found")
+  endif ()
   ExternalProject_Add(cginternals_cppassist
     GIT_REPOSITORY "https://github.com/cginternals/cppassist.git"
     CMAKE_ARGS -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
