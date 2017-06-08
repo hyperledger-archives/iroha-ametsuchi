@@ -29,17 +29,21 @@ if (TESTING)
     set(gtest_LIBRARIES ${binary_dir}/googletest/libgtest.a)
     set(gtest_MAIN_LIBRARIES ${binary_dir}/googletest/libgtest_main.a)
     file(MAKE_DIRECTORY ${gtest_INCLUDE_DIRS})
-
-    add_library(gtest STATIC IMPORTED)
-    set_target_properties(gtest PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES ${gtest_INCLUDE_DIRS}
-      IMPORTED_LOCATION ${gtest_LIBRARIES}
-      IMPORTED_LINK_INTERFACE_LIBRARIES "pthread;${gtest_MAIN_LIBRARIES}"
-      )
-
-    add_dependencies(gtest google_test)
   else ()
-    add_library(gtest ALIAS GTest::Main)
+    set(gtest_INCLUDE_DIRS ${GTEST_INCLUDE_DIRS})
+    set(gtest_LIBRARIES ${GTEST_LIBRARIES})
+    set(gtest_MAIN_LIBRARIES ${GTEST_MAIN_LIBRARIES})
+  endif ()
+
+  add_library(gtest STATIC IMPORTED)
+  set_target_properties(gtest PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES ${gtest_INCLUDE_DIRS}
+    IMPORTED_LOCATION ${gtest_LIBRARIES}
+    IMPORTED_LINK_INTERFACE_LIBRARIES "pthread;${gtest_MAIN_LIBRARIES}"
+    )
+
+  if (NOT GTEST_FOUND)
+    add_dependencies(gtest google_test)
   endif ()
 
 endif (TESTING)
