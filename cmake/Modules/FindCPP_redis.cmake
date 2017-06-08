@@ -11,7 +11,7 @@ find_package_handle_standard_args(CPP_redis
 
 if (CPP_redis_FOUND)
   add_library(cpp_redis UNKNOWN IMPORTED)
-  set_target_properties(keccak PROPERTIES
+  set_target_properties(cpp_redis PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES ${CPP_redis_INCLUDE_DIR}
     IMPORTED_LOCATION ${CPP_redis_LIBRARY}
     INTERFACE_LINK_LIBRARIES "tacopie"
