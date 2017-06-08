@@ -12,7 +12,6 @@ add_library(utils
   )
 
 target_link_libraries(utils
-  flatbuffers
   protobuf
   keccak
   )
