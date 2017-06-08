@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: /ametsuchi
     docker:
-      - image: warchantua/iroha-dev
+      - image: lebdron/iroha-ametsuchi-dev
         environment:
           AMETSUCHI_HOME: /ametsuchi
       - image: postgres:9.5
@@ -12,7 +12,6 @@ jobs:
       - image: redis:3.2.8
     steps:
       - checkout
-      - run: apt update && apt install -y libssh2-1-dev libssl-dev libpq-dev
       - run:
           name: cmake
           command: cmake .
@@ -57,5 +56,5 @@ jobs:
       - run:
           name: Sample integration
           command: |
-            ./bin/ametsuchi-server &
+            ./bin/ametsuchi-server &; \
             ./integration_test_bin/integration_test

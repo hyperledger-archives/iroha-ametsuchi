@@ -1,4 +1,3 @@
-compile_fbs_to_cpp(block.fbs)
 compile_proto_to_cpp(block.proto)
 compile_proto_to_cpp(action.proto)
 add_dependencies(blockproto_h actionproto_h)

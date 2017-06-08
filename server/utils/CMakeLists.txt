@@ -3,8 +3,6 @@ add_library(utils
   action_parser.cc
   block_parser.h
   block_parser.cc
-  block_parser_flatbuffers.h
-  block_parser_flatbuffers.cc
   block_parser_protobuf.h
   block_parser_protobuf.cc
   hash.h
