@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *        http://www.apache.org/licenses/LICENSE-2.0/**
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,4 +26,12 @@ TEST(hash_test, sha3_256_hash_test) {
     sprintf(&res_hash[2 * i], "%02x", my_hash[i] & 0xFF);
   }
   ASSERT_STREQ(res_hash.c_str(), "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a");
+
+  std::vector<uint8_t > blob({0x1, 0x2});
+  std::string hash(32, '\0');
+
+  utils::sha3_256((unsigned char *) &hash.at(0), blob.data(), 32);
+  for (int i = 0; i < hash.size(); ++i){
+    printf("%02x", hash[i] & 0xFF);
+  }
 }
