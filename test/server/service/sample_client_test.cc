@@ -30,7 +30,32 @@ class ServiceTest : public ::testing::Test {
     std::remove("/tmp/block_store/0000000000000002");
     std::remove("/tmp/block_store/0000000000000003");
     std::remove("/tmp/block_store");
+
+    if (backend_ == "Postgres") {
+      const auto drop =
+        "DROP TABLE IF EXISTS domain_has_account;\n"
+          "DROP TABLE IF EXISTS account_has_asset;\n"
+          "DROP TABLE IF EXISTS asset;\n"
+          "DROP TABLE IF EXISTS domain;\n"
+          "DROP TABLE IF EXISTS signatory;\n"
+          "DROP TABLE IF EXISTS account;";
+
+      pqxx::connection connection;
+      pqxx::work txn(connection);
+      txn.exec(drop);
+      txn.commit();
+      connection.disconnect();
+    }
+    else if (backend_ == "Redis") {
+      cpp_redis::redis_client client;
+      client.connect();
+      client.flushall();
+      client.sync_commit();
+      client.disconnect();
+    }
+
   }
+  std::string backend_;
 };
 
 void test_backend(const std::string &backend) {
@@ -48,6 +73,7 @@ void test_backend(const std::string &backend) {
   {
     iroha::AppendRequest request;
     auto block = request.mutable_block();
+    block->set_height(1);
     auto txs = block->add_txs();
     auto actions = txs->add_actions();
     auto add_account = actions->mutable_add_account();
@@ -71,6 +97,7 @@ void test_backend(const std::string &backend) {
   {
     iroha::AppendRequest request;
     auto block = request.mutable_block();
+    block->set_height(2);
     auto txs = block->add_txs();
     auto actions = txs->add_actions();
     auto add_domain = actions->mutable_add_domain();
@@ -91,6 +118,7 @@ void test_backend(const std::string &backend) {
   {
     iroha::AppendRequest request;
     auto block = request.mutable_block();
+    block->set_height(3);
     auto txs = block->add_txs();
     auto actions = txs->add_actions();
     auto add_balance = actions->mutable_add_balance();
@@ -116,30 +144,13 @@ void test_backend(const std::string &backend) {
 }
 
 TEST_F(ServiceTest, postgres_test) {
-  test_backend("Postgres");
-
-  const auto drop =
-    "DROP TABLE IF EXISTS domain_has_account;\n"
-      "DROP TABLE IF EXISTS account_has_asset;\n"
-      "DROP TABLE IF EXISTS asset;\n"
-      "DROP TABLE IF EXISTS domain;\n"
-      "DROP TABLE IF EXISTS signatory;\n"
-      "DROP TABLE IF EXISTS account;";
-
-  pqxx::connection connection;
-  pqxx::work txn(connection);
-  txn.exec(drop);
-  txn.commit();
-  connection.disconnect();
+  backend_ = "Postgres";
+  test_backend(backend_);
 }
 
 TEST_F(ServiceTest, redis_test) {
-  test_backend("Redis");
-  cpp_redis::redis_client client;
-  client.connect();
-  client.flushall();
-  client.sync_commit();
-  client.disconnect();
+  backend_ = "Redis";
+  test_backend(backend_);
 }
 
 }

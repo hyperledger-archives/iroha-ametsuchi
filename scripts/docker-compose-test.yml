@@ -12,7 +12,7 @@ services:
 
 
   redis:
-    image: redis
+    image: redis:3.2.8
     networks:
       private:
         ipv4_address: 192.168.55.3

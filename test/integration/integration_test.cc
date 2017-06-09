@@ -22,6 +22,7 @@ TEST(integration_test, sample_test) {
   ametsuchi::Client client;
   {
     auto block = client.block();
+    block->set_height(1);
     auto txs = block->add_txs();
     auto actions = txs->add_actions();
     auto add_account = actions->mutable_add_account();
@@ -32,6 +33,7 @@ TEST(integration_test, sample_test) {
   ASSERT_EQ(client.get_account_by_id(0), "Ivan");
   {
     auto block = client.block();
+    block->set_height(2);
     auto txs = block->add_txs();
     auto actions = txs->add_actions();
     auto add_domain = actions->mutable_add_domain();
@@ -47,6 +49,7 @@ TEST(integration_test, sample_test) {
   }
   {
     auto block = client.block();
+    block->set_height(3);
     auto txs = block->add_txs();
     auto actions = txs->add_actions();
     auto add_balance = actions->mutable_add_balance();

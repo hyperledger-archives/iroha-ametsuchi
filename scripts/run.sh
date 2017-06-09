@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 docker-compose down 1>/dev/null 2>&1 || true
-docker-compose -f docker-compose-test.yml up -d || exit 1
+docker-compose -f docker-compose-test.yml down 1>/dev/null 2>&1 || true
 
 export PGHOST=192.168.55.2
 export PGUSER=zekret

@@ -21,6 +21,36 @@
 #include <pqxx/pqxx>
 #include <cpp_redis/cpp_redis>
 
+class WSVTest : public ::testing::Test {
+ protected:
+  virtual void TearDown() {
+    if (backend_ == "Postgres") {
+      const auto drop =
+        "DROP TABLE IF EXISTS domain_has_account;\n"
+          "DROP TABLE IF EXISTS account_has_asset;\n"
+          "DROP TABLE IF EXISTS asset;\n"
+          "DROP TABLE IF EXISTS domain;\n"
+          "DROP TABLE IF EXISTS signatory;\n"
+          "DROP TABLE IF EXISTS account;";
+
+      pqxx::connection connection;
+      pqxx::work txn(connection);
+      txn.exec(drop);
+      txn.commit();
+      connection.disconnect();
+    }
+    else if (backend_ == "Redis") {
+      cpp_redis::redis_client client;
+      client.connect();
+      client.flushall();
+      client.sync_commit();
+      client.disconnect();
+    }
+
+  }
+  std::string backend_;
+};
+
 void test_backend(const std::string &backend) {
   auto wsv_ = wsv::Manager::instance().make_WSV(backend);
   wsv_->add_account(0, "Ivan");
@@ -34,28 +64,12 @@ void test_backend(const std::string &backend) {
   ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 200);
 }
 
-TEST(wsv_test, postgres_test) {
-  test_backend("Postgres");
-  const auto drop =
-    "DROP TABLE IF EXISTS domain_has_account;\n"
-      "DROP TABLE IF EXISTS account_has_asset;\n"
-      "DROP TABLE IF EXISTS asset;\n"
-      "DROP TABLE IF EXISTS domain;\n"
-      "DROP TABLE IF EXISTS signatory;\n"
-      "DROP TABLE IF EXISTS account;";
-
-  pqxx::connection connection;
-  pqxx::work txn(connection);
-  txn.exec(drop);
-  txn.commit();
-  connection.disconnect();
+TEST_F(WSVTest, postgres_test) {
+  backend_ = "Postgres";
+  test_backend(backend_);
 }
 
-TEST(wsv_test, redis_test) {
-  test_backend("Redis");
-  cpp_redis::redis_client client;
-  client.connect();
-  client.flushall();
-  client.sync_commit();
-  client.disconnect();
+TEST_F(WSVTest, redis_test) {
+  backend_ = "Redis";
+  test_backend(backend_);
 }
