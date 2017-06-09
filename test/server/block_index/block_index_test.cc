@@ -32,7 +32,6 @@ class BlockIndex_Test : public ::testing::Test {
   size_t port_ = 6379;
 };
 
-
 TEST_F(BlockIndex_Test, REDIS_ADD_GET_TEST) {
   block_index::BlockIndexRedis block_index(host_, port_);
 
