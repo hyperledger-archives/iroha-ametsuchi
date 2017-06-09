@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
-#include "storage_service.h"
 #include <grpc++/grpc++.h>
-#include <pqxx/pqxx>
+#include <gtest/gtest.h>
 #include <cpp_redis/cpp_redis>
+#include <pqxx/pqxx>
+#include "storage_service.h"
 
 namespace service {
 
@@ -33,7 +33,7 @@ class ServiceTest : public ::testing::Test {
 
     if (backend_ == "Postgres") {
       const auto drop =
-        "DROP TABLE IF EXISTS domain_has_account;\n"
+          "DROP TABLE IF EXISTS domain_has_account;\n"
           "DROP TABLE IF EXISTS account_has_asset;\n"
           "DROP TABLE IF EXISTS asset;\n"
           "DROP TABLE IF EXISTS domain;\n"
@@ -45,17 +45,19 @@ class ServiceTest : public ::testing::Test {
       txn.exec(drop);
       txn.commit();
       connection.disconnect();
-    }
-    else if (backend_ == "Redis") {
+    } else if (backend_ == "Redis") {
       cpp_redis::redis_client client;
-      client.connect();
+      client.connect(redis_host_, redis_port_);
       client.flushall();
       client.sync_commit();
       client.disconnect();
     }
-
   }
   std::string backend_;
+  std::string redis_host_ =
+      std::getenv("REDISHOST") ? std::getenv("REDISHOST") : "127.0.0.1";
+  size_t redis_port_ =
+      std::getenv("REDISPORT") ? std::stoull(std::getenv("REDISPORT")) : 6379;
 };
 
 void test_backend(const std::string &backend) {
@@ -68,7 +70,7 @@ void test_backend(const std::string &backend) {
   auto server = builder.BuildAndStart();
 
   auto stub = iroha::Storage::NewStub(grpc::CreateChannel(
-    "localhost:50051", grpc::InsecureChannelCredentials()));
+      "localhost:50051", grpc::InsecureChannelCredentials()));
 
   {
     iroha::AppendRequest request;
@@ -152,5 +154,4 @@ TEST_F(ServiceTest, redis_test) {
   backend_ = "Redis";
   test_backend(backend_);
 }
-
 }

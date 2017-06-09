@@ -17,17 +17,15 @@
  */
 
 #include <pqxx/pqxx>
-#include "wsv.h"
 #include "factory.h"
 #include "manager.h"
+#include "wsv.h"
 
 namespace wsv {
 
 class WSVPostgres : public WSV {
  public:
-  WSVPostgres(std::string host = "localhost",
-              size_t port = 5432,
-              std::string user = "postgres");
+  WSVPostgres();
   ~WSVPostgres();
   bool add_account(uint64_t account_id, std::string name) override;
   bool add_balance(uint64_t account_id, uint64_t asset_id,
@@ -93,10 +91,7 @@ bool WSVPostgres::add_account(uint64_t account_id, std::string name) {
   txn.commit();
   return true;
 }
-WSVPostgres::WSVPostgres(std::string host, size_t port,
-                         std::string user)
-    : connection_("host=" + host + " port=" + std::to_string(port) + " user=" +
-                  user) {
+WSVPostgres::WSVPostgres() {
   pqxx::work txn(connection_);
   txn.exec(init);
   txn.commit();
@@ -201,23 +196,16 @@ uint64_t WSVPostgres::get_balance_by_account_id_asset_id(uint64_t account_id,
   txn.commit();
   return res.empty() ? 0 : std::stoull(res.at(0)["amount"].as<std::string>());
 }
-WSVPostgres::~WSVPostgres() {
-  connection_.disconnect();
-}
+WSVPostgres::~WSVPostgres() { connection_.disconnect(); }
 
 class PostgresFactory : public Factory {
  public:
-  PostgresFactory() {
-    Manager::instance().insert(*this);
-  }
-  std::string name() const override {
-    return "Postgres";
-  }
+  PostgresFactory() { Manager::instance().insert(*this); }
+  std::string name() const override { return "Postgres"; }
   std::unique_ptr<WSV> create_instance() override {
     return std::make_unique<WSVPostgres>();
   }
 };
 
 static PostgresFactory postgresFactory;
-
 }

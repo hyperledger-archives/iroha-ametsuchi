@@ -16,17 +16,17 @@
  */
 
 #include <gtest/gtest.h>
-#include <wsv.h>
 #include <manager.h>
-#include <pqxx/pqxx>
+#include <wsv.h>
 #include <cpp_redis/cpp_redis>
+#include <pqxx/pqxx>
 
 class WSVTest : public ::testing::Test {
  protected:
   virtual void TearDown() {
     if (backend_ == "Postgres") {
       const auto drop =
-        "DROP TABLE IF EXISTS domain_has_account;\n"
+          "DROP TABLE IF EXISTS domain_has_account;\n"
           "DROP TABLE IF EXISTS account_has_asset;\n"
           "DROP TABLE IF EXISTS asset;\n"
           "DROP TABLE IF EXISTS domain;\n"
@@ -38,17 +38,19 @@ class WSVTest : public ::testing::Test {
       txn.exec(drop);
       txn.commit();
       connection.disconnect();
-    }
-    else if (backend_ == "Redis") {
+    } else if (backend_ == "Redis") {
       cpp_redis::redis_client client;
-      client.connect();
+      client.connect(redis_host_, redis_port_);
       client.flushall();
       client.sync_commit();
       client.disconnect();
     }
-
   }
   std::string backend_;
+  std::string redis_host_ =
+      std::getenv("REDISHOST") ? std::getenv("REDISHOST") : "127.0.0.1";
+  size_t redis_port_ =
+      std::getenv("REDISPORT") ? std::stoull(std::getenv("REDISPORT")) : 6379;
 };
 
 void test_backend(const std::string &backend) {

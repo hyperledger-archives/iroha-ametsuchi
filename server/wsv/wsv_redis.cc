@@ -24,11 +24,11 @@ namespace wsv {
 
 class WSVRedis : public WSV {
  public:
-  WSVRedis(std::string host = "localhost", size_t port = 6379) : host_(host), port_(port) {
-    auto envhost = std::getenv("REDISHOST");
-    if (envhost) {
-      host = envhost;
-    }
+  WSVRedis() {
+    auto env = std::getenv("REDISHOST");
+    host_ = env ? env : "127.0.0.1";
+    env = std::getenv("REDISPORT");
+    port_ = env ? std::stoull(env) : 6379;
     client_.connect(host_, port_);
   }
   ~WSVRedis();
