@@ -28,8 +28,6 @@ class BlockStore {
   virtual const std::vector<uint8_t> get(uint32_t id) = 0;
   virtual const uint32_t last_id() = 0;
 
-  //virtual std::vector<uint32_t> get_holes() = 0;
-
   class AbstractIterator;
   class Iterator;
 

@@ -65,7 +65,7 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
     if (fh.isDirectory()) {
       // Directory exists
       dump_dir = path;
-      current_id = check_consitency();
+      current_id = check_consistency();
       if (!current_id) {
         // TODO: inconsistent state
       }
@@ -84,7 +84,7 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
   }
 }
 
-const uint32_t BlockStoreFlat::check_consitency() {
+const uint32_t BlockStoreFlat::check_consistency() {
   uint32_t tmp_id = 0u;
   if (!dump_dir.empty()) {
     FileHandle dir = fs::open(dump_dir);

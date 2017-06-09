@@ -39,7 +39,8 @@ grpc::Status StorageServiceImpl::Append(::grpc::ServerContext *context,
                                         ::iroha::AppendResponse *response) {
   std::vector<uint8_t> block(request->block().ByteSize());
   request->block().SerializeToArray(block.data(), block.size());
-  response->set_id(block_store_->append(block));
+  block_store_->add(request->block().height(), block);
+  response->set_id(request->block().height());
   for (auto tx : request->block().txs()) {
     for (auto action : tx.actions()) {
       auto handler = handler_.at((uint8_t)action.command_case());
