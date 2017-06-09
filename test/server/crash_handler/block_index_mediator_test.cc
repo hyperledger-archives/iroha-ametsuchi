@@ -50,10 +50,12 @@ TEST_F(BlockIndexMediatorTest, valid){
   std::string hash2(32, '\0');
   utils::sha3_256((unsigned char *)&hash2.at(0), blob2.data(), blob2.size());
 
-  size_t id1 = bl_store.append(blob1);
+  uint32_t id1 = 1u;
+  bl_store.add(id1, blob1);
   bl_index.add_blockhash_blockid(hash1, id1);
 
-  size_t id2 = bl_store.append(blob2);
+  uint32_t id2 = 2u;
+  bl_store.add(id2, blob2);
   bl_index.add_blockhash_blockid(hash2, id2);
 
   ASSERT_EQ(bl_index.get_last_blockid(), bl_store.last_id());
@@ -77,11 +79,13 @@ TEST_F(BlockIndexMediatorTest, invalid_to_valid){
   std::string hash2(32, '\0');
   utils::sha3_256((unsigned char *)&hash2.at(0), blob2.data(), blob2.size());
 
-  size_t id1 = bl_store.append(blob1);
+  uint32_t id1 = 1u;
+  bl_store.add(id1, blob1);
   bl_index.add_blockhash_blockid(hash1, id1);
 
   // The last blob is added only to bl_store, thus, it is needed to make them consistent
-  size_t id2 = bl_store.append(blob2);
+  uint32_t id2 = 2u;
+  bl_store.add(id2, blob2);
 
   ASSERT_NE(bl_index.get_last_blockid(), bl_store.last_id());
 
@@ -107,10 +111,12 @@ TEST_F(BlockIndexMediatorTest, b_index_is_lost){
   std::string hash2(32, '\0');
   utils::sha3_256((unsigned char *)&hash2.at(0), blob2.data(), blob2.size());
 
-  size_t id1 = bl_store.append(blob1);
+  uint32_t id1 = 1u;
+  bl_store.add(id1, blob1);
 
   // The last blob is added only to bl_store, thus, it is needed to make them consistent
-  size_t id2 = bl_store.append(blob2);
+  uint32_t id2 = 2u;
+  bl_store.add(id2, blob2);
 
   block_index::BlockIndexRedis bl_index(host_, port_);
   crash_handler::BlockIndexMediator bim(bl_index, bl_store);

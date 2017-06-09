@@ -15,11 +15,9 @@ bool BlockIndexMediator::validate() {
     return true;
   } else {
     auto last_blockid = block_index_.get_last_blockid();
-    block_store::BlockStoreFlat block_store_flat =
-        *dynamic_cast<block_store::BlockStoreFlat *>(
-            &block_store_);  // TODO remove kakaha
-    auto it = block_store_flat.begin() + last_blockid;
-    for (it; it < block_store_flat.end(); it++) {
+
+    auto it = block_store_.begin() + last_blockid;
+    for (it; it < block_store_.end(); it++) {
       auto block_blob = *it;
 
       std::string hash(32, '\0');
