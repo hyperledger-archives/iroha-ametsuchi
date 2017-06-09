@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  pg:
+    image: postgres:9.5
+    environment:
+      - POSTGRES_USER:zekret
+      - POSTGRES_PASSWORD:secretpasswd
+    networks:
+      private:
+        ipv4_address: 192.168.55.2
+
+
+  redis:
+    image: redis
+    networks:
+      private:
+        ipv4_address: 192.168.55.3
+
+
+networks:
+  private:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.55.0/24
