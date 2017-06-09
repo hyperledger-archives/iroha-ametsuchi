@@ -20,14 +20,22 @@
 
 class BlStore_Test : public ::testing::Test {
  protected:
-  virtual void TearDown() {}
+  virtual void TearDown() {
+    system(("rm -rf " + block_store_path).c_str());
+  }
+
+  std::string block_store_path = "/tmp/dump";
 };
 
-TEST(BlStore_Test, Read_Write_Test) {
+TEST_F(BlStore_Test, Read_Write_Test) {
   std::vector<uint8_t> block(100000, 5);
-  block_store::BlockStoreFlat bl_store("dump");
-  auto id = bl_store.append(block);
-  auto id2 = bl_store.append(block);
+  block_store::BlockStoreFlat bl_store(block_store_path);
+
+  auto id = 1u;
+  bl_store.add(id, block);
+  auto id2 = 2u;
+  bl_store.add(id2, block);
+
   auto res = bl_store.get(id);
   ASSERT_FALSE(res.empty());
   ASSERT_EQ(res, block);

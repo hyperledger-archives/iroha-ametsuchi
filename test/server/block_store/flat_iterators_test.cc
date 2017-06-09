@@ -21,30 +21,36 @@
 
 class BlStoreIterators_Test : public ::testing::Test {
  protected:
-  virtual void TearDown() {}
+  virtual void TearDown() {
+    system(("rm -rf " + block_store_path).c_str());
+  }
+
+  std::string block_store_path = "/tmp/dump";
 };
 
-TEST(BlStoreIterators_Test, Forward_Test) {
+TEST_F(BlStoreIterators_Test, Forward_Test) {
   uint n = 5u;
-  block_store::BlockStoreFlat bl_store("dump_test");
+  block_store::BlockStoreFlat bl_store(block_store_path);
   std::vector<std::vector<uint8_t>> test_set(n);
 
   auto offset = bl_store.last_id();
 
+
   for (uint i = 0u; i < n; ++i) {
     test_set[i] = std::vector<uint8_t>(i+1, 5);
-    auto id = bl_store.append(test_set[i]);
-    ASSERT_EQ(id, i+1+offset);
+    bl_store.add(i+1+offset, test_set[i]);
   }
 
   int i = 0;
-  auto end = bl_store.begin()+n;
-  auto begin = bl_store.begin();
+  auto end = bl_store.end();
+  auto begin = bl_store.begin()+offset;
+
   for (auto it = begin; it < end; ++it) {
 
     ASSERT_EQ(test_set[i], *it);
     i++;
   }
+
 
 
 }

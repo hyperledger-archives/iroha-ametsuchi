@@ -23,6 +23,8 @@
 #include <dirent.h>
 #include <iostream>
 #include "block_store_flat.h"
+#include "flat_iterator.h"
+
 
 namespace fs = cppfs::fs;
 using cppfs::FileHandle;
@@ -30,8 +32,7 @@ using cppfs::FileIterator;
 
 namespace block_store {
 
-
-const uint64_t BlockStoreFlat::append(const std::vector<uint8_t> &block) {
+const void BlockStoreFlat::add(uint32_t id, const std::vector<uint8_t> &block) {
   auto next_id = current_id + 1;
   std::string file_name = dump_dir + "/" + id_to_name(next_id);
   // Write block to binary file
@@ -46,13 +47,12 @@ const uint64_t BlockStoreFlat::append(const std::vector<uint8_t> &block) {
 
     // Update internals, release lock
     current_id = next_id;
-    return current_id;
+
   } else {
     // Already exists, something is wrong
     // Answer iroha status
     // TODO: handle this case
     std::cout << "File name already exist " << std::endl;
-    return 0;
   }
 }
 
@@ -66,10 +66,10 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
       // Directory exists
       dump_dir = path;
       current_id = check_consitency();
-      if(!current_id){
+      if (!current_id) {
         // TODO: inconsistent state
       }
-     } else {
+    } else {
       // Wrong path
       // TODO: handle wrong path
     }
@@ -84,9 +84,8 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
   }
 }
 
-
-const uint64_t BlockStoreFlat::check_consitency() {
-  uint64_t tmp_id = 0u;
+const uint32_t BlockStoreFlat::check_consitency() {
+  uint32_t tmp_id = 0u;
   if (!dump_dir.empty()) {
     FileHandle dir = fs::open(dump_dir);
     if (dir.isDirectory()) {
@@ -101,14 +100,12 @@ const uint64_t BlockStoreFlat::check_consitency() {
         while (++i < n) {
           if (id_to_name(tmp_id) != namelist[i]->d_name) {
             // TODO: handle Inconsistent state
-
           }
           tmp_id = name_to_id(namelist[i]->d_name);
           free(namelist[i]);
         }
         free(namelist);
       }
-
 
     } else {
       // Not a directory
@@ -119,9 +116,7 @@ const uint64_t BlockStoreFlat::check_consitency() {
   return tmp_id;
 }
 
-
-const std::vector<uint8_t> BlockStoreFlat::get(uint64_t id) {
-
+const std::vector<uint8_t> BlockStoreFlat::get(uint32_t id) {
   std::string filename = dump_dir + "/" + id_to_name(id);
   FileHandle fh = fs::open(filename);
   if (fh.exists()) {
@@ -156,13 +151,90 @@ const std::string BlockStoreFlat::id_to_name(uint64_t id) {
   return new_id;
 }
 
-const uint64_t block_store::BlockStoreFlat::last_id() {
-  return current_id;
-}
+const uint32_t block_store::BlockStoreFlat::last_id() { return current_id; }
 
 const uint64_t BlockStoreFlat::name_to_id(std::string name) {
   std::string::size_type sz;
   return std::stoull(name, &sz);
+}
+
+BlockStore::Iterator BlockStoreFlat::begin() {
+  BlockStore::Iterator iter(new FlatIterator(*this, 1));
+  return iter;
+
+}
+BlockStore::Iterator BlockStoreFlat::end() {
+  BlockStore::Iterator iter(new FlatIterator(*this, last_id()+1));
+  return iter;
+}
+
+// Flat Iterator realization
+
+BlockStoreFlat::FlatIterator::FlatIterator(BlockStoreFlat &bstore): bstore_(bstore), n_(0) {}
+
+
+BlockStoreFlat::FlatIterator::FlatIterator(BlockStoreFlat &bstore, uint32_t offset)
+    : bstore_(bstore), n_(offset) {}
+
+BlockStoreFlat::FlatIterator::FlatIterator(const FlatIterator &it)
+    : bstore_(it.bstore_), n_(it.n_), value_(it.value_) {}
+
+
+bool BlockStoreFlat::FlatIterator::operator==(
+    const block_store::BlockStore::AbstractIterator &it) {
+
+  return n_ == dynamic_cast<const FlatIterator*>(&it)->n_;
+}
+
+bool BlockStoreFlat::FlatIterator::operator!=(const BlockStore::AbstractIterator &it) {
+  return n_ != dynamic_cast<const FlatIterator*>(&it)->n_;
+}
+
+
+BlockStore::AbstractIterator& BlockStoreFlat::FlatIterator::operator=(const BlockStore::AbstractIterator &it) {
+  return *this;
+}
+bool BlockStoreFlat::FlatIterator::operator<(const BlockStore::AbstractIterator &it) {
+  return n_ < dynamic_cast<const FlatIterator*>(&it)->n_;
+}
+bool BlockStoreFlat::FlatIterator::operator>(const BlockStore::AbstractIterator &it) {
+  return n_ > dynamic_cast<const FlatIterator*>(&it)->n_;
+}
+bool BlockStoreFlat::FlatIterator::operator>=(const BlockStore::AbstractIterator &it) {
+  return n_ >= dynamic_cast<const FlatIterator*>(&it)->n_;
+}
+bool BlockStoreFlat::FlatIterator::operator<=(const BlockStore::AbstractIterator &it) {
+  return n_ <= dynamic_cast<const FlatIterator*>(&it)->n_;
+}
+const std::vector<uint8_t> &BlockStoreFlat::FlatIterator::operator*() {
+  value_ = bstore_.get(n_);
+  return value_;
+}
+BlockStore::AbstractIterator& BlockStoreFlat::FlatIterator::operator++() {
+  n_ += 1;
+  return *this;
+}
+
+BlockStore::AbstractIterator& BlockStoreFlat::FlatIterator::operator--() {
+  n_ -= 1;
+  return *this;
+}
+
+BlockStore::AbstractIterator& BlockStoreFlat::FlatIterator::operator+=(const int &n) {
+  n_ += n;
+  return *this;
+}
+BlockStore::AbstractIterator& BlockStoreFlat::FlatIterator::operator-=(const int &n) {
+  n_ -= n;
+  return *this;
+}
+BlockStore::AbstractIterator& BlockStoreFlat::FlatIterator::operator-(const int &n) {
+  n_ -= n;
+  return *this;
+}
+BlockStore::AbstractIterator& BlockStoreFlat::FlatIterator::operator+(const int &n) {
+  n_ += n;
+  return *this;
 }
 
 }

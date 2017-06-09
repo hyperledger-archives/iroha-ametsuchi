@@ -24,29 +24,30 @@
 namespace block_store {
 class BlockStoreFlat : public BlockStore {
  public:
-
-  BlockStoreFlat(const std::string &path = "/tmp/block_store"); // TODO refactor
+  BlockStoreFlat(
+      const std::string &path = "/tmp/block_store");  // TODO refactor
   ~BlockStoreFlat();
 
-  const uint64_t append(const std::vector<uint8_t> &block) override;
-  const std::vector<uint8_t> get(uint64_t id) override;
-  const uint64_t last_id() override;
+  const void add(uint32_t id, const std::vector<uint8_t> &block) override;
+  const std::vector<uint8_t> get(uint32_t id) override;
+  const uint32_t last_id() override;
 
-  class Iterator;
+  class FlatIterator;
 
-  Iterator begin();
-  Iterator end();
+  BlockStore::Iterator begin() override;
+  BlockStore::Iterator end() override;
 
  private:
-  uint64_t current_id;
+  uint32_t current_id;
   std::string dump_dir;
+  std::vector<uint32_t> holes;
   // Get next auto increment
   // Get last consistent id, check iternal consistency of block store
-  const uint64_t check_consitency();
+  const uint32_t check_consitency();
   const std::string get_next_id(std::string old_id);
   const std::string id_to_name(uint64_t id);
   const uint64_t name_to_id(std::string name);
 };
+
+
 }
-
-

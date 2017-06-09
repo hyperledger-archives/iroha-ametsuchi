@@ -17,45 +17,39 @@
 
 #pragma once
 
-#include "block_store_flat.h"
-namespace block_store{
 
-class BlockStoreFlat::Iterator{
+#include "block_store.h"
 
+namespace block_store {
+
+class BlockStoreFlat::FlatIterator : public BlockStore::AbstractIterator {
  public:
-  Iterator(BlockStoreFlat& bstore);
-  Iterator(BlockStoreFlat& bstore, int64_t offset);
-  Iterator(const Iterator& it);
+  FlatIterator(BlockStoreFlat &bstore);
+  FlatIterator(BlockStoreFlat &bstore, uint32_t offset);
+  FlatIterator(const FlatIterator &it);
   // Operators
-  bool operator==(const BlockStoreFlat::Iterator &it);
-  bool operator!=(const BlockStoreFlat::Iterator &it);
-  Iterator operator=(const BlockStoreFlat::Iterator &it);
-  bool operator<(const BlockStoreFlat::Iterator &it);
-  bool operator>(const BlockStoreFlat::Iterator &it);
-  bool operator>=(const BlockStoreFlat::Iterator &it);
-  bool operator<=(const BlockStoreFlat::Iterator &it);
+  bool operator==(const BlockStore::AbstractIterator &it) override;
+  bool operator!=(const BlockStore::AbstractIterator &it) override;
+  BlockStore::AbstractIterator &operator=(const BlockStore::AbstractIterator &it) override;
+  bool operator<(const BlockStore::AbstractIterator &it) override;
+  bool operator>(const BlockStore::AbstractIterator &it) override;
+  bool operator>=(const BlockStore::AbstractIterator &it) override;
+  bool operator<=(const BlockStore::AbstractIterator &it) override;
 
-  const std::vector<uint8_t> &operator*();
+  const std::vector<uint8_t> &operator*() override;
 
-  Iterator operator++();
-  Iterator operator++(int);
-  Iterator operator--();
-  Iterator operator--(int);
+  BlockStore::AbstractIterator &operator++() override;
+  //BlockStore::AbstractIterator &operator++(int) override;
+  BlockStore::AbstractIterator &operator--() override;
+  //BlockStore::AbstractIterator &operator--(int) override;
 
-  Iterator operator+=(const int &n);
-  Iterator operator-=(const int &n);
-  Iterator operator-(const int &n);
-  Iterator operator+(const int &n);
-
- protected:
-  BlockStoreFlat& bstore_;
-  int64_t n_;
+  BlockStore::AbstractIterator &operator+=(const int &n) override;
+  BlockStore::AbstractIterator &operator-=(const int &n) override;
+  BlockStore::AbstractIterator &operator-(const int &n) override;
+  BlockStore::AbstractIterator &operator+(const int &n) override;
+ private:
+  BlockStoreFlat &bstore_;
+  uint32_t n_;
   std::vector<uint8_t> value_;
-
 };
-
-
-
 }
-
-
