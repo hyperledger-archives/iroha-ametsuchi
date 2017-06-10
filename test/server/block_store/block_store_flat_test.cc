@@ -17,6 +17,9 @@
 
 #include <block_store_flat.h>
 #include <gtest/gtest.h>
+#include <cppfs/fs.h>
+#include <cppfs/FileHandle.h>
+#include <cppfs/FileIterator.h>
 
 class BlStore_Test : public ::testing::Test {
  protected:
@@ -39,4 +42,49 @@ TEST_F(BlStore_Test, Read_Write_Test) {
   auto res = bl_store.get(id);
   ASSERT_FALSE(res.empty());
   ASSERT_EQ(res, block);
+}
+
+
+TEST_F(BlStore_Test, InConsistency_Test) {
+  namespace fs = cppfs::fs;
+  using cppfs::FileHandle;
+  using cppfs::FileIterator;
+  // Adding blocks
+  {
+    std::vector<uint8_t> block(1000, 5);
+    block_store::BlockStoreFlat bl_store(block_store_path);
+    // Adding three blocks
+    auto id = 1u;
+    bl_store.add(id, block);
+    auto id2 = 2u;
+    bl_store.add(id2, block);
+    auto id3 = 3u;
+    bl_store.add(id3, block);
+
+    auto res = bl_store.get(id);
+    ASSERT_FALSE(res.empty());
+    ASSERT_EQ(res, block);
+  }
+  // Simulate removal of the block
+  {
+    // Remove file in the middle of the block store
+    system(("rm " + block_store_path + "/0000000000000002").c_str());
+    std::vector<uint8_t> block(1000, 5);
+    block_store::BlockStoreFlat bl_store(block_store_path);
+    auto res = bl_store.last_id();
+    // Must return 1
+    ASSERT_EQ(res, 1);
+    // There must be no other files:
+
+    FileHandle dir = fs::open(block_store_path);
+    std::vector<std::string> files = dir.listFiles();
+    ASSERT_EQ(files.size(), 1);
+    for (auto name : files){
+      ASSERT_EQ(name, "0000000000000001");
+    }
+  }
+
+
+
+
 }

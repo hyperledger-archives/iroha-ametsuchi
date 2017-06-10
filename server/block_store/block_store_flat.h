@@ -43,7 +43,6 @@ class BlockStoreFlat : public BlockStore {
   // Get next auto increment
   // Get last consistent id, check iternal consistency of block store
   const uint32_t check_consistency();
-  const std::string get_next_id(std::string old_id);
   const std::string id_to_name(uint64_t id);
   const uint64_t name_to_id(std::string name);
 };
