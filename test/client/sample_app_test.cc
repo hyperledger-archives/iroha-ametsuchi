@@ -19,29 +19,71 @@
 #include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
 
-class FakeStorageServiceImpl final : public iroha::Storage::Service {
- public:
-  grpc::Status GetAccount(::grpc::ServerContext *context,
-                          const ::iroha::AccountRequest *request,
-                          ::iroha::AccountResponse *response) override {
-    response->set_name("Ivan");
-    return grpc::Status::OK;
-  }
-  grpc::Status GetBalance(::grpc::ServerContext *context,
-                          const ::iroha::BalanceRequest *request,
-                          ::iroha::BalanceResponse *response) override {
-    response->set_amount(100);
-    return grpc::Status::OK;
-  }
-  grpc::Status Append(::grpc::ServerContext *context,
-                      const ::iroha::AppendRequest *request,
-                      ::iroha::AppendResponse *response) override {
-    response->set_id(1);
-    return grpc::Status::OK;
-  }
+class ClientTest : public ::testing::Test {
+ protected:
+  class FakeStorageServiceImpl final : public iroha::Storage::Service {
+   public:
+
+    void test_add(const ::iroha::BlockMessage *request){
+      iroha::Block block;
+      block.mutable_meta()->set_height(1);
+      ASSERT_EQ(request->block().Utf8DebugString(), block.Utf8DebugString());
+    }
+    grpc::Status AddBlock(::grpc::ServerContext *context,
+                          const ::iroha::BlockMessage *request,
+                          ::google::protobuf::Empty *response) override {
+      test_add(request);
+      return grpc::Status::OK;
+    }
+
+
+    grpc::Status GetPeers(::grpc::ServerContext *context,
+                          const ::google::protobuf::Empty *request,
+                          ::iroha::PeersResponse *response) override {
+      response->add_address("127.0.0.1");
+      return grpc::Status::OK;
+    }
+
+
+    void test_get(const iroha::BlockIdMessage *request) {
+      ASSERT_TRUE(request->id_case() == iroha::BlockIdMessage::kHeight ||
+                  request->id_case() == iroha::BlockIdMessage::kBlockHash ||
+                  request->id_case() ==
+                      iroha::BlockIdMessage::kTransactionHash);
+    }
+    grpc::Status GetBlock(::grpc::ServerContext *context,
+                          const ::iroha::BlockIdMessage *request,
+                          ::iroha::BlockMessage *response) override {
+      auto block = response->mutable_block();
+      block->mutable_meta()->set_height(2);
+      return grpc::Status::OK;
+    }
+
+
+    void test_erase(const iroha::BlockIdMessage *request) {
+      ASSERT_EQ(request->id_case(), iroha::BlockIdMessage::kHeight);
+      ASSERT_EQ(request->height(), 0);
+    }
+    grpc::Status EraseBlock(::grpc::ServerContext *context,
+                            const ::iroha::BlockIdMessage *request,
+                            ::google::protobuf::Empty *response) override {
+      test_erase(request);
+      return grpc::Status::OK;
+    }
+
+    grpc::Status GetBlocks(
+        ::grpc::ServerContext *context, const ::iroha::RangeGetRequest *request,
+        ::grpc::ServerWriter<::iroha::BlockMessage> *writer) override {
+      iroha::Block block;
+      iroha::BlockMessage message;
+      message.set_allocated_block(&block);
+      writer->Write(message);
+      return grpc::Status::OK;
+    }
+  };
 };
 
-TEST(sample_app_test, sample_test) {
+TEST_F(ClientTest, sample_test) {
   std::string server_address("0.0.0.0:50051");
   FakeStorageServiceImpl service;
 
@@ -51,9 +93,17 @@ TEST(sample_app_test, sample_test) {
   auto server = builder.BuildAndStart();
 
   ametsuchi::Client client;
-  ASSERT_EQ(client.get_account_by_id(0), "Ivan");
-  ASSERT_EQ(client.get_balance_by_account_id_asset_id(0, 0), 100);
-  client.block();
-  ASSERT_EQ(client.append(), 1);
+
+  iroha::Block block;
+  block.mutable_meta()->set_height(1);
+
+  ASSERT_TRUE(client.add(&block));
+  ASSERT_EQ(block.meta().height(), 1); // block not deleted
+
+  auto peers = client.get_peers();
+  ASSERT_EQ(peers.size(), 1);
+  ASSERT_EQ(peers.at(0), "127.0.0.1");
+
+  ASSERT_TRUE(client.erase(0));
   server->Shutdown();
 }

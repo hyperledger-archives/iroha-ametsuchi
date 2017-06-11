@@ -33,7 +33,7 @@ class WSVRedis : public WSV {
   }
   ~WSVRedis();
 
-  bool add_account(uint64_t account_id, std::string name) override;
+  bool add_account(uint64_t account_id, uint8_t quorum, uint32_t status) override;
   bool add_domain(uint64_t domain_id,
                   std::string name,
                   uint64_t root_account_id) override;
@@ -55,7 +55,7 @@ class WSVRedis : public WSV {
 
 WSVRedis::~WSVRedis() { client_.disconnect(); }
 
-bool WSVRedis::add_account(uint64_t account_id, std::string name) {
+bool WSVRedis::add_account(uint64_t account_id, uint8_t quorum, uint32_t status) {
   bool res;
   std::string string_id = "account:" + std::to_string(account_id);
   client_.hset(string_id, "name", name, [&res](cpp_redis::reply& reply) { res = reply.ok(); });

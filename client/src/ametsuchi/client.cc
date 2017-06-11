@@ -20,50 +20,126 @@
 
 namespace ametsuchi {
 
-Client::Client(){
-  auto channel = grpc::CreateChannel(
-    "localhost:50051", grpc::InsecureChannelCredentials());
-  stub_ = iroha::Storage::NewStub(channel);
+using google::protobuf::Empty;
+
+Client::Client() {
+  channel_ = grpc::CreateChannel("localhost:50051",
+                                 grpc::InsecureChannelCredentials());
+  stub_ = iroha::Storage::NewStub(channel_);
 }
-std::string Client::get_account_by_id(uint64_t account_id) {
-  iroha::AccountRequest request;
-  request.set_account_id(account_id);
-  iroha::AccountResponse response;
+
+
+bool Client::add(iroha::Block *block) {
   grpc::ClientContext context;
-  auto status = stub_->GetAccount(&context, request, &response);
+  iroha::BlockMessage request;
+  request.set_allocated_block(block);
+  Empty response;
+  auto result = stub_->AddBlock(&context, request, &response).ok();
+  request.release_block();
+  return result;
+}
+
+
+std::vector<std::string> Client::get_peers() {
+  grpc::ClientContext context;
+  Empty request;
+  iroha::PeersResponse response;
+  auto status = stub_->GetPeers(&context, request, &response);
   if (status.ok()) {
-    return response.name();
-  }
-  else {
-    return "";
+    return std::vector<std::string>(
+        std::make_move_iterator(response.address().begin()),
+        std::make_move_iterator(response.address().end()));
+  } else {
+    return {};
   }
 }
-uint64_t Client::get_balance_by_account_id_asset_id(uint64_t account_id,
-                                                    uint64_t asset_id) {
-  iroha::BalanceRequest request;
-  request.set_account_id(account_id);
-  request.set_asset_id(asset_id);
-  iroha::BalanceResponse response;
+
+
+bool Client::server_alive(std::chrono::system_clock::time_point deadline) {
+  return channel_->WaitForConnected(deadline);
+}
+
+
+Client::BlockStream Client::get_range(uint32_t begin, uint32_t end) {
   grpc::ClientContext context;
-  auto status = stub_->GetBalance(&context, request, &response);
+  iroha::RangeGetRequest request;
+  request.set_begin(begin);
+  request.set_end(end);
+  return BlockStream(stub_->GetBlocks(&context, request));
+}
+
+
+iroha::Block Client::get_by_height(uint32_t height) {
+  grpc::ClientContext context;
+  iroha::BlockIdMessage request;
+  request.set_height(height);
+  iroha::BlockMessage response;
+  auto status = stub_->GetBlock(&context, request, &response);
+  auto block = response.block();
+  response.release_block();
   if (status.ok()) {
-    return response.amount();
+    return block;
+  } else {
+    return iroha::Block();
   }
 }
-uint64_t Client::append() {
-  if (!request_){
-    // TODO handle
-  }
-  iroha::AppendResponse response;
+
+
+iroha::Block Client::get_by_block_hash(std::string hash) {
   grpc::ClientContext context;
-  auto status = stub_->Append(&context, *request_, &response);
-  request_.reset(nullptr);
-  if (status.ok()){
-    return response.id();
+  iroha::BlockIdMessage request;
+  request.set_block_hash(hash);
+  iroha::BlockMessage response;
+  auto status = stub_->GetBlock(&context, request, &response);
+  auto block = response.block();
+  response.release_block();
+  if (status.ok()) {
+    return block;
+  } else {
+    return iroha::Block();
   }
 }
-iroha::Block *Client::block() {
-  request_.reset(new iroha::AppendRequest);
-  return request_->mutable_block();
+
+
+iroha::Block Client::get_by_transaction_hash(std::string hash) {
+  grpc::ClientContext context;
+  iroha::BlockIdMessage request;
+  request.set_transaction_hash(hash);
+  iroha::BlockMessage response;
+  auto status = stub_->GetBlock(&context, request, &response);
+  auto block = response.block();
+  response.release_block();
+  if (status.ok()) {
+    return block;
+  } else {
+    return iroha::Block();
+  }
 }
+
+
+bool Client::erase(uint32_t height) {
+  grpc::ClientContext context;
+  iroha::BlockIdMessage request;
+  request.set_height(height);
+  Empty response;
+  return stub_->EraseBlock(&context, request, &response).ok();
+}
+
+
+Client::BlockStream::BlockStream(
+    std::unique_ptr<grpc::ClientReader<iroha::BlockMessage>> reader)
+    : state_(true), reader_(std::move(reader)) {}
+
+
+Client::BlockStream &Client::BlockStream::operator>>(iroha::Block &val) {
+  state_ = reader_->Read(&message_);
+  if (!state_) {
+    reader_->Finish();
+  }
+  val = message_.block();
+  return *this;
+}
+
+
+Client::BlockStream::operator bool() const { return state_; }
 }

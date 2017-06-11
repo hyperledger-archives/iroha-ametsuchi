@@ -27,11 +27,15 @@ class WSVTest : public ::testing::Test {
     if (backend_ == "Postgres") {
       const auto drop =
           "DROP TABLE IF EXISTS domain_has_account;\n"
-          "DROP TABLE IF EXISTS account_has_asset;\n"
-          "DROP TABLE IF EXISTS asset;\n"
-          "DROP TABLE IF EXISTS domain;\n"
-          "DROP TABLE IF EXISTS signatory;\n"
-          "DROP TABLE IF EXISTS account;";
+            "DROP TABLE IF EXISTS account_has_asset;\n"
+            "DROP TABLE IF EXISTS account_has_wallet;\n"
+            "DROP TABLE IF EXISTS wallet;\n"
+            "DROP TABLE IF EXISTS exchange;\n"
+            "DROP TABLE IF EXISTS asset;\n"
+            "DROP TABLE IF EXISTS domain;\n"
+            "DROP TABLE IF EXISTS peer;\n"
+            "DROP TABLE IF EXISTS signatory;\n"
+            "DROP TABLE IF EXISTS account;";
 
       pqxx::connection connection;
       pqxx::work txn(connection);
@@ -55,15 +59,14 @@ class WSVTest : public ::testing::Test {
 
 void test_backend(const std::string &backend) {
   auto wsv_ = wsv::Manager::instance().make_WSV(backend);
-  wsv_->add_account(0, "Ivan");
-  ASSERT_EQ(wsv_->get_account_by_id(0), "Ivan");
-  wsv_->add_domain(0, "RU", 0);
-  wsv_->add_asset(0, "USD", 0);
-  ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 0);
-  wsv_->add_balance(0, 0, 100);
-  ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 100);
-  wsv_->add_balance(0, 0, 100);
-  ASSERT_EQ(wsv_->get_balance_by_account_id_asset_id(0, 0), 200);
+  wsv_->add_account(0, 1, 1);
+  std::string public_key("000000000000000000000000000000000000000000000000000000000000000");
+  wsv_->add_signatory(0, public_key);
+  std::string address("127.0.0.1");
+  wsv_->add_peer(0, address, 1);
+  auto result = wsv_->get_peers();
+  ASSERT_EQ(result.size(), 1);
+  ASSERT_EQ(result.at(0), address);
 }
 
 TEST_F(WSVTest, postgres_test) {
@@ -71,7 +74,7 @@ TEST_F(WSVTest, postgres_test) {
   test_backend(backend_);
 }
 
-TEST_F(WSVTest, redis_test) {
-  backend_ = "Redis";
-  test_backend(backend_);
-}
+//TEST_F(WSVTest, redis_test) {
+//  backend_ = "Redis";
+//  test_backend(backend_);
+//}

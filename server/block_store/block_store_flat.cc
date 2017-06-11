@@ -41,7 +41,7 @@ void BlockStoreFlat::add(uint32_t id, const std::vector<uint8_t> &block) {
     // New file will be created
     FILE *pfile;
     pfile = fopen(file_name.c_str(), "wb");
-    auto res = fwrite(block.data(), sizeof(uint8_t), block.size(), pfile);
+    /*auto res = */fwrite(block.data(), sizeof(uint8_t), block.size(), pfile);
     fflush(pfile);
     fclose(pfile);
 
@@ -82,22 +82,23 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
   }
 }
 
-const uint32_t BlockStoreFlat::check_consistency() {
+uint32_t BlockStoreFlat::check_consistency() const {
   uint32_t tmp_id = 0u;
   if (!dump_dir.empty()) {
     FileHandle dir = fs::open(dump_dir);
     if (dir.isDirectory()) {
       // Directory iterator:
       struct dirent **namelist;
-      auto n = scandir(dump_dir.c_str(), &namelist, NULL, alphasort);
-      if (n < 0) {
+      auto status = scandir(dump_dir.c_str(), &namelist, NULL, alphasort);
+      if (status < 0) {
         // TODO: handle internal error
       } else {
+        uint n = status;
         tmp_id++;
         uint i = 1;
         while (++i < n) {
           if (id_to_name(tmp_id) != namelist[i]->d_name) {
-            for (int j = i; j < n; ++j) {
+            for (uint j = i; j < n; ++j) {
 
               FileHandle file = fs::open(dump_dir+"/"+namelist[j]->d_name);
               file.remove();
@@ -107,7 +108,7 @@ const uint32_t BlockStoreFlat::check_consistency() {
           tmp_id = name_to_id(namelist[i]->d_name);
         }
 
-        for (int j = 0; j < n; ++j) {
+        for (uint j = 0; j < n; ++j) {
           free(namelist[j]);
         }
         free(namelist);
@@ -122,7 +123,7 @@ const uint32_t BlockStoreFlat::check_consistency() {
   return tmp_id;
 }
 
-const std::vector<uint8_t> BlockStoreFlat::get(uint32_t id) {
+std::vector<uint8_t> BlockStoreFlat::get(uint32_t id) const {
   std::string filename = dump_dir + "/" + id_to_name(id);
   FileHandle fh = fs::open(filename);
   if (fh.exists()) {
@@ -141,15 +142,15 @@ const std::vector<uint8_t> BlockStoreFlat::get(uint32_t id) {
 }
 
 
-const std::string BlockStoreFlat::id_to_name(uint64_t id) {
+std::string BlockStoreFlat::id_to_name(uint64_t id) const {
   std::string new_id(16, '\0');
-  sprintf(&new_id[0], "%016llu", id);
+  sprintf(&new_id[0], "%016lu", id);
   return new_id;
 }
 
-const uint32_t block_store::BlockStoreFlat::last_id() { return current_id; }
+uint32_t block_store::BlockStoreFlat::last_id() const { return current_id; }
 
-const uint64_t BlockStoreFlat::name_to_id(std::string name) {
+uint64_t BlockStoreFlat::name_to_id(std::string name) const{
   std::string::size_type sz;
   return std::stoull(name, &sz);
 }

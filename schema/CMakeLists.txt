@@ -1,5 +1,3 @@
 compile_proto_to_cpp(block.proto)
-compile_proto_to_cpp(action.proto)
-add_dependencies(blockproto_h actionproto_h)
 compile_proto_to_grpc_cpp(storage.proto)
 add_dependencies(storageproto_h blockproto_h)

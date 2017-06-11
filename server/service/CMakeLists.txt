@@ -5,9 +5,12 @@ add_library(service
 
 target_link_libraries(service
   block_store
+  block_index
+  tx_index
   wsv
   grpc++
   protobuf
+  utils
   )
 
 target_include_directories(service INTERFACE .)

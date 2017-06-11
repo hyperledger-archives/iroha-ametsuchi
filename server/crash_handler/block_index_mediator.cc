@@ -17,7 +17,7 @@ bool BlockIndexMediator::validate() {
     auto last_blockid = block_index_.get_last_blockid();
 
     auto it = block_store_.begin() + last_blockid;
-    for (it; it < block_store_.end(); it++) {
+    for (;it < block_store_.end(); it++) {
       auto block_blob = *it;
 
       std::string hash(32, '\0');

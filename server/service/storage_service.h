@@ -19,63 +19,38 @@
 #define AMETSUCHI_STORAGE_SERVICE_H
 
 #include <block_store_flat.h>
+#include <block_index_redis.h>
+#include <tx_index_redis.h>
 #include <manager.h>
 #include <storage.grpc.pb.h>
 #include <wsv.h>
 #include <unordered_map>
+
 namespace service {
 class StorageServiceImpl final : public iroha::Storage::Service {
  public:
-  StorageServiceImpl(std::string backend = "Postgres") {
-    block_store_.reset(new block_store::BlockStoreFlat);
-    auto envbackend = std::getenv("AMWSVBACKEND");
-    if (envbackend) {
-      backend = envbackend;
-    }
-    wsv_ = wsv::Manager::instance().make_WSV(backend);
-    handler_.insert(std::make_pair(iroha::Action::CommandCase::kAddAccount,
-                                   [this](const iroha::Action &action) {
-                                     auto add_account = action.add_account();
-                                     wsv_->add_account(add_account.account_id(),
-                                                       add_account.name());
-                                   }));
-    handler_.insert(std::make_pair(iroha::Action::CommandCase::kAddAsset,
-                                   [this](const iroha::Action &action) {
-                                     auto add_asset = action.add_asset();
-                                     wsv_->add_asset(add_asset.asset_id(),
-                                                     add_asset.name(),
-                                                     add_asset.domain_id());
-                                   }));
-    handler_.insert(std::make_pair(iroha::Action::CommandCase::kAddBalance,
-                                   [this](const iroha::Action &action) {
-                                     auto add_balance = action.add_balance();
-                                     wsv_->add_balance(add_balance.account_id(),
-                                                       add_balance.asset_id(),
-                                                       add_balance.amount());
-                                   }));
-    handler_.insert(std::make_pair(
-        iroha::Action::CommandCase::kAddDomain,
-        [this](const iroha::Action &action) {
-          auto add_domain = action.add_domain();
-          wsv_->add_domain(add_domain.domain_id(), add_domain.name(),
-                           add_domain.root_account_id());
-        }));
-  }
-  grpc::Status GetAccount(::grpc::ServerContext *context,
-                          const ::iroha::AccountRequest *request,
-                          ::iroha::AccountResponse *response) override;
-  grpc::Status GetBalance(::grpc::ServerContext *context,
-                          const ::iroha::BalanceRequest *request,
-                          ::iroha::BalanceResponse *response) override;
-
-  grpc::Status Append(::grpc::ServerContext *context,
-                      const ::iroha::AppendRequest *request,
-                      ::iroha::AppendResponse *response) override;
-
+  StorageServiceImpl();
+  grpc::Status AddBlock(::grpc::ServerContext *context,
+                        const ::iroha::BlockMessage *request,
+                        ::google::protobuf::Empty *response) override;
+  grpc::Status GetBlock(::grpc::ServerContext *context,
+                        const ::iroha::BlockIdMessage *request,
+                        ::iroha::BlockMessage *response) override;
+  grpc::Status EraseBlock(::grpc::ServerContext *context,
+                          const ::iroha::BlockIdMessage *request,
+                          ::google::protobuf::Empty *response) override;
+  grpc::Status GetBlocks(::grpc::ServerContext *context,
+                         const ::iroha::RangeGetRequest *request,
+                         ::grpc::ServerWriter<::iroha::BlockMessage> *writer) override;
+  grpc::Status GetPeers(::grpc::ServerContext *context,
+                        const ::google::protobuf::Empty *request,
+                        ::iroha::PeersResponse *response) override;
  private:
   std::unique_ptr<block_store::BlockStore> block_store_;
+  std::unique_ptr<block_index::BlockIndex> block_index_;
+  std::unique_ptr<tx_index::TxIndex> transaction_index_;
   std::unique_ptr<wsv::WSV> wsv_;
-  std::unordered_map<uint8_t, std::function<void(iroha::Action)>> handler_;
+  std::unordered_map<iroha::Action::CommandCase, std::function<bool(iroha::Action)>> handler_;
 };
 }
 

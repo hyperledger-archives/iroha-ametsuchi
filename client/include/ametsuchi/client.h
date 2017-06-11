@@ -26,15 +26,29 @@
 namespace ametsuchi {
 class Client {
  public:
+  class BlockStream {
+   public:
+    BlockStream(std::unique_ptr<grpc::ClientReader<iroha::BlockMessage>> reader);
+    BlockStream& operator>> (iroha::Block& val);
+    operator bool() const;
+   private:
+    bool state_;
+    std::unique_ptr<grpc::ClientReader<iroha::BlockMessage>> reader_;
+    iroha::BlockMessage message_;
+  };
+
   Client();
-  iroha::Block* block();
-  uint64_t append();
-  std::string get_account_by_id(uint64_t account_id);
-  uint64_t get_balance_by_account_id_asset_id(uint64_t account_id,
-                                              uint64_t asset_id);
+  bool add(iroha::Block *block);
+  std::vector<std::string> get_peers();
+  bool server_alive(std::chrono::system_clock::time_point deadline);
+  iroha::Block get_by_height(uint32_t height);
+  iroha::Block get_by_block_hash(std::string hash);
+  iroha::Block get_by_transaction_hash(std::string hash);
+  bool erase(uint32_t height);
+  BlockStream get_range(uint32_t begin, uint32_t end);
  private:
+  std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<iroha::Storage::Stub> stub_;
-  std::unique_ptr<iroha::AppendRequest> request_;
 };
 }
 

@@ -1,25 +1,69 @@
 syntax = "proto3";
 package iroha;
 
-import "action.proto";
-
-message Block{
-  repeated Transaction txs = 1;
-  repeated Signature peer_sigs = 2;
-  bytes prev_hash = 3;
-  uint32 length = 4;
-  bytes merkle_root = 5;
-  uint64 height = 6;
-  uint64 created= 7;
+message Signature {
+  bytes public_key = 1;
+  bytes signature = 2;
 }
 
-message Transaction{
-  repeated Signature sigs = 1;
-  uint64 created = 2;
-  uint32 nonce = 3;
-  repeated Action actions = 4;
+message Transaction {
+  message Header {
+    uint64 creation_time = 1;
+    repeated Signature signature = 2;
+  }
+
+  message Meta {
+    bytes creator_public_key = 1;
+  }
+
+  message Body {
+    repeated Action action = 1;
+  }
+
+  Header header = 1;
+  Meta meta = 2;
+  Body body = 3;
 }
-message Signature{
-  bytes pubkey = 1;
-  bytes sig = 2;
+
+message Block {
+  message Header {
+    uint64 creation_time = 1;
+    repeated Signature peer_signature = 2;
+  }
+
+  message Meta {
+    uint32 size = 1; // the number of transactions inside. Maximum 16384 or 2^14
+    uint32 height = 2; // the current block number in a ledger
+    bytes merkle_root = 3; // global merkle root
+  }
+
+  message Body {
+    repeated Transaction transaction = 1;
+  }
+
+  Header header = 1;
+  Meta meta = 2;
+  Body body = 3;
+}
+
+message AddAccount {
+  repeated Signature signature = 1;
+}
+
+message RegisterSignatories {
+  bytes account_id = 1;
+  repeated Signature signature = 2;
+}
+
+message AddPeer {
+  bytes account_id = 1;
+  string address = 2;
+}
+
+message Action {
+  oneof command {
+    AddAccount add_account = 1;
+    RegisterSignatories register_signatories = 2;
+    AddPeer add_peer = 3;
+  }
 }

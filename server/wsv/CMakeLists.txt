@@ -4,7 +4,7 @@ add_library(wsv SHARED
   manager_imp.h
   manager_imp.cc
   wsv.h
-  wsv_redis.cc
+#  wsv_redis.cc
   wsv_postgres.cc
   )
 

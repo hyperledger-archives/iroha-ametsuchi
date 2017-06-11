@@ -33,14 +33,13 @@ class TxIndex_Test : public ::testing::Test {
 };
 
 TEST_F(TxIndex_Test, TxRedisTest) {
-  tx_index::TxIndexRedis tx_index(host_, port_);
+  tx_index::TxIndexRedis tx_index;
 
-  tx_index.add_txhash_blockhash_txid("tx_one", std::to_string(1),
-                                     std::to_string(10));
+  tx_index.add_txhash_blockhash_txid("tx_one", 1, 10);
 
   auto one = tx_index.get_blockhash_by_txhash("tx_one");
   auto ten = tx_index.get_txid_by_txhash("tx_one");
 
   ASSERT_EQ(one, std::to_string(1));
-  ASSERT_EQ(ten, std::to_string(10));
+  ASSERT_EQ(ten, 10);
 }

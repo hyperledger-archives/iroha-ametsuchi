@@ -1,5 +1,0 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/integration_test_bin)
-
-add_executable(integration_test integration_test.cc)
-target_link_libraries(integration_test gtest ametsuchiclient)
-StrictMode(integration_test)

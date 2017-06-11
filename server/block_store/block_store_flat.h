@@ -29,8 +29,8 @@ class BlockStoreFlat : public BlockStore {
   ~BlockStoreFlat();
 
   void add(uint32_t id, const std::vector<uint8_t> &block) override;
-  const std::vector<uint8_t> get(uint32_t id) override;
-  const uint32_t last_id() override;
+  std::vector<uint8_t> get(uint32_t id) const override;
+  uint32_t last_id() const override;
   void remove(uint32_t id) override;
 
   class FlatIterator;
@@ -43,9 +43,9 @@ class BlockStoreFlat : public BlockStore {
   std::string dump_dir;
   // Get next auto increment
   // Get last consistent id, check iternal consistency of block store
-  const uint32_t check_consistency();
-  const std::string id_to_name(uint64_t id);
-  const uint64_t name_to_id(std::string name);
+  uint32_t check_consistency() const;
+  std::string id_to_name(uint64_t id) const;
+  uint64_t name_to_id(std::string name) const;
 };
 
 

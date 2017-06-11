@@ -39,7 +39,7 @@ class BlockIndexMediatorTest : public ::testing::Test {
 
 TEST_F(BlockIndexMediatorTest, valid){
   block_store::BlockStoreFlat bl_store(block_store_path);
-  block_index::BlockIndexRedis bl_index(host_, port_);
+  block_index::BlockIndexRedis bl_index;
 
   std::vector<uint8_t > blob1({0x1, 0x2, 0x2});
   std::vector<uint8_t > blob2({0x3, 0x4});
@@ -68,7 +68,7 @@ TEST_F(BlockIndexMediatorTest, valid){
 
 TEST_F(BlockIndexMediatorTest, invalid_to_valid){
   block_store::BlockStoreFlat bl_store(block_store_path);
-  block_index::BlockIndexRedis bl_index(host_, port_);
+  block_index::BlockIndexRedis bl_index;
 
   std::vector<uint8_t > blob1({0x1, 0x2, 0x2});
   std::vector<uint8_t > blob2({0x3, 0x4});
@@ -118,7 +118,7 @@ TEST_F(BlockIndexMediatorTest, b_index_is_lost){
   uint32_t id2 = 2u;
   bl_store.add(id2, blob2);
 
-  block_index::BlockIndexRedis bl_index(host_, port_);
+  block_index::BlockIndexRedis bl_index;
   crash_handler::BlockIndexMediator bim(bl_index, bl_store);
   ASSERT_TRUE(bim.validate());
   ASSERT_EQ(bl_index.get_last_blockid(), bl_store.last_id());

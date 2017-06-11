@@ -25,8 +25,8 @@ namespace block_store {
 class BlockStore {
  public:
   virtual void add(uint32_t id, const std::vector<uint8_t> &block) = 0;
-  virtual const std::vector<uint8_t> get(uint32_t id) = 0;
-  virtual const uint32_t last_id() = 0;
+  virtual std::vector<uint8_t> get(uint32_t id) const = 0;
+  virtual uint32_t last_id() const = 0;
   virtual void remove(uint32_t id) = 0;
 
   class AbstractIterator;

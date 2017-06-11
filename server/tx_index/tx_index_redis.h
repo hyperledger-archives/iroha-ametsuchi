@@ -24,13 +24,11 @@ namespace tx_index {
 
 class TxIndexRedis : public TxIndex {
  public:
-  TxIndexRedis(std::string host, size_t port) : host_(host), port_(port) {
-    client_.connect(host, port);
-  }
+  TxIndexRedis();
 
-  bool add_txhash_blockhash_txid(std::string txhash, std::string blockid,
-                                 std::string txid);
-  std::string get_txid_by_txhash(std::string txhash);
+  bool add_txhash_blockhash_txid(std::string txhash, uint32_t height,
+                                 int txid);
+  int get_txid_by_txhash(std::string txhash);
   std::string get_blockhash_by_txhash(std::string txhash);
 
   ~TxIndexRedis();

@@ -33,9 +33,9 @@ class BlockIndex_Test : public ::testing::Test {
 };
 
 TEST_F(BlockIndex_Test, REDIS_ADD_GET_TEST) {
-  block_index::BlockIndexRedis block_index(host_, port_);
+  block_index::BlockIndexRedis block_index;
 
   block_index.add_blockhash_blockid("one", 1);
-  size_t one = block_index.get_blockid_by_blockhash("one");
+  uint32_t one = block_index.get_blockid_by_blockhash("one");
   ASSERT_EQ(one, 1);
 }

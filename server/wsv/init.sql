@@ -1,34 +1,58 @@
 CREATE TABLE IF NOT EXISTS account (
-    account_id uuid PRIMARY KEY,
-    name character varying(255) NOT NULL,
-    quorum "char" NOT NULL
+    account_id char(64) PRIMARY KEY,
+    quorum int NOT NULL,
+    status int NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS signatory (
     account_id uuid NOT NULL REFERENCES account,
-    public_key bit(256) NOT NULL,
+    public_key char(64) NOT NULL,
     PRIMARY KEY (account_id, public_key)
 );
+CREATE TABLE IF NOT EXISTS peer (
+    peer_id serial PRIMARY KEY,
+    account_id char(64) NOT NULL REFERENCES account,
+    address inet NOT NULL UNIQUE,
+    state int NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS domain (
-    domain_id uuid PRIMARY KEY,
-    name character varying(45) NOT NULL,
-    root_account_id uuid NOT NULL REFERENCES account
+    domain_id character varying(164) PRIMARY KEY,
+    parent_domain_id character varying(131) NOT NULL REFERENCES domain(domain_id),
+    open bool NOT NULL
 );
 CREATE TABLE IF NOT EXISTS asset (
-    asset_id uuid PRIMARY KEY,
-    name character varying(45) NOT NULL,
-    domain_id uuid NOT NULL REFERENCES domain
+    asset_id character varying(197) PRIMARY KEY,
+    domain_id character varying(164) NOT NULL REFERENCES domain,
+    data json
+);
+CREATE TABLE IF NOT EXISTS exchange (
+    asset1_id character varying(197) NOT NULL REFERENCES asset(asset_id),
+    asset2_id character varying(197) NOT NULL REFERENCES asset(asset_id),
+    asset1 int NOT NULL,
+    asset2 int NOT NULL,
+    PRIMARY KEY (asset1_id, asset2_id)
+);
+CREATE TABLE IF NOT EXISTS wallet (
+    wallet_id uuid PRIMARY KEY,
+    asset_id character varying(197),
+    amount int NOT NULL,
+    precision int NOT NULL,
+    permissions bit varying NOT NULL
+);
+CREATE TABLE IF NOT EXISTS account_has_wallet (
+    account_id char(64) NOT NULL REFERENCES account,
+    wallet_id uuid NOT NULL REFERENCES wallet,
+    permissions bit varying NOT NULL,
+    PRIMARY KEY (account_id, wallet_id)
 );
 CREATE TABLE IF NOT EXISTS account_has_asset (
-    account_id uuid NOT NULL REFERENCES account,
-    asset_id uuid NOT NULL,
-    amount character varying(256) NOT NULL,
-    "precision" "char" NOT NULL,
+    account_id char(64) NOT NULL REFERENCES account,
+    asset_id character varying(197) NOT NULL REFERENCES asset,
     permissions bit varying NOT NULL,
     PRIMARY KEY (account_id, asset_id)
 );
 CREATE TABLE IF NOT EXISTS domain_has_account (
-    domain_id uuid NOT NULL REFERENCES domain,
-    account_id uuid NOT NULL REFERENCES account,
+    domain_id character varying(164) NOT NULL REFERENCES domain,
+    account_id char(64) NOT NULL REFERENCES account,
     permissions bit varying NOT NULL,
     PRIMARY KEY (domain_id, account_id)
 );
