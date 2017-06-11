@@ -32,7 +32,7 @@ using cppfs::FileIterator;
 
 namespace block_store {
 
-const void BlockStoreFlat::add(uint32_t id, const std::vector<uint8_t> &block) {
+void BlockStoreFlat::add(uint32_t id, const std::vector<uint8_t> &block) {
   auto next_id = current_id + 1;
   std::string file_name = dump_dir + "/" + id_to_name(next_id);
   // Write block to binary file
@@ -161,6 +161,11 @@ BlockStore::Iterator BlockStoreFlat::begin() {
 BlockStore::Iterator BlockStoreFlat::end() {
   BlockStore::Iterator iter(new FlatIterator(*this, last_id() + 1));
   return iter;
+}
+void BlockStoreFlat::remove(uint32_t id) {
+  // Assume that id exists
+  FileHandle file = fs::open(dump_dir+"/"+id_to_name(id));
+  file.remove();
 }
 
 // Flat Iterator realization

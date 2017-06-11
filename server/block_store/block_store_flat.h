@@ -28,9 +28,10 @@ class BlockStoreFlat : public BlockStore {
       const std::string &path = "/tmp/block_store");  // TODO refactor
   ~BlockStoreFlat();
 
-  const void add(uint32_t id, const std::vector<uint8_t> &block) override;
+  void add(uint32_t id, const std::vector<uint8_t> &block) override;
   const std::vector<uint8_t> get(uint32_t id) override;
   const uint32_t last_id() override;
+  void remove(uint32_t id) override;
 
   class FlatIterator;
 
