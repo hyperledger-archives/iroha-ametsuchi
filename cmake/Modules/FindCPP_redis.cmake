@@ -14,6 +14,6 @@ if (CPP_redis_FOUND)
   set_target_properties(cpp_redis PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES ${CPP_redis_INCLUDE_DIR}
     IMPORTED_LOCATION ${CPP_redis_LIBRARY}
-    INTERFACE_LINK_LIBRARIES "tacopie"
+    INTERFACE_LINK_LIBRARIES "tacopie;pthread"
     )
 endif ()

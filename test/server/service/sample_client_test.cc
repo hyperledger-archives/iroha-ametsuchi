@@ -95,15 +95,15 @@ void test_backend(const std::string &backend) {
   }
   // Block hash
   std::string block_hash(32, '\0');
-  std::vector<uint8_t> buffer(sent_block.ByteSizeLong());
+  std::vector<uint8_t> buffer(sent_block.ByteSize());
   sent_block.meta().SerializeToArray(buffer.data(),
                                      sent_block.meta().ByteSize());
   sent_block.body().SerializeToArray(
-      buffer.data() + sent_block.meta().ByteSizeLong(),
+      buffer.data() + sent_block.meta().ByteSize(),
       sent_block.body().ByteSize());
   utils::sha3_256(
       (unsigned char *)&block_hash[0], buffer.data(),
-      sent_block.meta().ByteSizeLong() + sent_block.body().ByteSizeLong());
+      sent_block.meta().ByteSize() + sent_block.body().ByteSize());
 
   {
     grpc::ClientContext context;

@@ -16,8 +16,9 @@
  */
 
 #include "tx_index_redis.h"
-#include <block_parser_protobuf.h>
+//#include <block_parser_protobuf.h>
 #include <hash.h>
+#include <block.pb.h>
 
 namespace tx_index {
 
@@ -57,8 +58,11 @@ TxIndexRedis::TxIndexRedis() {
 }
 
 bool TxIndexRedis::add_block(std::vector<uint8_t> block_blob) {
-  utils::BlockParserProtobuf parser(block_blob);
-  auto txs = parser.get_txs();
+//  utils::BlockParserProtobuf parser(block_blob);
+  iroha::Block block;
+  block.ParseFromArray(block_blob.data(), block_blob.size());
+//  auto txs = parser.get_txs();
+  auto txs = block.body().transaction();
 
   int txid = 0;
   for (const auto& tx : txs){
@@ -67,9 +71,10 @@ bool TxIndexRedis::add_block(std::vector<uint8_t> block_blob) {
     const unsigned char* body_bytes = nullptr;
 
     body.SerializeToArray((void *) body_bytes, body.ByteSize());
-    utils::sha3_256((unsigned char *) &tx_hash.at(0), body_bytes, body.ByteSizeLong());
+    utils::sha3_256((unsigned char *) &tx_hash.at(0), body_bytes, body.ByteSize());
 
-    _add_txhash_blockhash_txid(tx_hash, parser.get_height(), txid++);
+//    _add_txhash_blockhash_txid(tx_hash, parser.get_height(), txid++);
+    _add_txhash_blockhash_txid(tx_hash, block.meta().height(), txid++);
   }
   client_.sync_commit();
   return true;
