@@ -33,7 +33,7 @@ using cppfs::FileIterator;
 namespace block_store {
 
 void BlockStoreFlat::add(uint32_t id, const std::vector<uint8_t> &block) {
-  auto next_id = current_id + 1;
+  auto next_id = id;
   std::string file_name = dump_dir + "/" + id_to_name(next_id);
   // Write block to binary file
   auto fh = fs::open(file_name);

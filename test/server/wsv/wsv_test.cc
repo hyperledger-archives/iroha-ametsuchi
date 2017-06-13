@@ -59,11 +59,11 @@ class WSVTest : public ::testing::Test {
 
 void test_backend(const std::string &backend) {
   auto wsv_ = wsv::Manager::instance().make_WSV(backend);
-  wsv_->add_account(0, 1, 1);
-  std::string public_key("000000000000000000000000000000000000000000000000000000000000000");
-  wsv_->add_signatory(0, public_key);
+  std::string public_key("00000000000000000000000000000000");
+  ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
+  ASSERT_TRUE(wsv_->add_signatory(public_key, public_key));
   std::string address("127.0.0.1");
-  wsv_->add_peer(0, address, 1);
+  ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
   auto result = wsv_->get_peers();
   ASSERT_EQ(result.size(), 1);
   ASSERT_EQ(result.at(0), address);

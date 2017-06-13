@@ -15,8 +15,11 @@
  * limitations under the License.
  */
 
+#include <cppfs/FileHandle.h>
+#include <cppfs/fs.h>
 #include <grpc++/grpc++.h>
 #include <gtest/gtest.h>
+#include <hash.h>
 #include <cpp_redis/cpp_redis>
 #include <pqxx/pqxx>
 #include "storage_service.h"
@@ -26,17 +29,18 @@ namespace service {
 class ServiceTest : public ::testing::Test {
  protected:
   virtual void TearDown() {
-    std::remove("/tmp/block_store/0000000000000001");
-    std::remove("/tmp/block_store/0000000000000002");
-    std::remove("/tmp/block_store/0000000000000003");
-    std::remove("/tmp/block_store");
+    cppfs::fs::open("/tmp/block_store").removeDirectoryRec();
 
     if (backend_ == "Postgres") {
       const auto drop =
           "DROP TABLE IF EXISTS domain_has_account;\n"
           "DROP TABLE IF EXISTS account_has_asset;\n"
+          "DROP TABLE IF EXISTS account_has_wallet;\n"
+          "DROP TABLE IF EXISTS wallet;\n"
+          "DROP TABLE IF EXISTS exchange;\n"
           "DROP TABLE IF EXISTS asset;\n"
           "DROP TABLE IF EXISTS domain;\n"
+          "DROP TABLE IF EXISTS peer;\n"
           "DROP TABLE IF EXISTS signatory;\n"
           "DROP TABLE IF EXISTS account;";
 
@@ -72,7 +76,72 @@ void test_backend(const std::string &backend) {
   auto stub = iroha::Storage::NewStub(grpc::CreateChannel(
       "localhost:50051", grpc::InsecureChannelCredentials()));
 
-  // TODO
+  iroha::Block sent_block;
+  {
+    sent_block.mutable_meta()->set_height(1);
+    sent_block.mutable_meta()->set_size(1);
+    auto transaction = sent_block.mutable_body()->add_transaction();
+    auto action = transaction->mutable_body()->add_action();
+    std::string public_key = "00000000000000000000000000000000";
+    auto signature = action->mutable_add_account()->add_signature();
+    signature->set_public_key(public_key);
+    grpc::ClientContext context;
+    iroha::BlockMessage request;
+    request.set_allocated_block(&sent_block);
+    google::protobuf::Empty response;
+    auto status = stub->AddBlock(&context, request, &response);
+    request.release_block();
+    ASSERT_TRUE(status.ok());
+  }
+  // Block hash
+  std::string block_hash(32, '\0');
+  std::vector<uint8_t> buffer(sent_block.ByteSizeLong());
+  sent_block.meta().SerializeToArray(buffer.data(),
+                                     sent_block.meta().ByteSize());
+  sent_block.body().SerializeToArray(
+      buffer.data() + sent_block.meta().ByteSizeLong(),
+      sent_block.body().ByteSize());
+  utils::sha3_256(
+      (unsigned char *)&block_hash[0], buffer.data(),
+      sent_block.meta().ByteSizeLong() + sent_block.body().ByteSizeLong());
+
+  {
+    grpc::ClientContext context;
+    iroha::BlockIdMessage request;
+    request.set_block_hash(block_hash);
+    iroha::BlockMessage response;
+    auto status = stub->GetBlock(&context, request, &response);
+    ASSERT_TRUE(status.ok());
+    ASSERT_TRUE(response.block().has_meta());
+    ASSERT_TRUE(response.block().has_body());
+    ASSERT_EQ(response.block().meta().height(), sent_block.meta().height());
+    ASSERT_EQ(response.block().meta().size(), sent_block.meta().size());
+    ASSERT_EQ(response.block().body().transaction_size(), 1);
+    ASSERT_EQ(response.block().body().transaction(0).body().action_size(), 1);
+    ASSERT_TRUE(response.block()
+                    .body()
+                    .transaction(0)
+                    .body()
+                    .action(0)
+                    .has_add_account());
+    ASSERT_EQ(response.block()
+                  .body()
+                  .transaction(0)
+                  .body()
+                  .action(0)
+                  .add_account()
+                  .signature_size(),
+              1);
+    ASSERT_EQ(response.block()
+                  .body()
+                  .transaction(0)
+                  .body()
+                  .action(0)
+                  .add_account()
+                  .signature(0)
+                  .public_key(),
+              "00000000000000000000000000000000");
+  }
 }
 
 TEST_F(ServiceTest, postgres_test) {
@@ -80,7 +149,7 @@ TEST_F(ServiceTest, postgres_test) {
   test_backend(backend_);
 }
 
-//TEST_F(ServiceTest, redis_test) {
+// TEST_F(ServiceTest, redis_test) {
 //  backend_ = "Redis";
 //  test_backend(backend_);
 //}

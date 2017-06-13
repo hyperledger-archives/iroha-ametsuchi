@@ -18,27 +18,30 @@
 #ifndef AMETSUCHI_CLIENT_H
 #define AMETSUCHI_CLIENT_H
 
-#include <string>
+#include <storage.grpc.pb.h>
 #include <cstdint>
 #include <memory>
-#include <storage.grpc.pb.h>
+#include <string>
 
 namespace ametsuchi {
 class Client {
  public:
   class BlockStream {
    public:
-    BlockStream(std::unique_ptr<grpc::ClientReader<iroha::BlockMessage>> reader);
-    BlockStream& operator>> (iroha::Block& val);
+    BlockStream(grpc::ClientContext* context,
+                grpc::ClientReader<iroha::BlockMessage>* reader);
+    BlockStream& operator>>(iroha::Block& val);
     operator bool() const;
+
    private:
     bool state_;
     std::unique_ptr<grpc::ClientReader<iroha::BlockMessage>> reader_;
+    std::unique_ptr<grpc::ClientContext> context_;
     iroha::BlockMessage message_;
   };
 
   Client();
-  bool add(iroha::Block *block);
+  bool add(iroha::Block* block);
   std::vector<std::string> get_peers();
   bool server_alive(std::chrono::system_clock::time_point deadline);
   iroha::Block get_by_height(uint32_t height);
@@ -46,10 +49,11 @@ class Client {
   iroha::Block get_by_transaction_hash(std::string hash);
   bool erase(uint32_t height);
   BlockStream get_range(uint32_t begin, uint32_t end);
+
  private:
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<iroha::Storage::Stub> stub_;
 };
 }
 
-#endif //AMETSUCHI_CLIENT_H
+#endif  // AMETSUCHI_CLIENT_H

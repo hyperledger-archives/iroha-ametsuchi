@@ -26,11 +26,14 @@ namespace wsv {
 
 class WSV {
  public:
-  virtual void add_account(std::string account_id,
+  virtual bool add_account(std::string account_id,
                            uint8_t quorum,
                            uint32_t status) = 0;
-  virtual void add_peer(std::string account_id, std::string address, uint32_t state) = 0;
-  virtual void add_signatory(std::string account_id, std::string public_key) = 0;
+  virtual bool add_peer(const std::string &account_id,
+                        const std::string &address,
+                        uint32_t state) = 0;
+  virtual bool add_signatory(const std::string &account_id,
+                             const std::string &public_key) = 0;
 
   virtual std::vector<std::string> get_peers() = 0;
 };

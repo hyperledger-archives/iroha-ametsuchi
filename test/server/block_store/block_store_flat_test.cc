@@ -24,7 +24,7 @@
 class BlStore_Test : public ::testing::Test {
  protected:
   virtual void TearDown() {
-    system(("rm -rf " + block_store_path).c_str());
+    cppfs::fs::open(block_store_path).removeDirectoryRec();
   }
 
   std::string block_store_path = "/tmp/dump";
@@ -68,7 +68,7 @@ TEST_F(BlStore_Test, InConsistency_Test) {
   // Simulate removal of the block
   {
     // Remove file in the middle of the block store
-    system(("rm " + block_store_path + "/0000000000000002").c_str());
+    std::remove((block_store_path + "/0000000000000002").c_str());
     std::vector<uint8_t> block(1000, 5);
     block_store::BlockStoreFlat bl_store(block_store_path);
     auto res = bl_store.last_id();

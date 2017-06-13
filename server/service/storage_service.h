@@ -50,7 +50,8 @@ class StorageServiceImpl final : public iroha::Storage::Service {
   std::unique_ptr<block_index::BlockIndex> block_index_;
   std::unique_ptr<tx_index::TxIndex> transaction_index_;
   std::unique_ptr<wsv::WSV> wsv_;
-  std::unordered_map<iroha::Action::CommandCase, std::function<bool(iroha::Action)>> handler_;
+  // TODO replace key with iroha::Action::CommandCase
+  std::unordered_map<int, std::function<bool(iroha::Action)>> handler_;
 };
 }
 

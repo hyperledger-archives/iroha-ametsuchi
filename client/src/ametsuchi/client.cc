@@ -61,11 +61,12 @@ bool Client::server_alive(std::chrono::system_clock::time_point deadline) {
 
 
 Client::BlockStream Client::get_range(uint32_t begin, uint32_t end) {
-  grpc::ClientContext context;
+  auto context = std::make_unique<grpc::ClientContext>();
   iroha::RangeGetRequest request;
   request.set_begin(begin);
   request.set_end(end);
-  return BlockStream(stub_->GetBlocks(&context, request));
+  auto reader = stub_->GetBlocks(context.get(), request);
+  return BlockStream(context.release(), reader.release());
 }
 
 
@@ -126,20 +127,24 @@ bool Client::erase(uint32_t height) {
 }
 
 
-Client::BlockStream::BlockStream(
-    std::unique_ptr<grpc::ClientReader<iroha::BlockMessage>> reader)
-    : state_(true), reader_(std::move(reader)) {}
-
-
 Client::BlockStream &Client::BlockStream::operator>>(iroha::Block &val) {
-  state_ = reader_->Read(&message_);
-  if (!state_) {
-    reader_->Finish();
+  if (state_) {
+    state_ = reader_->Read(&message_);
+    if (!state_) {
+      reader_->Finish();
+    } else {
+      val = std::move(message_.block());
+    }
   }
-  val = message_.block();
   return *this;
 }
 
 
 Client::BlockStream::operator bool() const { return state_; }
+
+
+Client::BlockStream::BlockStream(
+    grpc::ClientContext *context,
+    grpc::ClientReader<iroha::BlockMessage> *reader)
+    : state_(true), reader_(reader), context_(context) {}
 }
