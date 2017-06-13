@@ -27,9 +27,12 @@ class TxIndexRedis : public TxIndex {
   TxIndexRedis();
 
   bool add_txhash_blockhash_txid(std::string txhash, uint32_t height,
-                                 int txid);
-  int get_txid_by_txhash(std::string txhash);
-  std::string get_blockhash_by_txhash(std::string txhash);
+                                 int txid) override;
+  int get_txid_by_txhash(std::string txhash) override;
+  std::string get_blockhash_by_txhash(std::string txhash) override;
+
+  bool add_block(std::vector<uint8_t > block_blob) override;
+  size_t get_last_blockid() override;
 
   ~TxIndexRedis();
 
@@ -37,5 +40,8 @@ class TxIndexRedis : public TxIndex {
   cpp_redis::redis_client client_;
   std::string host_;
   size_t port_;
+
+  // addition to the tx index without committing
+  bool _add_txhash_blockhash_txid(std::string txhash, uint32_t height, int txid);
 };
 }

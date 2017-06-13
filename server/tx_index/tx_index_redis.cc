@@ -16,6 +16,8 @@
  */
 
 #include "tx_index_redis.h"
+#include <block_parser_protobuf.h>
+#include <hash.h>
 
 namespace tx_index {
 
@@ -24,9 +26,7 @@ TxIndexRedis::~TxIndexRedis() { client_.disconnect(); }
 bool TxIndexRedis::add_txhash_blockhash_txid(std::string txhash,
                                              uint32_t height,
                                              int txid) {
-  bool res;
-  client_.hset("tx:" + txhash, "blockid", std::to_string(height), [&res](cpp_redis::reply& reply) { res = reply.ok(); });
-  client_.hset("tx:" + txhash, "txid", std::to_string(txid), [&res](cpp_redis::reply& reply) { res &= reply.ok(); });
+  bool res = _add_txhash_blockhash_txid(txhash, height, txid);
   client_.sync_commit();
   return res;
 }
@@ -55,4 +55,39 @@ TxIndexRedis::TxIndexRedis() {
   port_ = env ? std::stoull(env) : 6379;
   client_.connect(host_, port_);
 }
+
+bool TxIndexRedis::add_block(std::vector<uint8_t> block_blob) {
+  utils::BlockParserProtobuf parser(block_blob);
+  auto txs = parser.get_txs();
+
+  int txid = 0;
+  for (const auto& tx : txs){
+    const auto& body = tx.body();
+    std::string tx_hash(32, '\0');
+    const unsigned char* body_bytes = nullptr;
+
+    body.SerializeToArray((void *) body_bytes, body.ByteSize());
+    utils::sha3_256((unsigned char *) &tx_hash.at(0), body_bytes, body.ByteSizeLong());
+
+    _add_txhash_blockhash_txid(tx_hash, parser.get_height(), txid++);
+  }
+  client_.sync_commit();
+  return true;
+}
+
+size_t TxIndexRedis::get_last_blockid() {
+  size_t res;
+  client_.get("block_id_last",
+               [&res](cpp_redis::reply& reply) { res = std::stoul(reply.as_string()); });
+  client_.sync_commit();
+  return res;
+}
+
+bool TxIndexRedis::_add_txhash_blockhash_txid(std::string txhash, uint32_t height, int txid) {
+  bool res;
+  client_.hset("tx:" + txhash, "blockid", std::to_string(height), [&res](cpp_redis::reply& reply) { res = reply.ok(); });
+  client_.hset("tx:" + txhash, "txid", std::to_string(txid), [&res](cpp_redis::reply& reply) { res &= reply.ok(); });
+  return true;
+}
+
 }
