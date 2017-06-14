@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include <ametsuchi/ametsuchi.h>
+
 namespace ametsuchi {
 
 

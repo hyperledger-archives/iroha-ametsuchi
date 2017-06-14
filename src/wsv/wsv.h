@@ -35,7 +35,19 @@ class WSV {
   virtual bool add_signatory(const std::string &account_id,
                              const std::string &public_key) = 0;
 
-  virtual std::vector<std::string> get_peers() = 0;
+  virtual std::vector<std::string> get_peers(bool committed) = 0;
+
+  virtual void start_block() = 0;
+
+  virtual void start_transaction() = 0;
+
+  virtual void commit_transaction() = 0;
+
+  virtual void commit_block() = 0;
+
+  virtual void rollback_transaction() = 0;
+
+  virtual void rollback_block() = 0;
 };
 }
 

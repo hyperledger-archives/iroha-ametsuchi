@@ -18,16 +18,40 @@
 #ifndef AMETSUCHI_AMETSUCHI_H
 #define AMETSUCHI_AMETSUCHI_H
 
+#include <string>
+#include <vector>
+#include <memory>
+#include <block_store.h>
+#include <block_index.h>
+#include <tx_index.h>
+#include <wsv.h>
+
 namespace ametsuchi {
 
 class Ametsuchi {
-
+ public:
   Ametsuchi();
 
   // Block store
+  void insert(const std::string &blob);
+  std::string get_by_height(uint32_t height);
+  std::string get_by_block_hash(std::string hash);
+  std::string get_by_tx_hash(std::string hash);
+  void erase_by_height(uint32_t height);
 
   // WSV
+  void add_account();
+  void add_signatory(std::string account_id, std::string);
+  void add_peer();
 
+  std::vector<std::string> get_peers();
+
+  std::vector<std::string> get_peers_uncommited();
+ private:
+  std::unique_ptr<block_store::BlockStore> block_store_;
+  std::unique_ptr<block_index::BlockIndex> block_index_;
+  std::unique_ptr<tx_index::TxIndex> tx_index_;
+  std::unique_ptr<wsv::WSV> wsv_;
 };
 
 }

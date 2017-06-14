@@ -17,7 +17,7 @@
 
 #include "tx_index_redis.h"
 //#include <block_parser_protobuf.h>
-#include <hash.h>
+//#include <hash.h>
 //#include <block.pb.h>
 
 namespace tx_index {

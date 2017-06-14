@@ -14,9 +14,9 @@ target_link_libraries(tx_index_test
 #target_link_libraries(parser_test
 #  utils)
 
-AddTest(hash_test utils/hash_test.cc)
-target_link_libraries(hash_test
-  utils)
+#AddTest(hash_test utils/hash_test.cc)
+#target_link_libraries(hash_test
+#  utils)
 
 AddTest(bstore_test block_store/block_store_flat_test.cc)
 target_link_libraries(bstore_test

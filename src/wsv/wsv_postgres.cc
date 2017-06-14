@@ -28,24 +28,24 @@ namespace wsv {
 class WSVPostgres : public WSV {
  public:
   WSVPostgres() {
+    read_ = std::make_shared<pqxx::nontransaction>(read_connection_);
     pqxx::work txn(connection_);
     txn.exec(init_);
     txn.commit();
   }
 
-  ~WSVPostgres() { connection_.disconnect(); }
+  ~WSVPostgres() { connection_.disconnect(); read_connection_.disconnect(); }
 
   bool add_account(std::string account_id, uint8_t quorum,
                    uint32_t status) override {
-    pqxx::work txn(connection_);
     try {
-      txn.exec(
+      tx_->exec(
           "INSERT INTO public.account(\n"
           "            account_id, quorum, status)\n"
           "    VALUES (" +
-          txn.quote(account_id) + ", " + txn.quote((uint32_t)quorum) + // TODO fix pqxx
-          ", " + txn.quote(status) + ");");
-      txn.commit();
+          tx_->quote(account_id) + ", " +
+          tx_->quote((uint32_t)quorum) +  // TODO fix pqxx
+          ", " + tx_->quote(status) + ");");
     } catch (std::exception e) {
       std::cerr << e.what() << std::endl;
       return false;
@@ -54,18 +54,15 @@ class WSVPostgres : public WSV {
   }
 
 
-  bool add_peer(const std::string &account_id,
-                const std::string &address,
+  bool add_peer(const std::string &account_id, const std::string &address,
                 uint32_t state) override {
-    pqxx::work txn(connection_);
     try {
-      txn.exec(
+      tx_->exec(
           "INSERT INTO public.peer(\n"
           "            account_id, address, state)\n"
           "    VALUES (" +
-          txn.quote(account_id) + ", " + txn.quote(address) +
-          ", " + txn.quote(state) + ");");
-      txn.commit();
+          tx_->quote(account_id) + ", " + tx_->quote(address) + ", " +
+          tx_->quote(state) + ");");
     } catch (std::exception e) {
       std::cerr << e.what() << std::endl;
       return false;
@@ -76,15 +73,12 @@ class WSVPostgres : public WSV {
 
   bool add_signatory(const std::string &account_id,
                      const std::string &public_key) override {
-    pqxx::work txn(connection_);
     try {
-      txn.exec(
+      tx_->exec(
           "INSERT INTO public.signatory(\n"
           "            account_id, public_key)\n"
           "    VALUES (" +
-          txn.quote(account_id) + ", " + txn.quote(public_key) +
-          ");");
-      txn.commit();
+          tx_->quote(account_id) + ", " + tx_->quote(public_key) + ");");
     } catch (std::exception e) {
       std::cerr << e.what() << std::endl;
       return false;
@@ -93,18 +87,24 @@ class WSVPostgres : public WSV {
   }
 
 
-  std::vector<std::string> get_peers() override {
-    pqxx::work txn(connection_);
+  std::vector<std::string> get_peers(bool committed) override {
+    std::shared_ptr<pqxx::transaction_base> txn;
+    if (committed) {
+      txn = read_;
+    } else if (tx_){
+      txn = tx_;
+    } else {
+      txn = block_;
+    }
     pqxx::result result;
     try {
-      result = txn.exec(
+      result = txn->exec(
           "SELECT \n"
           "  peer.address\n"
           "FROM \n"
           "  public.peer\n"
           "ORDER BY\n"
           "  peer.peer_id ASC;");
-      txn.commit();
     } catch (std::exception e) {
       std::cerr << e.what() << std::endl;
     }
@@ -115,8 +115,28 @@ class WSVPostgres : public WSV {
     return peers;
   }
 
+  void start_block() { block_ = std::make_shared<pqxx::work>(connection_); }
+
+  void start_transaction() {
+    tx_ = std::make_shared<pqxx::subtransaction>(*block_);
+  }
+
+  void commit_transaction() { tx_->commit(); tx_.reset(); }
+
+  void commit_block() { block_->commit(); block_.reset(); }
+
+  void rollback_transaction() { tx_->abort(); tx_.reset(); }
+
+  void rollback_block() { block_->abort(); block_.reset(); }
+
  private:
-  pqxx::connection connection_;
+  pqxx::connection connection_, read_connection_;
+
+  std::shared_ptr<pqxx::work> block_;
+  std::shared_ptr<pqxx::subtransaction> tx_;
+  std::shared_ptr<pqxx::nontransaction> read_;
+
+
   const std::string init_ = "CREATE TABLE IF NOT EXISTS account (\n"
     "    account_id char(32) PRIMARY KEY,\n"
     "    quorum int NOT NULL,\n"

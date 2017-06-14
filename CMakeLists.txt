@@ -23,6 +23,22 @@ include(cmake/functions.cmake)
 
 add_subdirectory(src)
 
+add_library(ametsuchi
+  src/ametsuchi.cc
+  include/ametsuchi/ametsuchi.h
+  )
+
+target_include_directories(ametsuchi PUBLIC
+  include
+  )
+
+target_link_libraries(ametsuchi PUBLIC
+  block_index
+  block_store
+  tx_index
+  wsv
+  )
+
 if (TESTING)
   # Connect test executable and CMake test system.
   enable_testing()
