@@ -15,9 +15,21 @@
  * limitations under the License.
  */
 
-#ifndef AMETSUCHI_AMETSUCHI_H_H
-#define AMETSUCHI_AMETSUCHI_H_H
+#ifndef AMETSUCHI_AMETSUCHI_H
+#define AMETSUCHI_AMETSUCHI_H
 
-#include "client.h"
+namespace ametsuchi {
 
-#endif //AMETSUCHI_AMETSUCHI_H_H
+class Ametsuchi {
+
+  Ametsuchi();
+
+  // Block store
+
+  // WSV
+
+};
+
+}
+
+#endif //AMETSUCHI_AMETSUCHI_H

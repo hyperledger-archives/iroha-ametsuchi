@@ -12,11 +12,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 option(TESTING "Build tests" ON)
 
-if (NOT IROHA_SCHEMA_DIR)
-  set(IROHA_SCHEMA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/schema)
-endif ()
-message(STATUS "Schema folder found: ${IROHA_SCHEMA_DIR}")
-
 # set default CMAKE_BUILD_TYPE=Debug
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
@@ -26,10 +21,7 @@ message(STATUS "-DTESTING=${TESTING}")
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
-add_subdirectory(schema)
-
-add_subdirectory(server)
-add_subdirectory(client)
+add_subdirectory(src)
 
 if (TESTING)
   # Connect test executable and CMake test system.

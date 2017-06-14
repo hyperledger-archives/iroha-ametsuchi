@@ -1,4 +1,31 @@
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin)
+AddTest(wsv_test wsv/wsv_test.cc)
+target_link_libraries(wsv_test
+  wsv)
 
-add_subdirectory(server)
-add_subdirectory(client)
+AddTest(block_index_test block_index/block_index_test.cc)
+target_link_libraries(block_index_test
+  block_index)
+
+AddTest(tx_index_test tx_index/tx_index_test.cc)
+target_link_libraries(tx_index_test
+  tx_index)
+
+#AddTest(parser_test utils/parser_test.cc)
+#target_link_libraries(parser_test
+#  utils)
+
+AddTest(hash_test utils/hash_test.cc)
+target_link_libraries(hash_test
+  utils)
+
+AddTest(bstore_test block_store/block_store_flat_test.cc)
+target_link_libraries(bstore_test
+  block_store)
+
+AddTest(bstore_iterators_test block_store/flat_iterators_test.cc)
+target_link_libraries(bstore_iterators_test
+    block_store)
+
+#AddTest(block_index_mediator_test crash_handler/block_index_mediator_test.cc)
+#target_link_libraries(block_index_mediator_test
+#        crash_handler utils)

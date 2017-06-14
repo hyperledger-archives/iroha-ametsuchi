@@ -5,7 +5,7 @@
 #ifndef AMETSUCHI_BLOCK_PARSER_PROTOBUF_H
 #define AMETSUCHI_BLOCK_PARSER_PROTOBUF_H
 
-#include <block.pb.h>
+//#include <block.pb.h>
 #include <array>
 #include <cstdint>
 #include <string>

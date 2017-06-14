@@ -15,22 +15,8 @@
  * limitations under the License.
  */
 
-#include "storage_service.h"
-#include <grpc++/grpc++.h>
+namespace ametsuchi {
 
-void RunServer() {
-  std::string server_address("0.0.0.0:50051");
-  service::StorageServiceImpl service;
 
-  grpc::ServerBuilder builder;
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  builder.RegisterService(&service);
-  auto server = builder.BuildAndStart();
 
-  server->Wait();
-}
-
-int main() {
-  RunServer();
-  return 0;
 }

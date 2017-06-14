@@ -31,7 +31,7 @@ class TxIndexRedis : public TxIndex {
   int get_txid_by_txhash(std::string txhash) override;
   std::string get_blockhash_by_txhash(std::string txhash) override;
 
-  bool add_block(std::vector<uint8_t > block_blob) override;
+//  bool add_block(std::vector<uint8_t > block_blob) override;
   size_t get_last_blockid() override;
 
   ~TxIndexRedis();
