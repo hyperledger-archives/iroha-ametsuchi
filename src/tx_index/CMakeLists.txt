@@ -6,7 +6,7 @@ add_library(tx_index
 
 target_link_libraries(tx_index
   cpp_redis
-#  utils
+  optional
   )
 
 target_include_directories(tx_index INTERFACE .)

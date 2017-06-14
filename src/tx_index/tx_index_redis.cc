@@ -16,35 +16,46 @@
  */
 
 #include "tx_index_redis.h"
+#include "../../external/src/akrzemi1_Optional/optional.hpp"
 //#include <block_parser_protobuf.h>
 //#include <hash.h>
 //#include <block.pb.h>
 
 namespace tx_index {
 
-TxIndexRedis::~TxIndexRedis() { client_.disconnect(); }
+TxIndexRedis::~TxIndexRedis() {
+  client_.disconnect();
+  read_client_.disconnect();
+}
 
-bool TxIndexRedis::add_txhash_blockhash_txid(std::string txhash,
-                                             uint32_t height,
-                                             int txid) {
-  bool res = _add_txhash_blockhash_txid(txhash, height, txid);
+bool TxIndexRedis::add_txhash_blockid_txid(std::string txhash, uint32_t height,
+                                           int txid) {
+  bool res = _add_txhash_blockid_txid(txhash, height, txid);
   client_.sync_commit();
   return res;
 }
 
-int TxIndexRedis::get_txid_by_txhash(std::string txhash) {
-  int res;
-  client_.hget("tx:" + txhash, "txid",
-               [&res](cpp_redis::reply& reply) { res = std::stoi(reply.as_string()); });
-  client_.sync_commit();
+std::experimental::optional<int> TxIndexRedis::get_txid_by_txhash(
+    std::string txhash) {
+  std::experimental::optional<int> res;
+  read_client_.hget("tx:" + txhash, "txid", [&res](cpp_redis::reply& reply) {
+    if (reply.ok() && reply.is_string()) {
+      res = std::stoi(reply.as_string());
+    }
+  });
+  read_client_.sync_commit();
   return res;
 }
 
-std::string TxIndexRedis::get_blockhash_by_txhash(std::string txhash) {
-  std::string res;
-  client_.hget("tx:" + txhash, "blockid",
-               [&res](cpp_redis::reply& reply) { res = reply.as_string(); });
-  client_.sync_commit();
+std::experimental::optional<uint32_t> TxIndexRedis::get_blockid_by_txhash(
+    std::string txhash) {
+  std::experimental::optional<uint32_t> res;
+  read_client_.hget("tx:" + txhash, "blockid", [&res](cpp_redis::reply& reply) {
+    if (reply.ok() && reply.is_string()) {
+      res = (uint32_t)std::stoul(reply.as_string());
+    }
+  });
+  read_client_.sync_commit();
   return res;
 }
 
@@ -55,9 +66,10 @@ TxIndexRedis::TxIndexRedis() {
   env = std::getenv("REDISPORT");
   port_ = env ? std::stoull(env) : 6379;
   client_.connect(host_, port_);
+  read_client_.connect(host_, port_);
 }
 //
-//bool TxIndexRedis::add_block(std::vector<uint8_t> block_blob) {
+// bool TxIndexRedis::add_block(std::vector<uint8_t> block_blob) {
 ////  utils::BlockParserProtobuf parser(block_blob);
 //  iroha::Block block;
 //  block.ParseFromArray(block_blob.data(), block_blob.size());
@@ -71,28 +83,56 @@ TxIndexRedis::TxIndexRedis() {
 //    const unsigned char* body_bytes = nullptr;
 //
 //    body.SerializeToArray((void *) body_bytes, body.ByteSize());
-//    utils::sha3_256((unsigned char *) &tx_hash.at(0), body_bytes, body.ByteSize());
+//    utils::sha3_256((unsigned char *) &tx_hash.at(0), body_bytes,
+//    body.ByteSize());
 //
 ////    _add_txhash_blockhash_txid(tx_hash, parser.get_height(), txid++);
-//    _add_txhash_blockhash_txid(tx_hash, block.meta().height(), txid++);
+//    _add_txhash_blockid_txid(tx_hash, block.meta().height(), txid++);
 //  }
 //  client_.sync_commit();
 //  return true;
 //}
 
-size_t TxIndexRedis::get_last_blockid() {
+/*size_t TxIndexRedis::get_last_blockid() {
   size_t res;
   client_.get("block_id_last",
-               [&res](cpp_redis::reply& reply) { res = std::stoul(reply.as_string()); });
+               [&res](cpp_redis::reply& reply) { res =
+std::stoul(reply.as_string()); });
+  client_.sync_commit();
+  return res;
+}*/
+
+bool TxIndexRedis::_add_txhash_blockid_txid(std::string txhash, uint32_t height,
+                                            int txid) {
+  bool res;
+  client_.hset("tx:" + txhash, "blockid", std::to_string(height),
+               [&res](cpp_redis::reply& reply) { res = reply.ok(); });
+  client_.hset("tx:" + txhash, "txid", std::to_string(txid),
+               [&res](cpp_redis::reply& reply) { res &= reply.ok(); });
+  return true;
+}
+
+
+bool TxIndexRedis::start_multi() {
+  bool res;
+  client_.multi([&res](cpp_redis::reply& reply) { res = reply.ok(); });
   client_.sync_commit();
   return res;
 }
 
-bool TxIndexRedis::_add_txhash_blockhash_txid(std::string txhash, uint32_t height, int txid) {
+
+bool TxIndexRedis::exec_multi() {
   bool res;
-  client_.hset("tx:" + txhash, "blockid", std::to_string(height), [&res](cpp_redis::reply& reply) { res = reply.ok(); });
-  client_.hset("tx:" + txhash, "txid", std::to_string(txid), [&res](cpp_redis::reply& reply) { res &= reply.ok(); });
-  return true;
+  client_.exec([&res](cpp_redis::reply& reply) { res = reply.ok(); });
+  client_.sync_commit();
+  return res;
 }
 
+
+bool TxIndexRedis::discard_multi() {
+  bool res;
+  client_.discard([&res](cpp_redis::reply& reply) { res = reply.ok(); });
+  client_.sync_commit();
+  return res;
+}
 }

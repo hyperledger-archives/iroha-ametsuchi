@@ -35,7 +35,55 @@ class BlockIndex_Test : public ::testing::Test {
 TEST_F(BlockIndex_Test, REDIS_ADD_GET_TEST) {
   block_index::BlockIndexRedis block_index;
 
-  block_index.add_blockhash_blockid("one", 1);
-  uint32_t one = block_index.get_blockid_by_blockhash("one");
-  ASSERT_EQ(one, 1);
+  ASSERT_TRUE(block_index.add_blockhash_blockid("one", 1));
+  auto one = block_index.get_blockid_by_blockhash("one");
+  ASSERT_TRUE(one);
+  ASSERT_EQ(*one, 1);
+}
+
+TEST_F(BlockIndex_Test, REDIS_ADD_GET_TEST_MULTI) {
+  block_index::BlockIndexRedis block_index;
+
+  ASSERT_TRUE(block_index.start_multi());
+
+  ASSERT_TRUE(block_index.add_blockhash_blockid("one", 1));
+
+  ASSERT_TRUE(block_index.exec_multi());
+
+  auto one = block_index.get_blockid_by_blockhash("one");
+  ASSERT_TRUE(one);
+  ASSERT_EQ(*one, 1);
+}
+
+TEST_F(BlockIndex_Test, REDIS_ADD_GET_TEST_DISCARD) {
+  block_index::BlockIndexRedis block_index;
+
+  ASSERT_TRUE(block_index.start_multi());
+
+  ASSERT_TRUE(block_index.add_blockhash_blockid("one", 1));
+
+  ASSERT_TRUE(block_index.discard_multi());
+
+  auto one = block_index.get_blockid_by_blockhash("one");
+  ASSERT_FALSE(one);
+}
+
+TEST_F(BlockIndex_Test, REDIS_ADD_GET_TEST_READ) {
+  block_index::BlockIndexRedis block_index;
+
+  ASSERT_TRUE(block_index.add_blockhash_blockid("two", 2));
+
+  ASSERT_TRUE(block_index.start_multi());
+
+  ASSERT_TRUE(block_index.add_blockhash_blockid("one", 1));
+
+  auto two = block_index.get_blockid_by_blockhash("two");
+  ASSERT_TRUE(two);
+  ASSERT_EQ(*two, 2);
+
+  ASSERT_TRUE(block_index.exec_multi());
+
+  auto one = block_index.get_blockid_by_blockhash("one");
+  ASSERT_TRUE(one);
+  ASSERT_EQ(*one, 1);
 }

@@ -35,11 +35,79 @@ class TxIndex_Test : public ::testing::Test {
 TEST_F(TxIndex_Test, TxRedisTest) {
   tx_index::TxIndexRedis tx_index;
 
-  tx_index.add_txhash_blockhash_txid("tx_one", 1, 10);
+  tx_index.add_txhash_blockid_txid("tx_one", 1, 10);
 
-  auto one = tx_index.get_blockhash_by_txhash("tx_one");
+  auto one = tx_index.get_blockid_by_txhash("tx_one");
   auto ten = tx_index.get_txid_by_txhash("tx_one");
 
-  ASSERT_EQ(one, std::to_string(1));
-  ASSERT_EQ(ten, 10);
+  ASSERT_TRUE(one);
+  ASSERT_TRUE(ten);
+
+  ASSERT_EQ(*one, 1);
+  ASSERT_EQ(*ten, 10);
+}
+
+TEST_F(TxIndex_Test, MultiTest) {
+  tx_index::TxIndexRedis tx_index;
+
+  ASSERT_TRUE(tx_index.start_multi());
+
+  ASSERT_TRUE(tx_index.add_txhash_blockid_txid("tx_one", 1, 10));
+
+  ASSERT_TRUE(tx_index.exec_multi());
+
+  auto one = tx_index.get_blockid_by_txhash("tx_one");
+  auto ten = tx_index.get_txid_by_txhash("tx_one");
+
+  ASSERT_TRUE(one);
+  ASSERT_TRUE(ten);
+
+  ASSERT_EQ(*one, 1);
+  ASSERT_EQ(*ten, 10);
+}
+
+TEST_F(TxIndex_Test, MultiTest_Discard) {
+  tx_index::TxIndexRedis tx_index;
+
+  ASSERT_TRUE(tx_index.start_multi());
+
+  ASSERT_TRUE(tx_index.add_txhash_blockid_txid("tx_one", 1, 10));
+
+  ASSERT_TRUE(tx_index.discard_multi());
+
+  auto one = tx_index.get_blockid_by_txhash("tx_one");
+  auto ten = tx_index.get_txid_by_txhash("tx_one");
+
+  ASSERT_FALSE(one);
+  ASSERT_FALSE(ten);
+}
+
+TEST_F(TxIndex_Test, MultiTest_Read) {
+  tx_index::TxIndexRedis tx_index;
+
+  tx_index.add_txhash_blockid_txid("tx_two", 2, 20);
+
+  ASSERT_TRUE(tx_index.start_multi());
+  
+  auto two = tx_index.get_blockid_by_txhash("tx_two");
+  auto twenty = tx_index.get_txid_by_txhash("tx_two");
+  
+  ASSERT_TRUE(two);
+  ASSERT_TRUE(twenty);
+  
+  ASSERT_EQ(*two, 2);
+  ASSERT_EQ(*twenty, 20);
+
+  ASSERT_TRUE(tx_index.add_txhash_blockid_txid("tx_one", 1, 10));
+
+  ASSERT_TRUE(tx_index.exec_multi());
+
+  auto one = tx_index.get_blockid_by_txhash("tx_one");
+  auto ten = tx_index.get_txid_by_txhash("tx_one");
+
+  ASSERT_TRUE(one);
+  ASSERT_TRUE(ten);
+
+  ASSERT_EQ(*one, 1);
+  ASSERT_EQ(*ten, 10);
 }

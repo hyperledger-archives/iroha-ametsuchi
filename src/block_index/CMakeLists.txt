@@ -6,6 +6,7 @@ add_library(block_index
 
 target_link_libraries(block_index
   cpp_redis
+  optional
   )
 
 target_include_directories(block_index INTERFACE .)
