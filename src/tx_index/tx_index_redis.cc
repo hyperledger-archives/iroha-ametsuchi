@@ -16,7 +16,6 @@
  */
 
 #include "tx_index_redis.h"
-#include "../../external/src/akrzemi1_Optional/optional.hpp"
 //#include <block_parser_protobuf.h>
 //#include <hash.h>
 //#include <block.pb.h>
