@@ -18,17 +18,14 @@
 
 #include <stdio.h>
 
-#include <cppfs/FileHandle.h>
-#include <cppfs/fs.h>
 #include <dirent.h>
 #include <iostream>
 #include "block_store_flat.h"
 #include "flat_iterator.h"
+#include <experimental/filesystem>
 
 
-namespace fs = cppfs::fs;
-using cppfs::FileHandle;
-using cppfs::FileIterator;
+namespace fs = std::experimental::filesystem;
 
 namespace block_store {
 
@@ -36,8 +33,8 @@ void BlockStoreFlat::add(uint32_t id, const std::vector<uint8_t> &block) {
   auto next_id = id;
   std::string file_name = dump_dir + "/" + id_to_name(next_id);
   // Write block to binary file
-  auto fh = fs::open(file_name);
-  if (!fh.exists()) {
+  fs::path fh(file_name);
+  if (!fs::exists(fh)) {
     // New file will be created
     FILE *pfile;
     pfile = fopen(file_name.c_str(), "wb");
@@ -60,9 +57,9 @@ BlockStoreFlat::~BlockStoreFlat() {}
 
 BlockStoreFlat::BlockStoreFlat(const std::string &path) {
   // Check if path exist:
-  FileHandle fh = fs::open(path);
-  if (fh.exists()) {
-    if (fh.isDirectory()) {
+  fs::path fh(path);
+  if (fs::exists(fh)) {
+    if (fs::is_directory(path)) {
       // Directory exists
       dump_dir = path;
       current_id = check_consistency();
@@ -73,7 +70,7 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
     }
   } else {
     // New BlockStore
-    if (!fh.createDirectory()) {
+    if (!fs::create_directories(fh)) {
       // TODO: handle cannot create directory
       std::cout << "Error creating directory " << std::endl;
     }
@@ -85,8 +82,8 @@ BlockStoreFlat::BlockStoreFlat(const std::string &path) {
 uint32_t BlockStoreFlat::check_consistency() const {
   uint32_t tmp_id = 0u;
   if (!dump_dir.empty()) {
-    FileHandle dir = fs::open(dump_dir);
-    if (dir.isDirectory()) {
+    fs::path dir(dump_dir);
+    if (fs::is_directory(dir)) {
       // Directory iterator:
       struct dirent **namelist;
       auto status = scandir(dump_dir.c_str(), &namelist, NULL, alphasort);
@@ -99,9 +96,8 @@ uint32_t BlockStoreFlat::check_consistency() const {
         while (++i < n) {
           if (id_to_name(tmp_id) != namelist[i]->d_name) {
             for (uint j = i; j < n; ++j) {
-
-              FileHandle file = fs::open(dump_dir+"/"+namelist[j]->d_name);
-              file.remove();
+              fs::path file(dump_dir+"/"+namelist[j]->d_name);
+              fs::remove(file);
             }
             break;
           }
@@ -125,9 +121,9 @@ uint32_t BlockStoreFlat::check_consistency() const {
 
 std::vector<uint8_t> BlockStoreFlat::get(uint32_t id) const {
   std::string filename = dump_dir + "/" + id_to_name(id);
-  FileHandle fh = fs::open(filename);
-  if (fh.exists()) {
-    auto f_size = fh.size();
+  fs::path fh(filename);
+  if (fs::exists(fh)) {
+    auto f_size = fs::file_size(fh);
     std::vector<uint8_t> buf(f_size);
     FILE *pfile = fopen(filename.c_str(), "rb");
     fread(&buf[0], sizeof(uint8_t), f_size, pfile);
@@ -165,8 +161,8 @@ BlockStore::Iterator BlockStoreFlat::end() {
 }
 void BlockStoreFlat::remove(uint32_t id) {
   // Assume that id exists
-  FileHandle file = fs::open(dump_dir+"/"+id_to_name(id));
-  file.remove();
+  fs::path file(dump_dir+"/"+id_to_name(id));
+  fs::remove(file);
 }
 
 // Flat Iterator realization

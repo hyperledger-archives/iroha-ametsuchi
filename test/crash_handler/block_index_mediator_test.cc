@@ -20,8 +20,8 @@
 #include <block_index_redis.h>
 #include <hash.h>
 #include <block_index_mediator.h>
-#include <cppfs/fs.h>
-#include <cppfs/FileHandle.h>
+
+namespace fs = std::experimental::filesystem;
 
 class BlockIndexMediatorTest : public ::testing::Test {
  protected:
@@ -30,7 +30,7 @@ class BlockIndexMediatorTest : public ::testing::Test {
     client.connect(host_, port_);
     client.flushall();
     client.disconnect();
-    cppfs::fs::open(block_store_path).removeDirectoryRec();
+    fs::remove_all(fs::path(block_store_path));
   }
 
   std::string host_ = std::getenv("REDISHOST");

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cpp_redis/cpp_redis>
-#include <optional.hpp>
 #include "block_index.h"
 
 namespace block_index {

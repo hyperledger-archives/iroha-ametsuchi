@@ -6,9 +6,8 @@ add_library(block_store
   )
 
 target_link_libraries(block_store
-   optional
-   cppfs
-   spdlog
+  stdc++fs # std::experimental::filesystem
+  spdlog
   )
 
 target_include_directories(block_store INTERFACE .)

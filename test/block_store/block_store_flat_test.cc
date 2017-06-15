@@ -17,14 +17,14 @@
 
 #include <block_store_flat.h>
 #include <gtest/gtest.h>
-#include <cppfs/fs.h>
-#include <cppfs/FileHandle.h>
-#include <cppfs/FileIterator.h>
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
 
 class BlStore_Test : public ::testing::Test {
  protected:
   virtual void TearDown() {
-    cppfs::fs::open(block_store_path).removeDirectoryRec();
+    fs::remove_all(fs::path(block_store_path));
   }
 
   std::string block_store_path = "/tmp/dump";
@@ -46,9 +46,6 @@ TEST_F(BlStore_Test, Read_Write_Test) {
 
 
 TEST_F(BlStore_Test, InConsistency_Test) {
-  namespace fs = cppfs::fs;
-  using cppfs::FileHandle;
-  using cppfs::FileIterator;
   // Adding blocks
   {
     std::vector<uint8_t> block(1000, 5);
@@ -76,11 +73,12 @@ TEST_F(BlStore_Test, InConsistency_Test) {
     ASSERT_EQ(res, 1);
     // There must be no other files:
 
-    FileHandle dir = fs::open(block_store_path);
-    std::vector<std::string> files = dir.listFiles();
+//    FileHandle dir = fs::open(block_store_path);
+    fs::path dir(block_store_path);
+    std::vector<fs::directory_entry> files((fs::directory_iterator(dir)), fs::directory_iterator());
     ASSERT_EQ(files.size(), 1);
     for (auto name : files){
-      ASSERT_EQ(name, "0000000000000001");
+      ASSERT_EQ(name.path().stem(), "0000000000000001");
     }
   }
 

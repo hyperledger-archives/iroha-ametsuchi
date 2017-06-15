@@ -18,13 +18,14 @@
 #include <block_store_flat.h>
 #include <gtest/gtest.h>
 #include <flat_iterator.h>
-#include <cppfs/fs.h>
-#include <cppfs/FileHandle.h>
+#include <experimental/filesystem>
+
+namespace fs = std::experimental::filesystem;
 
 class BlStoreIterators_Test : public ::testing::Test {
  protected:
   virtual void TearDown() {
-    cppfs::fs::open(block_store_path).removeDirectoryRec();
+    fs::remove_all(fs::path(block_store_path));
   }
 
   std::string block_store_path = "/tmp/dump";
