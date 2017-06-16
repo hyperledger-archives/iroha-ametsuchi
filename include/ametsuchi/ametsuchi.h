@@ -20,38 +20,26 @@
 
 #include <string>
 #include <vector>
-#include <memory>
-#include <block_store.h>
-#include <block_index.h>
-#include <tx_index.h>
-#include <wsv.h>
 
 namespace ametsuchi {
 
 class Ametsuchi {
  public:
-  Ametsuchi();
+  std::unique_ptr<Ametsuchi> create();
 
   // Block store
-  void insert(const std::string &blob);
-  std::string get_by_height(uint32_t height);
-  std::string get_by_block_hash(std::string hash);
-  std::string get_by_tx_hash(std::string hash);
-  void erase_by_height(uint32_t height);
+  virtual void insert(const std::string &blob) = 0;
+  virtual std::string get_by_height(uint32_t height) = 0;
+  virtual std::string get_by_block_hash(std::string hash) = 0;
+  virtual std::string get_by_tx_hash(std::string hash) = 0;
+  virtual void erase_by_height(uint32_t height) = 0;
 
   // WSV
-  void add_account();
-  void add_signatory(std::string account_id, std::string);
-  void add_peer();
+  virtual void add_account() = 0;
+  virtual void add_signatory(std::string account_id, std::string) = 0;
+  virtual void add_peer() = 0;
 
-  std::vector<std::string> get_peers();
-
-  std::vector<std::string> get_peers_uncommited();
- private:
-  std::unique_ptr<block_store::BlockStore> block_store_;
-  std::unique_ptr<block_index::BlockIndex> block_index_;
-  std::unique_ptr<tx_index::TxIndex> tx_index_;
-  std::unique_ptr<wsv::WSV> wsv_;
+  virtual std::vector<std::string> get_peers(bool committed) = 0;
 };
 
 }

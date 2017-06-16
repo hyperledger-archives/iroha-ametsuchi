@@ -24,7 +24,7 @@ include(cmake/functions.cmake)
 add_subdirectory(src)
 
 add_library(ametsuchi
-  src/ametsuchi.cc
+  src/ametsuchi.cc src/ametsuchi.h
   include/ametsuchi/ametsuchi.h
   )
 

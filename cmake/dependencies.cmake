@@ -78,41 +78,6 @@ if (NOT CPP_redis_FOUND)
   add_dependencies(cpp_redis cylix_cpp_redis)
 endif ()
 
-###########################
-#         keccak          #
-###########################
-find_package(Keccak)
-
-if (NOT Keccak_FOUND)
-  find_package(LibXslt QUIET)
-  if (NOT LIBXSLT_XSLTPROC_EXECUTABLE)
-    message(FATAL_ERROR "xsltproc not found")
-  endif ()
-
-  ExternalProject_Add(gvanas_keccak
-    GIT_REPOSITORY "https://github.com/gvanas/KeccakCodePackage.git"
-    CONFIGURE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND CFLAGS="-fPIC" $(MAKE) generic64/libkeccak.a CC="${CMAKE_C_COMPILER}"
-    INSTALL_COMMAND "" # remove install step
-    TEST_COMMAND "" # remove test step
-    UPDATE_COMMAND "" # remove update step
-    )
-  ExternalProject_Get_Property(gvanas_keccak source_dir)
-  set(keccak_INCLUDE_DIR ${source_dir}/bin/generic64/libkeccak.a.headers)
-  set(keccak_LIBRARY ${source_dir}/bin/generic64/libkeccak.a)
-  file(MAKE_DIRECTORY ${keccak_INCLUDE_DIR})
-
-  add_library(keccak STATIC IMPORTED)
-  set_target_properties(keccak PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES ${keccak_INCLUDE_DIR}
-    IMPORTED_LOCATION ${keccak_LIBRARY}
-    IMPORTED_LINK_INTERFACE_LANGUAGES "C"
-    )
-
-  add_dependencies(keccak gvanas_keccak)
-endif ()
-
 ##########################
 #          pqxx          #
 ##########################
