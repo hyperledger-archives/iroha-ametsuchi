@@ -16,17 +16,16 @@
  */
 
 #include <gtest/gtest.h>
-#include <manager.h>
-#include <wsv.h>
-#include <cpp_redis/cpp_redis>
 #include <pqxx/pqxx>
+#include <wsv/backend/postgresql.hpp>
 
-class WSVTest : public ::testing::Test {
- protected:
-  virtual void TearDown() {
-    if (backend_ == "Postgres") {
-      const auto drop =
-          "DROP TABLE IF EXISTS domain_has_account;\n"
+namespace ametsuchi {
+  namespace wsv {
+    class WSVTest : public ::testing::Test {
+     protected:
+      virtual void TearDown() {
+        const auto drop =
+            "DROP TABLE IF EXISTS domain_has_account;\n"
             "DROP TABLE IF EXISTS account_has_asset;\n"
             "DROP TABLE IF EXISTS account_has_wallet;\n"
             "DROP TABLE IF EXISTS wallet;\n"
@@ -35,159 +34,124 @@ class WSVTest : public ::testing::Test {
             "DROP TABLE IF EXISTS domain;\n"
             "DROP TABLE IF EXISTS peer;\n"
             "DROP TABLE IF EXISTS signatory;\n"
-            "DROP TABLE IF EXISTS account;";
+            "DROP TABLE IF EXISTS account;\n"
+            "DROP SEQUENCE IF EXISTS peer_peer_id_seq;";
 
-      pqxx::connection connection;
-      pqxx::work txn(connection);
-      txn.exec(drop);
-      txn.commit();
-      connection.disconnect();
-    } else if (backend_ == "Redis") {
-      cpp_redis::redis_client client;
-      client.connect(redis_host_, redis_port_);
-      client.flushall();
-      client.sync_commit();
-      client.disconnect();
+        pqxx::connection connection("host=" + host_ + " port=" +
+                                    std::to_string(port_) + " user=" + user_ +
+                                    " password=" + password_);
+        pqxx::work txn(connection);
+        txn.exec(drop);
+        txn.commit();
+        connection.disconnect();
+      }
+      std::string host_ = "localhost";
+      size_t port_ = 5432;
+      std::string user_ = "postgres";
+      std::string password_ = "";
+    };
+
+    TEST_F(WSVTest, postgres_test) {
+      auto wsv_ = std::make_unique<PostgreSQL>(host_, port_, user_, password_);
+
+      std::string public_key("00000000000000000000000000000000");
+      ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
+      ASSERT_TRUE(wsv_->add_signatory(public_key, public_key));
+      std::string address("127.0.0.1");
+      ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
+      wsv_->commit_transaction();
+      wsv_->commit_block();
+      auto result = wsv_->get_peers(true);
+      ASSERT_EQ(result.size(), 1);
+      ASSERT_EQ(result.at(0), address);
     }
-  }
-  std::string backend_;
-  std::string redis_host_ =
-      std::getenv("REDISHOST") ? std::getenv("REDISHOST") : "127.0.0.1";
-  size_t redis_port_ =
-      std::getenv("REDISPORT") ? std::stoull(std::getenv("REDISPORT")) : 6379;
-};
 
-void test_backend(const std::string &backend) {
-  auto wsv_ = wsv::Manager::instance().make_WSV(backend);
+    TEST_F(WSVTest, select_test) {
+      auto wsv_ = std::make_unique<PostgreSQL>(host_, port_, user_, password_);
 
-  wsv_->start_block();
-  wsv_->start_transaction();
-  std::string public_key("00000000000000000000000000000000");
-  ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
-  ASSERT_TRUE(wsv_->add_signatory(public_key, public_key));
-  std::string address("127.0.0.1");
-  ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
-  wsv_->commit_transaction();
-  wsv_->commit_block();
-  auto result = wsv_->get_peers(true);
-  ASSERT_EQ(result.size(), 1);
-  ASSERT_EQ(result.at(0), address);
+      std::string public_key("00000000000000000000000000000000");
+      ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
+      std::string address("127.0.0.1");
+      ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
 
-}
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 1);
 
-TEST_F(WSVTest, postgres_test) {
-  backend_ = "Postgres";
-  test_backend(backend_);
-}
+      wsv_->commit_transaction();
 
-TEST_F(WSVTest, select_test) {
-  backend_ = "Postgres";
-  auto wsv_ = wsv::Manager::instance().make_WSV(backend_);
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 1);
 
-  wsv_->start_block();
-  wsv_->start_transaction();
+      address = "127.0.0.2";
+      ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
 
-  std::string public_key("00000000000000000000000000000000");
-  ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
-  std::string address("127.0.0.1");
-  ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 2);
 
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 1);
+      wsv_->commit_transaction();
+      wsv_->commit_block();
 
-  wsv_->commit_transaction();
+      ASSERT_EQ(wsv_->get_peers(true).size(), 2);
+    }
 
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 1);
+    TEST_F(WSVTest, rollback_test) {
+      auto wsv_ = std::make_unique<PostgreSQL>(host_, port_, user_, password_);
 
-  wsv_->start_transaction();
+      std::string public_key("00000000000000000000000000000000");
+      ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
 
-  address = "127.0.0.2";
-  ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
+      wsv_->commit_transaction();
 
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 2);
+      std::string address("127.0.0.1");
+      ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
 
-  wsv_->commit_transaction();
-  wsv_->commit_block();
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 1);
 
-  ASSERT_EQ(wsv_->get_peers(true).size(), 2);
-}
+      wsv_->rollback_transaction();
 
-TEST_F(WSVTest, rollback_test) {
-  backend_ = "Postgres";
-  auto wsv_ = wsv::Manager::instance().make_WSV(backend_);
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 0);
 
-  wsv_->start_block();
-  wsv_->start_transaction();
+      address = "127.0.0.2";
+      ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
 
-  std::string public_key("00000000000000000000000000000000");
-  ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 1);
 
-  wsv_->commit_transaction();
+      wsv_->commit_transaction();
+      wsv_->commit_block();
 
-  wsv_->start_transaction();
+      ASSERT_EQ(wsv_->get_peers(true).size(), 1);
+    }
 
-  std::string address("127.0.0.1");
-  ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
+    TEST_F(WSVTest, block_rollback_test) {
+      auto wsv_ = std::make_unique<PostgreSQL>(host_, port_, user_, password_);
 
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 1);
+      std::string public_key("00000000000000000000000000000000");
+      ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
+      std::string address("127.0.0.1");
+      ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
 
-  wsv_->rollback_transaction();
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 1);
 
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 0);
+      wsv_->commit_transaction();
 
-  wsv_->start_transaction();
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 1);
 
-  address = "127.0.0.2";
-  ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
+      address = "127.0.0.2";
+      ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
 
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 1);
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+      ASSERT_EQ(wsv_->get_peers(false).size(), 2);
 
-  wsv_->commit_transaction();
-  wsv_->commit_block();
+      wsv_->commit_transaction();
+      wsv_->rollback_block();
 
-  ASSERT_EQ(wsv_->get_peers(true).size(), 1);
-}
+      ASSERT_EQ(wsv_->get_peers(true).size(), 0);
+    }
+  }  // namespace wsv
 
-TEST_F(WSVTest, block_rollback_test) {
-  backend_ = "Postgres";
-  auto wsv_ = wsv::Manager::instance().make_WSV(backend_);
-
-  wsv_->start_block();
-  wsv_->start_transaction();
-
-  std::string public_key("00000000000000000000000000000000");
-  ASSERT_TRUE(wsv_->add_account(public_key, 1, 1));
-  std::string address("127.0.0.1");
-  ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
-
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 1);
-
-  wsv_->commit_transaction();
-
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 1);
-
-  wsv_->start_transaction();
-
-  address = "127.0.0.2";
-  ASSERT_TRUE(wsv_->add_peer(public_key, address, 1));
-
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-  ASSERT_EQ(wsv_->get_peers(false).size(), 2);
-
-  wsv_->commit_transaction();
-  wsv_->rollback_block();
-
-  ASSERT_EQ(wsv_->get_peers(true).size(), 0);
-}
-
-//TEST_F(WSVTest, redis_test) {
-//  backend_ = "Redis";
-//  test_backend(backend_);
-//}
+}  // namespace ametsuchi

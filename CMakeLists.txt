@@ -5,6 +5,7 @@ project(ametsuchi LANGUAGES C CXX)
 SET(CMAKE_CXX_FLAGS "-std=c++1y -Wall -fPIC")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3")
 SET(CMAKE_CXX_FLAGS_DEBUG "-g -Wextra -Wno-unused-parameter -O0")
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -21,23 +22,10 @@ message(STATUS "-DTESTING=${TESTING}")
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
+include_directories(src)
+include_directories(include)
+
 add_subdirectory(src)
-
-add_library(ametsuchi
-  src/ametsuchi.cc src/ametsuchi.h
-  include/ametsuchi/ametsuchi.h
-  )
-
-target_include_directories(ametsuchi PUBLIC
-  include
-  )
-
-target_link_libraries(ametsuchi PUBLIC
-  block_index
-  block_store
-  tx_index
-  wsv
-  )
 
 if (TESTING)
   # Connect test executable and CMake test system.
