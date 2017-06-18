@@ -1,13 +1,8 @@
 add_library(block_store
-  block_store.h
-  block_store_flat.h
-  flat_iterator.h
-  block_store_flat.cc
+  block_store.hpp
+  backend/flat_file.hpp backend/flat_file.cpp
   )
 
 target_link_libraries(block_store
   stdc++fs # std::experimental::filesystem
-  spdlog
   )
-
-target_include_directories(block_store INTERFACE .)
