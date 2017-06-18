@@ -12,11 +12,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
 
 option(TESTING "Build tests" ON)
 
-if (NOT IROHA_SCHEMA_DIR)
-  set(IROHA_SCHEMA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/schema)
-endif ()
-message(STATUS "Schema folder found: ${IROHA_SCHEMA_DIR}")
-
 # set default CMAKE_BUILD_TYPE=Debug
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
@@ -26,10 +21,23 @@ message(STATUS "-DTESTING=${TESTING}")
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
-add_subdirectory(schema)
+add_subdirectory(src)
 
-add_subdirectory(server)
-add_subdirectory(client)
+add_library(ametsuchi
+  src/ametsuchi.cc src/ametsuchi.h
+  include/ametsuchi/ametsuchi.h
+  )
+
+target_include_directories(ametsuchi PUBLIC
+  include
+  )
+
+target_link_libraries(ametsuchi PUBLIC
+  block_index
+  block_store
+  tx_index
+  wsv
+  )
 
 if (TESTING)
   # Connect test executable and CMake test system.
