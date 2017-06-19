@@ -1,19 +1,24 @@
-AddTest(bstore_test block_store/block_store_flat_test.cc)
+addtest(bstore_test block_store/block_store_flat_test.cpp)
 target_link_libraries(bstore_test
-  block_store
-  )
+    block_store
+    )
 
-AddTest(block_index_test index/block_index_test.cc)
+addtest(block_index_test index/block_index_test.cpp)
 target_link_libraries(block_index_test
-  index
-  )
+    index
+    )
 
-AddTest(tx_index_test index/tx_index_test.cc)
+addtest(tx_index_test index/tx_index_test.cpp)
 target_link_libraries(tx_index_test
-  index
-  )
+    index
+    )
 
-AddTest(wsv_test wsv/wsv_test.cc)
+addtest(wsv_test wsv/wsv_test.cpp)
 target_link_libraries(wsv_test
-  wsv
-  )
+    wsv
+    )
+
+addtest(ametsuchi_test ametsuchi_test.cpp)
+target_link_libraries(ametsuchi_test
+    ametsuchi
+    )

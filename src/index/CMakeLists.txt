@@ -1,6 +1,9 @@
+set(index_SOURCES
+    backend/redis.cpp
+    )
+
 add_library(index
-  index.hpp
-  backend/redis.hpp backend/redis.cpp
+  ${index_SOURCES}
   )
 
 target_link_libraries(index

@@ -49,11 +49,14 @@ namespace ametsuchi {
                        uint32_t status) override;
       void add_signatory(const std::string &account_id,
                          const std::string &public_key) override;
-      void remove_signatory() override;
+      void remove_signatory(const std::string &account_id,
+                            const std::string &public_key) override;
+      void add_domain() override;
       void add_peer(const std::string &account_id, const std::string &address,
                     uint32_t state) override;
       std::vector<std::string> get_peers(bool committed) override;
       void commit_block() override;
+      std::vector<std::string> get_tx_hash(const std::string &account_id) override;
       void commit_tx() override;
       void rollback_block() override;
       void rollback_tx() override;

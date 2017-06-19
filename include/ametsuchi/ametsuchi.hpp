@@ -51,12 +51,18 @@ namespace ametsuchi {
         const std::string &hash) = 0;
     virtual std::experimental::optional<uint64_t> last_block_id_index() = 0;
 
+    virtual std::vector<std::string> get_tx_hash(
+        const std::string &account_id) = 0;
+
     // wsv
     virtual void add_account(const std::string &account_id, uint8_t quorum,
                              uint32_t status) = 0;
     virtual void add_signatory(const std::string &account_id,
                                const std::string &public_key) = 0;
-    virtual void remove_signatory() = 0;
+    virtual void remove_signatory(const std::string &account_id,
+                                  const std::string &public_key) = 0;
+    virtual void add_domain() = 0;
+
     virtual void add_peer(const std::string &account_id,
                           const std::string &address, uint32_t state) = 0;
     virtual std::vector<std::string> get_peers(bool committed) = 0;

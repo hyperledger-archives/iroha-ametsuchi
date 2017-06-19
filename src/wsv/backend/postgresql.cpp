@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#include <wsv/backend/postgresql.hpp>
 #include <iostream>
+#include <wsv/backend/postgresql.hpp>
 
 namespace ametsuchi {
 
@@ -38,6 +38,9 @@ namespace ametsuchi {
       write_ = std::make_unique<pqxx::nontransaction>(*connection_);
       read_ = std::make_unique<pqxx::nontransaction>(*read_connection_);
 
+      auto res =
+          read_->exec("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;");
+
       start_block();
       start_transaction();
     }
@@ -51,7 +54,7 @@ namespace ametsuchi {
                                  uint32_t status) {
       try {
         write_->exec(
-          "INSERT INTO public.account(\n"
+            "INSERT INTO public.account(\n"
             "            account_id, quorum, status)\n"
             "    VALUES (" +
             write_->quote(account_id) + ", " +
@@ -68,7 +71,7 @@ namespace ametsuchi {
                               const std::string &address, uint32_t state) {
       try {
         write_->exec(
-          "INSERT INTO public.peer(\n"
+            "INSERT INTO public.peer(\n"
             "            account_id, address, state)\n"
             "    VALUES (" +
             write_->quote(account_id) + ", " + write_->quote(address) + ", " +
@@ -84,10 +87,11 @@ namespace ametsuchi {
                                    const std::string &public_key) {
       try {
         write_->exec(
-          "INSERT INTO public.signatory(\n"
+            "INSERT INTO public.signatory(\n"
             "            account_id, public_key)\n"
             "    VALUES (" +
-            write_->quote(account_id) + ", " + write_->quote(public_key) + ");");
+            write_->quote(account_id) + ", " + write_->quote(public_key) +
+            ");");
       } catch (std::exception e) {
         std::cerr << e.what() << std::endl;
         return false;
@@ -100,7 +104,7 @@ namespace ametsuchi {
       pqxx::result result;
       try {
         result = tx->exec(
-          "SELECT \n"
+            "SELECT \n"
             "  peer.address\n"
             "FROM \n"
             "  public.peer\n"
@@ -136,9 +140,7 @@ namespace ametsuchi {
       start_block();
     }
 
-    void PostgreSQL::start_block() {
-      write_->exec("BEGIN;");
-    }
+    void PostgreSQL::start_block() { write_->exec("BEGIN;"); }
 
     void PostgreSQL::start_transaction() {
       write_->exec("SAVEPOINT savepoint_;");

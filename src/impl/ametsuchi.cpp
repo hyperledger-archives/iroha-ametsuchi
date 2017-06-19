@@ -87,7 +87,8 @@ namespace ametsuchi {
       wsv_->add_signatory(account_id, public_key);
     }
 
-    void Ametsuchi::remove_signatory() {
+    void Ametsuchi::remove_signatory(const std::string &account_id,
+                                     const std::string &public_key) {
       // TODO implement
     }
 
@@ -119,6 +120,13 @@ namespace ametsuchi {
     uint64_t Ametsuchi::last_block_id_wsv() {
       // TODO add last block id to sql schema
       return 0;
+    }
+    std::vector<std::string> Ametsuchi::get_tx_hash(const std::string &account_id) {
+      // TODO implement
+      return {};
+    }
+    void Ametsuchi::add_domain() {
+
     }
   }  // namespace impl
 
