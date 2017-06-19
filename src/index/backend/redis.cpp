@@ -43,8 +43,17 @@ namespace ametsuchi {
       return res;
     }
 
+    bool Redis::add_pubkey_txhash(std::string pubkey, std::string txhash) {
+      bool res = true;
+      std::vector<std::string> txhashes(
+          {txhash});  // cpp redis requires to put vector into rpush
+      client_.rpush("account_pubkey:" + pubkey, txhashes);
+      client_.sync_commit();
+      return res;
+    }
+
     std::experimental::optional<uint64_t> Redis::get_blockid_by_blockhash(
-      std::string hash) {
+        std::string hash) {
       std::experimental::optional<uint64_t> res;
       read_client_.get("block:" + hash, [&res](cpp_redis::reply& reply) {
         if (reply.ok() && reply.is_string()) {
@@ -84,6 +93,22 @@ namespace ametsuchi {
                             res = std::stoul(reply.as_string());
                           }
                         });
+      read_client_.sync_commit();
+      return res;
+    }
+
+    std::experimental::optional<std::vector<std::string>>
+    Redis::get_txhashes_by_pubkey(std::string pubkey) {
+      std::experimental::optional<std::vector<std::string>> res;
+      read_client_.lrange("account_pubkey:" + pubkey, 0, -1,
+                          [&res](cpp_redis::reply& reply) {
+                            if (reply.ok() && reply.is_array()) {
+                              auto replies = reply.as_array();
+                              for (const auto& one_reply : replies) {
+                                res->push_back(one_reply.as_string());
+                              }
+                            }
+                          });
       read_client_.sync_commit();
       return res;
     }

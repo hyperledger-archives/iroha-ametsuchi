@@ -78,5 +78,17 @@ namespace ametsuchi {
       ASSERT_EQ(*one, 1);
     }
 
+    TEST_F(BlockIndex_Test, REDIS_ADD_GET_PUBKEY_TXHASHES) {
+      Redis block_index(host_, port_);
+
+      block_index.add_pubkey_txhash("1", "0");
+      block_index.add_pubkey_txhash("1", "1");
+      block_index.add_pubkey_txhash("1", "2");
+      ASSERT_TRUE(block_index.exec_multi());
+      auto res = block_index.get_txhashes_by_pubkey("1");
+      std::vector<std::string> expected({"0", "1", "2"});
+
+      ASSERT_EQ(*res, expected);
+    }
   }  // namespace index
 }  // namespace ametsuchi

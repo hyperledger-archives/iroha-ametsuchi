@@ -32,13 +32,16 @@ namespace ametsuchi {
       bool add_blockhash_blockid(std::string block_hash,
                                  uint32_t height) override;
       std::experimental::optional<uint64_t> get_blockid_by_blockhash(
-        std::string hash) override;
+          std::string hash) override;
       bool add_txhash_blockid_txid(std::string txhash, uint32_t height,
                                    int txid) override;
+      bool add_pubkey_txhash(std::string pubkey, std::string txhash) override;
       std::experimental::optional<uint64_t> get_txid_by_txhash(
           std::string txhash) override;
       std::experimental::optional<uint64_t> get_blockid_by_txhash(
           std::string txhash) override;
+      std::experimental::optional<std::vector<std::string>>
+      get_txhashes_by_pubkey(std::string pubkey) override;
       std::experimental::optional<uint64_t> get_last_blockid() override;
       bool exec_multi() override;
       bool discard_multi() override;
