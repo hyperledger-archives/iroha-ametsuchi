@@ -29,32 +29,38 @@ namespace ametsuchi {
 
     class Ametsuchi : public ametsuchi::Ametsuchi {
      public:
-      Ametsuchi(); // TODO add parameters for components
+      Ametsuchi();  // TODO add parameters for components
       ~Ametsuchi();
-      void insert_block(uint64_t block_id, const std::vector<uint8_t> &blob) override;
+      void insert_block(uint64_t block_id,
+                        const std::vector<uint8_t> &blob) override;
       void erase_block(uint64_t block_id) override;
       std::vector<uint8_t> get_block(uint64_t block_id) override;
       void insert_block_index(uint64_t block_id,
                               const std::string &hash) override;
       void insert_tx_index(int tx_id, const std::string &hash,
                            uint64_t block_id) override;
-      std::experimental::optional<uint64_t> get_block_id_by_block_hash(const std::string &hash) override;
-      std::experimental::optional<uint64_t> get_block_id_by_tx_hash(const std::string &hash) override;
-      std::experimental::optional<uint64_t> get_tx_id(const std::string &hash) override;
-      void add_account(const std::string &account_id,
-                             uint8_t quorum,
-                             uint32_t status) override;
+      std::experimental::optional<uint64_t> get_block_id_by_block_hash(
+          const std::string &hash) override;
+      std::experimental::optional<uint64_t> get_block_id_by_tx_hash(
+          const std::string &hash) override;
+      std::experimental::optional<uint64_t> get_tx_id(
+          const std::string &hash) override;
+      void add_account(const std::string &account_id, uint8_t quorum,
+                       uint32_t status) override;
       void add_signatory(const std::string &account_id,
-                               const std::string &public_key) override;
+                         const std::string &public_key) override;
       void remove_signatory() override;
-      void add_peer(const std::string &account_id,
-                          const std::string &address,
-                          uint32_t state) override;
+      void add_peer(const std::string &account_id, const std::string &address,
+                    uint32_t state) override;
       std::vector<std::string> get_peers(bool committed) override;
       void commit_block() override;
       void commit_tx() override;
       void rollback_block() override;
       void rollback_tx() override;
+      uint64_t last_block_id_store() override;
+      std::experimental::optional<uint64_t> last_block_id_index() override;
+      uint64_t last_block_id_wsv() override;
+
      private:
       std::unique_ptr<block_store::BlockStore> block_store_;
       std::unique_ptr<index::Index> index_;
