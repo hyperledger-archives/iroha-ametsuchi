@@ -1,11 +1,7 @@
-set(wsv_SOURCES
+add_library(wsv
     backend/postgresql.cpp
     )
 
-add_library(wsv
-  ${wsv_SOURCES}
-  )
-
 target_link_libraries(wsv
-  pqxx
-  )
+    pqxx
+    )

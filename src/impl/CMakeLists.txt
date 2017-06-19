@@ -1,16 +1,12 @@
-set(ametsuchi_SOURCES
+add_library(ametsuchi
+    ../block_store/backend/flat_file.cpp
+    ../index/backend/redis.cpp
+    ../wsv/backend/postgresql.cpp
     ametsuchi.cpp
     )
 
-add_library(ametsuchi
-    ${block_store_SOURCES}
-    ${index_SOURCES}
-    ${wsv_SOURCES}
-    ${ametsuchi_SOURCES}
+target_link_libraries(ametsuchi PUBLIC
+    pqxx
+    cpp_redis
+    stdc++fs
     )
-
-target_link_libraries(ametsuchi
-  block_store
-  index
-  wsv
-  )
