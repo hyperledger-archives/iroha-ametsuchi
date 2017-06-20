@@ -17,53 +17,37 @@
 
 #include <dirent.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <block_store/backend/flat_file.hpp>
-#include <experimental/filesystem>
 #include <iostream>
 
 namespace ametsuchi {
 
   namespace block_store {
 
-    namespace fs = std::experimental::filesystem;
-
     FlatFile::FlatFile(const std::string &path) {
       // Check if path exist:
-      fs::path fh(path);
-      if (fs::exists(fh)) {
-        if (fs::is_directory(path)) {
-          // Directory exists
-          dump_dir = path;
-          current_id = check_consistency();
-
-        } else {
-          // We assume here that wrong path is not possible
-
-        }
-      } else {
-        // New BlockStore
-        if (!fs::create_directories(fh)) {
-          // TODO: handle cannot create directory
-          std::cout << "Error creating directory " << std::endl;
-        }
-        current_id = 0;
-        dump_dir = path;
-      }
+      dump_dir = path;
+      current_id = check_consistency();
     }
 
-    FlatFile::~FlatFile() {
-
-    }
+    FlatFile::~FlatFile() {}
 
     void FlatFile::add(uint32_t id, const std::vector<uint8_t> &block) {
       auto next_id = id;
       std::string file_name = dump_dir + "/" + id_to_name(next_id);
       // Write block to binary file
-      fs::path fh(file_name);
-      if (!fs::exists(fh)) {
+      if (file_exist(file_name)) {
+        // File already exist
+
+      } else {
         // New file will be created
         FILE *pfile;
         pfile = fopen(file_name.c_str(), "wb");
+        if (!pfile){
+          std::cout << "Can't create file " << std::endl;
+          return;
+        }
         /*auto res = */ fwrite(block.data(), sizeof(uint8_t), block.size(),
                                pfile);
         fflush(pfile);
@@ -71,92 +55,110 @@ namespace ametsuchi {
 
         // Update internals, release lock
         current_id = next_id;
-
-      } else {
-        // Already exists, something is wrong
-        // Answer iroha status
-        // TODO: handle this case
-        std::cout << "File name already exist " << std::endl;
       }
     }
 
     std::vector<uint8_t> FlatFile::get(uint32_t id) const {
       std::string filename = dump_dir + "/" + id_to_name(id);
-      fs::path fh(filename);
-      if (fs::exists(fh)) {
-        auto f_size = fs::file_size(fh);
+      if (file_exist(filename)) {
+        auto f_size = file_size(filename);
         std::vector<uint8_t> buf(f_size);
         FILE *pfile = fopen(filename.c_str(), "rb");
         fread(&buf[0], sizeof(uint8_t), f_size, pfile);
         fclose(pfile);
         return buf;
-
       } else {
         std::cout << "No file with this id found" << std::endl;
-        // TODO: handle not found
         return std::vector<uint8_t>();
       }
     }
 
-    uint32_t FlatFile::last_id() const {
-      return current_id;
-    }
+    uint32_t FlatFile::last_id() const { return current_id; }
 
     void FlatFile::remove(uint32_t id) {
       // Assume that id exists
-      fs::path file(dump_dir + "/" + id_to_name(id));
-      fs::remove(file);
+      auto f_name = dump_dir + "/" + id_to_name(id);
+      if (std::remove(f_name.c_str()) != 0) perror("Error deleting file");
     }
 
-    uint32_t FlatFile::check_consistency() const {
+    void FlatFile::remove_all() {
+      if (!dump_dir.empty()) {
+        // Directory iterator:
+        struct dirent **namelist;
+        auto status = scandir(dump_dir.c_str(), &namelist, NULL, alphasort);
+        if (status < 0) {
+          // TODO: handle internal error
+        } else {
+          uint n = status;
+          uint i = 1;
+          while (++i < n) {
+            remove(name_to_id(namelist[i]->d_name));
+          }
+          for (uint j = 0; j < n; ++j) {
+            free(namelist[j]);
+          }
+          free(namelist);
+        }
+        if (std::remove(dump_dir.c_str()) != 0) perror("Error deleting file");
+      }
+    }
+
+    uint32_t FlatFile::check_consistency() {
       uint32_t tmp_id = 0u;
       if (!dump_dir.empty()) {
-        fs::path dir(dump_dir);
-        if (fs::is_directory(dir)) {
-          // Directory iterator:
-          struct dirent **namelist;
-          auto status = scandir(dump_dir.c_str(), &namelist, NULL, alphasort);
-          if (status < 0) {
-            // TODO: handle internal error
-          } else {
-            uint n = status;
-            tmp_id++;
-            uint i = 1;
-            while (++i < n) {
-              if (id_to_name(tmp_id) != namelist[i]->d_name) {
-                for (uint j = i; j < n; ++j) {
-                  fs::path file(dump_dir + "/" + namelist[j]->d_name);
-                  fs::remove(file);
-                }
-                break;
+        // Directory iterator:
+        struct dirent **namelist;
+        auto status = scandir(dump_dir.c_str(), &namelist, NULL, alphasort);
+        if (status < 0) {
+          // TODO: handle internal error
+        } else {
+          uint n = status;
+          tmp_id++;
+          uint i = 1;
+          while (++i < n) {
+            if (id_to_name(tmp_id) != namelist[i]->d_name) {
+              for (uint j = i; j < n; ++j) {
+                remove(name_to_id(namelist[j]->d_name));
               }
-              tmp_id = name_to_id(namelist[i]->d_name);
+              break;
             }
-
-            for (uint j = 0; j < n; ++j) {
-              free(namelist[j]);
-            }
-            free(namelist);
+            tmp_id = name_to_id(namelist[i]->d_name);
           }
 
-        } else {
-          // Not a directory
-          // TODO: handle not a directory
-          std::cout << "Not a directory " << std::endl;
+          for (uint j = 0; j < n; ++j) {
+            free(namelist[j]);
+          }
+          free(namelist);
         }
+
+      } else {
+        // Not a directory
+        // TODO: handle not a directory
+        std::cout << "Not a directory " << std::endl;
       }
       return tmp_id;
     }
 
-    std::string FlatFile::id_to_name(uint64_t id) const {
+    std::string FlatFile::id_to_name(uint32_t id) const {
       std::string new_id(16, '\0');
-      sprintf(&new_id[0], "%016lu", id);
+      sprintf(&new_id[0], "%016u", id);
       return new_id;
     }
 
-    uint64_t FlatFile::name_to_id(std::string name) const {
+    uint32_t FlatFile::name_to_id(std::string name) const {
       std::string::size_type sz;
-      return std::stoull(name, &sz);
+      return std::stoul(name, &sz);
+    }
+
+    inline bool FlatFile::file_exist(const std::string &name) const {
+      struct stat buffer;
+      return (stat(name.c_str(), &buffer) == 0);
+    }
+
+    inline long FlatFile::file_size(const std::string &filename) const {
+      struct stat stat_buf;
+      int rc = stat(filename.c_str(), &stat_buf);
+      return rc == 0 ? stat_buf.st_size : 0u;
     }
 
   }  // namespace block_store

@@ -18,17 +18,22 @@
 #include <gtest/gtest.h>
 #include <block_store/backend/flat_file.hpp>
 #include <experimental/filesystem>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 
 namespace ametsuchi {
 
   namespace block_store {
 
-    namespace fs = std::experimental::filesystem;
 
     class BlStore_Test : public ::testing::Test {
      protected:
-      virtual void TearDown() { fs::remove_all(fs::path(block_store_path)); }
-
+      virtual void SetUp() {
+        mkdir(block_store_path.c_str() ,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      }
+      virtual void TearDown() {
+         }
       std::string block_store_path = "/tmp/dump";
     };
 
@@ -44,6 +49,7 @@ namespace ametsuchi {
       auto res = bl_store.get(id);
       ASSERT_FALSE(res.empty());
       ASSERT_EQ(res, block);
+      bl_store.remove_all();
     }
 
     TEST_F(BlStore_Test, InConsistency_Test) {
@@ -73,15 +79,7 @@ namespace ametsuchi {
         // Must return 1
         ASSERT_EQ(res, 1);
         // There must be no other files:
-
-        //    FileHandle dir = fs::open(block_store_path);
-        fs::path dir(block_store_path);
-        std::vector<fs::directory_entry> files((fs::directory_iterator(dir)),
-                                               fs::directory_iterator());
-        ASSERT_EQ(files.size(), 1);
-        for (auto name : files) {
-          ASSERT_EQ(name.path().stem(), "0000000000000001");
-        }
+        bl_store.remove_all();
       }
     }
 
