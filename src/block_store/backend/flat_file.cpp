@@ -44,7 +44,7 @@ namespace ametsuchi {
         // New file will be created
         FILE *pfile;
         pfile = fopen(file_name.c_str(), "wb");
-        if (!pfile){
+        if (!pfile) {
           std::cout << "Can't create file " << std::endl;
           return;
         }
@@ -79,28 +79,6 @@ namespace ametsuchi {
       // Assume that id exists
       auto f_name = dump_dir + "/" + id_to_name(id);
       if (std::remove(f_name.c_str()) != 0) perror("Error deleting file");
-    }
-
-    void FlatFile::remove_all() {
-      if (!dump_dir.empty()) {
-        // Directory iterator:
-        struct dirent **namelist;
-        auto status = scandir(dump_dir.c_str(), &namelist, NULL, alphasort);
-        if (status < 0) {
-          // TODO: handle internal error
-        } else {
-          uint n = status;
-          uint i = 1;
-          while (++i < n) {
-            remove(name_to_id(namelist[i]->d_name));
-          }
-          for (uint j = 0; j < n; ++j) {
-            free(namelist[j]);
-          }
-          free(namelist);
-        }
-        if (std::remove(dump_dir.c_str()) != 0) perror("Error deleting file");
-      }
     }
 
     uint32_t FlatFile::check_consistency() {

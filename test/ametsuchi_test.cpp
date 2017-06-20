@@ -16,35 +16,32 @@
  */
 
 #include <gtest/gtest.h>
-#include <pqxx/pqxx>
-#include <cpp_redis/cpp_redis>
-#include <experimental/filesystem>
 #include <ametsuchi/ametsuchi.hpp>
+#include <cpp_redis/cpp_redis>
+#include <pqxx/pqxx>
+#include <common.hpp>
 
 namespace ametsuchi {
 
-  namespace fs = std::experimental::filesystem;
-
   class AmetsuchiTest : public ::testing::Test {
-
    protected:
     virtual void TearDown() {
       const auto drop =
           "DROP TABLE IF EXISTS domain_has_account;\n"
-              "DROP TABLE IF EXISTS account_has_asset;\n"
-              "DROP TABLE IF EXISTS account_has_wallet;\n"
-              "DROP TABLE IF EXISTS wallet;\n"
-              "DROP TABLE IF EXISTS exchange;\n"
-              "DROP TABLE IF EXISTS asset;\n"
-              "DROP TABLE IF EXISTS domain;\n"
-              "DROP TABLE IF EXISTS peer;\n"
-              "DROP TABLE IF EXISTS signatory;\n"
-              "DROP TABLE IF EXISTS account;\n"
-              "DROP SEQUENCE IF EXISTS peer_peer_id_seq;";
+          "DROP TABLE IF EXISTS account_has_asset;\n"
+          "DROP TABLE IF EXISTS account_has_wallet;\n"
+          "DROP TABLE IF EXISTS wallet;\n"
+          "DROP TABLE IF EXISTS exchange;\n"
+          "DROP TABLE IF EXISTS asset;\n"
+          "DROP TABLE IF EXISTS domain;\n"
+          "DROP TABLE IF EXISTS peer;\n"
+          "DROP TABLE IF EXISTS signatory;\n"
+          "DROP TABLE IF EXISTS account;\n"
+          "DROP SEQUENCE IF EXISTS peer_peer_id_seq;";
 
       pqxx::connection connection("host=" + pghost_ + " port=" +
-          std::to_string(pgport_) + " user=" + user_ +
-          " password=" + password_);
+                                  std::to_string(pgport_) + " user=" + user_ +
+                                  " password=" + password_);
       pqxx::work txn(connection);
       txn.exec(drop);
       txn.commit();
@@ -56,7 +53,7 @@ namespace ametsuchi {
       client.sync_commit();
       client.disconnect();
 
-      fs::remove_all(fs::path(block_store_path));
+      remove_all(block_store_path);
     }
 
     std::string pghost_ = "localhost";
@@ -78,4 +75,4 @@ namespace ametsuchi {
     ASSERT_EQ(block, blob);
   }
 
-} // namespace ametsuchi
+}  // namespace ametsuchi

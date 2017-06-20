@@ -1,3 +1,5 @@
+include_directories(.)
+
 addtest(bstore_test block_store/block_store_flat_test.cpp)
 target_link_libraries(bstore_test
     block_store

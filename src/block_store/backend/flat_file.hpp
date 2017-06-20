@@ -33,7 +33,6 @@ namespace ametsuchi {
       std::vector<uint8_t> get(uint32_t id) const override;
       uint32_t last_id() const override;
       void remove(uint32_t id) override;
-      void remove_all() override;
      private:
       uint32_t current_id;
       std::string dump_dir;
