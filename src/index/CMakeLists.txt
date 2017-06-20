@@ -1,7 +1,5 @@
-add_library(index
+add_library(index OBJECT
     backend/redis.cpp
     )
 
-target_link_libraries(index
-    cpp_redis
-    )
+target_include_directories(index PUBLIC ${CPP_REDIS_INCLUDE_DIRS})

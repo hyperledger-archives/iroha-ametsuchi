@@ -25,6 +25,9 @@ namespace ametsuchi {
 
   class AmetsuchiTest : public ::testing::Test {
    protected:
+    virtual void SetUp() {
+      mkdir(block_store_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
     virtual void TearDown() {
       const auto drop =
           "DROP TABLE IF EXISTS domain_has_account;\n"

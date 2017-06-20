@@ -1,7 +1,5 @@
-add_library(wsv
+add_library(wsv OBJECT
     backend/postgresql.cpp
     )
 
-target_link_libraries(wsv
-    pqxx
-    )
+target_include_directories(wsv PUBLIC ${pqxx_INCLUDE_DIRS})
